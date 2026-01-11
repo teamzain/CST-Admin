@@ -2,24 +2,15 @@ import { Outlet } from 'react-router-dom';
 import { useState } from 'react';
 import { Menu, Bell, User, LogOut } from 'lucide-react';
 import { useLogout } from '@/hooks/use-auth';
+import { Sidebar } from './sidebar';
 
 export const DashboardLayout = () => {
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const { mutate: logout } = useLogout();
 
     return (
-        <div className="min-h-screen bg-gray-100">
-            {/* Sidebar */}
-            <aside
-                className={`fixed left-0 top-0 h-full bg-white shadow-lg transition-all duration-300 ${
-                    sidebarOpen ? 'w-64' : 'w-20'
-                }`}
-            >
-                <div className="p-4 border-b">
-                    <h1 className="text-xl font-bold">Admin</h1>
-                </div>
-                {/* Sidebar menu items */}
-            </aside>
+        <div className="min-h-screen bg-background">
+            <Sidebar open={sidebarOpen} />
 
             {/* Main Content */}
             <div
@@ -28,10 +19,11 @@ export const DashboardLayout = () => {
                 }`}
             >
                 {/* Top Navigation */}
-                <nav className="bg-white shadow-sm p-4 flex justify-between items-center">
-                    <button onClick={() => setSidebarOpen(!sidebarOpen)}>
+                <nav className="bg-background shadow-sm p-4 flex justify-between items-center">
+                    <button onClick={() => setSidebarOpen((prev) => !prev)}>
                         <Menu className="w-6 h-6" />
                     </button>
+
                     <div className="flex items-center gap-4">
                         <Bell className="w-5 h-5 cursor-pointer" />
                         <User className="w-5 h-5 cursor-pointer" />
@@ -41,7 +33,6 @@ export const DashboardLayout = () => {
                     </div>
                 </nav>
 
-                {/* Page Content */}
                 <main className="p-6">
                     <Outlet />
                 </main>

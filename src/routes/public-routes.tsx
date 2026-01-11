@@ -1,19 +1,9 @@
-// import { RouteObject } from 'react-router-dom';
-// import HomePage from '@/pages/public/home/page';
-// import AboutPage from '@/pages/public/about/page';
-// import NotFoundPage from '@/pages/errors/404/page';
+import type { RouteObject } from 'react-router-dom';
+import NotFoundPage from '@/pages/errors/404';
 
-// export const publicRoutes: RouteObject[] = [
-//     {
-//         path: '/',
-//         element: <HomePage />,
-//     },
-//     {
-//         path: '/about',
-//         element: <AboutPage />,
-//     },
-//     {
-//         path: '*',
-//         element: <NotFoundPage />,
-//     },
-// ];
+export const publicRoutes: RouteObject[] = [
+    {
+        path: '*',
+        element: <NotFoundPage />,
+    },
+];
