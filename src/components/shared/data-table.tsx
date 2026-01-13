@@ -39,6 +39,7 @@ interface DataTableProps<T extends { id: number | string }> {
     onDelete?: (row: T) => void;
     searchPlaceholder?: string;
     pageSize?: number;
+    extraFilters?: React.ReactNode;
 }
 
 export function DataTable<T extends { id: number | string }>({
@@ -48,6 +49,7 @@ export function DataTable<T extends { id: number | string }>({
     onDelete,
     searchPlaceholder = 'Search...',
     pageSize = 10,
+    extraFilters,
 }: DataTableProps<T>) {
     const [searchTerm, setSearchTerm] = useState('');
     const [sortConfig, setSortConfig] = useState<{
@@ -112,7 +114,7 @@ export function DataTable<T extends { id: number | string }>({
     return (
         <div className="space-y-4">
             {/* Search and Filter Controls */}
-            <div className="flex gap-4 flex-wrap">
+            <div className="flex gap-4 flex-wrap items-center">
                 <Input
                     placeholder={searchPlaceholder}
                     value={searchTerm}
@@ -122,6 +124,7 @@ export function DataTable<T extends { id: number | string }>({
                     }}
                     className="flex-1 min-w-64 bg-input border-border"
                 />
+                {extraFilters}
                 {columns.some((col) => col.filterable) && (
                     <Select
                         value={filteredColumn}
@@ -181,7 +184,9 @@ export function DataTable<T extends { id: number | string }>({
                                 ))}
                                 {(onEdit || onDelete) && (
                                     <TableHead className="text-right">
-                                        Actions
+                                        <div className="flex items-center justify-end gap-2">
+                                            Actions
+                                        </div>
                                     </TableHead>
                                 )}
                             </TableRow>

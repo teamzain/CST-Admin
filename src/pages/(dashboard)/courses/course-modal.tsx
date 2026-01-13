@@ -2,7 +2,7 @@
 
 import type React from 'react';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
     Dialog,
     DialogContent,
@@ -24,12 +24,15 @@ import {
 
 interface Course {
     id: number;
-    name: string;
-    state: string;
-    hours: number;
-    students: number;
+    title: string;
+    category: 'PRERECORDED' | 'LIVE_WEBINAR' | 'IN_PERSON';
+    duration_hours: number;
+    is_active: boolean;
+    instructor: string;
+    enrolled_students: number;
     price: number;
-    status: 'active' | 'draft';
+    state: string;
+    delivery_mode: 'online' | 'in-person';
 }
 
 interface CourseModalProps {
@@ -57,12 +60,15 @@ export function CourseModal({
     function getInitialFormData(course?: Course): Omit<Course, 'id'> {
         if (!course) {
             return {
-                name: '',
-                state: '',
-                hours: 0,
-                students: 0,
+                title: '',
+                category: 'PRERECORDED',
+                duration_hours: 0,
+                is_active: true,
+                instructor: '',
+                enrolled_students: 0,
                 price: 0,
-                status: 'active',
+                state: '',
+                delivery_mode: 'online',
             };
         }
 
@@ -72,10 +78,13 @@ export function CourseModal({
         return rest;
     }
     
-    const [formData, setFormData] = useState(() => getInitialFormData(course));
+    const [formData, setFormData] = useState<Omit<Course, 'id'>>(() => getInitialFormData(course));
 
-
-
+    useEffect(() => {
+        if (open) {
+            setFormData(getInitialFormData(course));
+        }
+    }, [open, course]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -85,7 +94,7 @@ export function CourseModal({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="bg-card border-border">
+            <DialogContent className="bg-card border-border max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>
                         {course ? 'Edit Course' : 'Create New Course'}
@@ -98,57 +107,58 @@ export function CourseModal({
                 </DialogHeader>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    <div>
-                        <Label htmlFor="name">Course Name</Label>
-                        <Input
-                            id="name"
-                            value={formData.name}
-                            onChange={(e) =>
-                                setFormData({
-                                    ...formData,
-                                    name: e.target.value,
-                                })
-                            }
-                            placeholder="e.g., Illinois Unarmed 20-Hour"
-                            className="bg-input border-border mt-1"
-                        />
-                    </div>
-
-                    <div>
-                        <Label htmlFor="state">State</Label>
-                        <Select
-                            value={formData.state}
-                            onValueChange={(value) =>
-                                setFormData({ ...formData, state: value })
-                            }
-                        >
-                            <SelectTrigger className="bg-input border-border mt-1">
-                                <SelectValue placeholder="Select state" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {states.map((state) => (
-                                    <SelectItem key={state} value={state}>
-                                        {state}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-
                     <div className="grid grid-cols-2 gap-4">
+                        <div className="col-span-2">
+                            <Label htmlFor="title">Course Title</Label>
+                            <Input
+                                id="title"
+                                value={formData.title}
+                                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                                placeholder="e.g., Illinois Unarmed 20-Hour"
+                                className="bg-input border-border mt-1"
+                            />
+                        </div>
+
+                        <div>
+                            <Label htmlFor="category">Category</Label>
+                            <Select
+                                value={formData.category}
+                                onValueChange={(val: any) => setFormData({ ...formData, category: val })}
+                            >
+                                <SelectTrigger className="bg-input border-border mt-1">
+                                    <SelectValue placeholder="Select Category" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="PRERECORDED">Prerecorded</SelectItem>
+                                    <SelectItem value="LIVE_WEBINAR">Live Webinar</SelectItem>
+                                    <SelectItem value="IN_PERSON">In Person</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <div>
+                            <Label htmlFor="delivery_mode">Delivery Mode</Label>
+                            <Select
+                                value={formData.delivery_mode}
+                                onValueChange={(val: any) => setFormData({ ...formData, delivery_mode: val })}
+                            >
+                                <SelectTrigger className="bg-input border-border mt-1">
+                                    <SelectValue placeholder="Select Mode" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="online">Online</SelectItem>
+                                    <SelectItem value="in-person">In Person</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+
                         <div>
                             <Label htmlFor="hours">Hours</Label>
                             <Input
                                 id="hours"
                                 type="number"
-                                value={formData.hours}
-                                onChange={(e) =>
-                                    setFormData({
-                                        ...formData,
-                                        hours: Number.parseInt(e.target.value),
-                                    })
-                                }
-                                placeholder="20"
+                                value={formData.duration_hours}
+                                onChange={(e) => setFormData({ ...formData, duration_hours: parseInt(e.target.value) || 0 })}
                                 className="bg-input border-border mt-1"
                             />
                         </div>
@@ -159,34 +169,55 @@ export function CourseModal({
                                 id="price"
                                 type="number"
                                 value={formData.price}
-                                onChange={(e) =>
-                                    setFormData({
-                                        ...formData,
-                                        price: Number.parseInt(e.target.value),
-                                    })
-                                }
-                                placeholder="199"
+                                onChange={(e) => setFormData({ ...formData, price: parseInt(e.target.value) || 0 })}
                                 className="bg-input border-border mt-1"
                             />
                         </div>
-                    </div>
 
-                    <div>
-                        <Label htmlFor="status">Status</Label>
-                        <Select
-                            value={formData.status}
-                            onValueChange={(value: 'active' | 'draft') =>
-                                setFormData({ ...formData, status: value })
-                            }
-                        >
-                            <SelectTrigger className="bg-input border-border mt-1">
-                                <SelectValue placeholder="Select status" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="active">Active</SelectItem>
-                                <SelectItem value="draft">Draft</SelectItem>
-                            </SelectContent>
-                        </Select>
+                        <div>
+                            <Label htmlFor="instructor">Instructor</Label>
+                            <Input
+                                id="instructor"
+                                value={formData.instructor}
+                                onChange={(e) => setFormData({ ...formData, instructor: e.target.value })}
+                                className="bg-input border-border mt-1"
+                            />
+                        </div>
+
+                        <div>
+                            <Label htmlFor="state">State</Label>
+                             <Select
+                                value={formData.state}
+                                onValueChange={(value) => setFormData({ ...formData, state: value })}
+                            >
+                                <SelectTrigger className="bg-input border-border mt-1">
+                                    <SelectValue placeholder="Select state" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {states.map((state) => (
+                                        <SelectItem key={state} value={state}>
+                                            {state}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <div>
+                            <Label htmlFor="status">Status</Label>
+                            <Select
+                                value={formData.is_active ? 'true' : 'false'}
+                                onValueChange={(val) => setFormData({ ...formData, is_active: val === 'true' })}
+                            >
+                                <SelectTrigger className="bg-input border-border mt-1">
+                                    <SelectValue placeholder="Select status" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="true">Active</SelectItem>
+                                    <SelectItem value="false">Inactive</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
                     </div>
 
                     <DialogFooter>

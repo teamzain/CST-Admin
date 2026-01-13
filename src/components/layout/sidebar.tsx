@@ -1,6 +1,7 @@
 'use client';
 
 import { Link, useLocation } from 'react-router-dom';
+import { useState } from 'react';
 import {
     BarChart3,
     BookOpen,
@@ -11,59 +12,161 @@ import {
     LogOut,
     Settings,
     Shield,
+    ChevronDown,
+    Menu,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import clsx from 'clsx';
 
 interface SidebarProps {
     open: boolean;
+    toggleSidebar: () => void;
 }
 
-export function Sidebar({ open }: SidebarProps) {
+export function Sidebar({ open, toggleSidebar }: SidebarProps) {
     const { pathname } = useLocation();
+    const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({});
+
+    const toggleMenu = (label: string) => {
+        setOpenMenus((prev) => ({
+            ...prev,
+            [label]: !prev[label],
+        }));
+    };
 
     const menuItems = [
         { href: '/', icon: BarChart3, label: 'Dashboard' },
-        { href: '/courses', icon: BookOpen, label: 'Courses' },
-        { href: '/students', icon: Users, label: 'Students' },
-        { href: '/instructors', icon: Shield, label: 'Instructors' },
-        { href: '/scheduling', icon: Calendar, label: 'Scheduling' },
-        { href: '/employers', icon: Briefcase, label: 'Employers' },
+        {
+            href: '/courses',
+            icon: BookOpen,
+            label: 'Courses',
+            subItems: [
+                { href: '/courses', label: 'All Courses' },
+                { href: '/courses/create', label: 'Create Course' },
+                { href: '/courses/update', label: 'Update Course' },
+            ],
+        },
+        {
+            href: '/students',
+            icon: Users,
+            label: 'Students',
+            subItems: [
+                { href: '/students', label: 'All Students' },
+                { href: '/students/create', label: 'Create Student' },
+            ],
+        },
+        {
+            href: '/instructors',
+            icon: Shield,
+            label: 'Instructors',
+            subItems: [
+                { href: '/instructors', label: 'All Instructors' },
+                { href: '/instructors/create', label: 'Create Instructor' },
+            ],
+        },
+        {
+            href: '/employers',
+            icon: Briefcase,
+            label: 'Employers',
+            subItems: [
+                { href: '/employers', label: 'All Employers' },
+                { href: '/employers/create', label: 'Create Employer' },
+            ],
+        },
+        {
+            href: '/scheduling',
+            icon: Calendar,
+            label: 'Scheduling',
+            subItems: [
+                { href: '/scheduling', label: 'View Schedule' },
+                { href: '/scheduling/slots', label: 'Manage Slots' },
+            ],
+        },
         { href: '/reports', icon: FileText, label: 'Reports' },
     ];
 
     return (
         <aside
             className={clsx(
-                'h-screen fixed left-0 top-0 flex flex-col border-r bg-sidebar transition-all duration-300',
+                'h-screen fixed left-0 top-0 flex flex-col border-r border-sidebar-border bg-sidebar bg-[#2C2C2C] text-sidebar-foreground transition-all duration-300 z-50',
                 open ? 'w-64' : 'w-20'
             )}
         >
             {/* Header */}
-            <div className="p-6 border-b border-sidebar-border">
-                <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-sidebar-primary rounded-lg flex items-center justify-center">
-                        <Shield className="w-5 h-5 text-sidebar-primary-foreground" />
-                    </div>
-
+            {/* Header */}
+            <div className="p-5 border-b border-sidebar-border h-[69px] flex items-center">
+                <div className={clsx("flex items-center w-full", open ? "justify-between" : "justify-center")}>
                     {open && (
-                        <h1 className="font-bold text-lg text-sidebar-foreground">
-                            TrainHub
-                        </h1>
+                        <div className="flex items-center gap-2">
+                            <div className="w-12 h-8 rounded-lg flex items-center justify-center">
+                                <img src="logo.png" alt="Logo" />
+                            </div>
+                        </div>
                     )}
+                    <button onClick={toggleSidebar} className={clsx("text-sidebar-foreground hover:text-primary transition-colors", open && "mr-1")}>
+                        <Menu className="w-6 h-6" />
+                    </button>
                 </div>
             </div>
 
             {/* Menu */}
-            <nav className="flex-1 p-4 space-y-2">
+            <nav className="flex-1 p-4 space-y-2 overflow-y-auto scrollbar-thin scrollbar-thumb-sidebar-border">
                 {menuItems.map((item) => {
-                    const isActive = pathname === item.href;
+                    const isActive = pathname === item.href || (item.subItems && item.subItems.some(sub => pathname === sub.href));
+                    const isOpen = openMenus[item.label];
+
+                    if (item.subItems) {
+                        return (
+                            <div key={item.label}>
+                                <Button
+                                    variant={isActive ? 'default' : 'ghost'}
+                                    className={clsx(
+                                        'w-full gap-3 my-1 justify-between border-b border-transparent hover:border-sidebar-border',
+                                        !open && 'justify-center px-2'
+                                    )}
+                                    onClick={() => toggleMenu(item.label)}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <item.icon className="w-4 h-4 shrink-0" />
+                                        {open && <span>{item.label}</span>}
+                                    </div>
+                                    {open && (
+                                        <ChevronDown
+                                            className={clsx(
+                                                'w-4 h-4 transition-transform duration-200',
+                                                isOpen && 'rotate-180'
+                                            )}
+                                        />
+                                    )}
+                                </Button>
+                                
+                                {open && isOpen && (
+                                    <div className="ml-4 pl-4 border-l border-sidebar-border space-y-1 mt-1">
+                                        {item.subItems.map((subItem) => (
+                                            <Link key={subItem.href} to={subItem.href}>
+                                                <Button
+                                                    variant="ghost"
+                                                    className={clsx(
+                                                        'w-full justify-start h-8 text-sm gap-2 my-1',
+                                                        pathname === subItem.href ? 'text-primary' : 'text-sidebar-foreground/70'
+                                                    )}
+                                                >
+                                                    <span>{subItem.label}</span>
+                                                </Button>
+                                            </Link>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    }
+
                     return (
                         <Link key={item.href} to={item.href}>
                             <Button
                                 variant={isActive ? 'default' : 'ghost'}
                                 className={clsx(
-                                    'w-full gap-3',
+                                    'w-full gap-3 my-1/2 border-b border-transparent hover:border-sidebar-border',
                                     open ? 'justify-start' : 'justify-center'
                                 )}
                             >
