@@ -14,6 +14,7 @@ import {
     Shield,
     ChevronDown,
     Menu,
+    MapPin,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import clsx from 'clsx';
@@ -37,13 +38,21 @@ export function Sidebar({ open, toggleSidebar }: SidebarProps) {
     const menuItems = [
         { href: '/', icon: BarChart3, label: 'Dashboard' },
         {
+            href: '/states',
+            icon: MapPin,
+            label: 'States',
+            subItems: [
+                { href: '/states', label: 'All States' },
+                { href: '/states/create', label: 'Add State' },
+            ],
+        },
+        {
             href: '/courses',
             icon: BookOpen,
             label: 'Courses',
             subItems: [
                 { href: '/courses', label: 'All Courses' },
                 { href: '/courses/create', label: 'Create Course' },
-                { href: '/courses/update', label: 'Update Course' },
             ],
         },
         {
@@ -88,13 +97,13 @@ export function Sidebar({ open, toggleSidebar }: SidebarProps) {
     return (
         <aside
             className={clsx(
-                'h-screen fixed left-0 top-0 flex flex-col border-r border-sidebar-border bg-sidebar bg-[#2C2C2C] text-sidebar-foreground transition-all duration-300 z-50',
+                'h-screen fixed left-0 top-0 flex flex-col border-r border-sidebar-border bg-[#2C2C2C] text-sidebar-foreground transition-all duration-300 z-50',
                 open ? 'w-64' : 'w-20'
             )}
         >
             {/* Header */}
             {/* Header */}
-            <div className="p-5 border-b border-sidebar-border h-[69px] flex items-center">
+            <div className="p-5 border-b border-sidebar-border h-17 flex items-center">
                 <div className={clsx("flex items-center w-full", open ? "justify-between" : "justify-center")}>
                     {open && (
                         <div className="flex items-center gap-2">
