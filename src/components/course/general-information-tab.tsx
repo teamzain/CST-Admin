@@ -86,7 +86,7 @@ export function GeneralInformationTab({ course, formData, isEditing, onInputChan
                             onChange={(e) => onInputChange('description', e.target.value)}
                             placeholder="Enter course description"
                             rows={5}
-                            className="bg-input border-border"
+                            className="bg-background border-border"
                         />
                     ) : (
                         <p className="text-foreground">{course.description}</p>
@@ -103,46 +103,59 @@ export function GeneralInformationTab({ course, formData, isEditing, onInputChan
                     <CardContent className="space-y-4">
                         {isEditing ? (
                             <>
-                                <div>
-                                    <Label>Training Type</Label>
-                                    <Select
-                                        value={formData.training_type || TRAINING_TYPE.UNARMED}
-                                        onValueChange={(val) => onInputChange('training_type', val)}
-                                    >
-                                        <SelectTrigger className="bg-input border-border">
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value={TRAINING_TYPE.UNARMED}>Unarmed</SelectItem>
-                                            <SelectItem value={TRAINING_TYPE.ARMED}>Armed</SelectItem>
-                                            <SelectItem value={TRAINING_TYPE.REFRESHER}>Refresher</SelectItem>
-                                        </SelectContent>
-                                    </Select>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <Label>Training Type</Label>
+                                        <Select
+                                            value={formData.training_type || TRAINING_TYPE.UNARMED}
+                                            onValueChange={(val) => onInputChange('training_type', val)}
+                                        >
+                                            <SelectTrigger className="bg-background border-border">
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value={TRAINING_TYPE.UNARMED}>Unarmed</SelectItem>
+                                                <SelectItem value={TRAINING_TYPE.ARMED}>Armed</SelectItem>
+                                                <SelectItem value={TRAINING_TYPE.REFRESHER}>Refresher</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div>
+                                        <Label>Delivery Mode</Label>
+                                        <Select
+                                            value={formData.delivery_mode || DELIVERY_MODE.ONLINE}
+                                            onValueChange={(val) => onInputChange('delivery_mode', val)}
+                                        >
+                                            <SelectTrigger className="bg-background border-border">
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value={DELIVERY_MODE.ONLINE}>Online</SelectItem>
+                                                <SelectItem value={DELIVERY_MODE.IN_PERSON}>In Person</SelectItem>
+                                                <SelectItem value={DELIVERY_MODE.HYBRID}>Hybrid</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
                                 </div>
-                                <div>
-                                    <Label>Delivery Mode</Label>
-                                    <Select
-                                        value={formData.delivery_mode || DELIVERY_MODE.ONLINE}
-                                        onValueChange={(val) => onInputChange('delivery_mode', val)}
-                                    >
-                                        <SelectTrigger className="bg-input border-border">
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value={DELIVERY_MODE.ONLINE}>Online</SelectItem>
-                                            <SelectItem value={DELIVERY_MODE.IN_PERSON}>In Person</SelectItem>
-                                            <SelectItem value={DELIVERY_MODE.HYBRID}>Hybrid</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div>
-                                    <Label>Duration (hours)</Label>
-                                    <Input
-                                        type="number"
-                                        value={formData.duration_hours || 0}
-                                        onChange={(e) => onInputChange('duration_hours', parseFloat(e.target.value))}
-                                        className="bg-input border-border"
-                                    />
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <Label>Duration (hours)</Label>
+                                        <Input
+                                            type="number"
+                                            value={formData.duration_hours || 0}
+                                            onChange={(e) => onInputChange('duration_hours', parseFloat(e.target.value))}
+                                            className="bg-background border-border"
+                                        />
+                                    </div>
+                                    <div>
+                                        <Label>Thumbnail URL</Label>
+                                        <Input
+                                            value={formData.thumbnail || ''}
+                                            onChange={(e) => onInputChange('thumbnail', e.target.value)}
+                                            placeholder="https://..."
+                                            className="bg-background border-border"
+                                        />
+                                    </div>
                                 </div>
                             </>
                         ) : (
@@ -178,7 +191,7 @@ export function GeneralInformationTab({ course, formData, isEditing, onInputChan
                                         step="0.01"
                                         value={formData.price || 0}
                                         onChange={(e) => onInputChange('price', parseFloat(e.target.value))}
-                                        className="bg-input border-border"
+                                        className="bg-background border-border"
                                     />
                                 </div>
                                 <div>
@@ -187,7 +200,7 @@ export function GeneralInformationTab({ course, formData, isEditing, onInputChan
                                         value={formData.location || ''}
                                         onChange={(e) => onInputChange('location', e.target.value)}
                                         placeholder="e.g., Chicago, IL"
-                                        className="bg-input border-border"
+                                        className="bg-background border-border"
                                     />
                                 </div>
                                 <div className="flex items-center gap-2">

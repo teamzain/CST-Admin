@@ -50,7 +50,7 @@ export function DeleteConfirmationDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md" showCloseButton={false}>
         <DialogHeader>
           <div className="flex items-center gap-2 text-destructive">
             <AlertTriangle className="h-6 w-6" />
@@ -60,13 +60,13 @@ export function DeleteConfirmationDialog({
             {description}
           </DialogDescription>
         </DialogHeader>
-        
+
         <div className="space-y-4 py-4">
           <div className="p-3 bg-red-50 border border-red-200 rounded-md text-sm text-red-800 dark:bg-red-900/20 dark:border-red-900/50 dark:text-red-300">
-            This action cannot be undone. This will permanently delete the 
+            This action cannot be undone. This will permanently delete the
             <span className="font-semibold"> {itemName}</span> {itemType} and all associated data.
           </div>
-          
+
           <div className="space-y-2">
             <Label htmlFor="confirmation-input">
               Type <span className="font-semibold">{itemName}</span> to confirm.
@@ -85,8 +85,8 @@ export function DeleteConfirmationDialog({
           <Button variant="outline" onClick={handleClose}>
             Cancel
           </Button>
-          <Button 
-            variant="destructive" 
+          <Button
+            variant="destructive"
             onClick={handleConfirm}
             disabled={!isMatch}
             className="bg-destructive hover:bg-destructive/90"
