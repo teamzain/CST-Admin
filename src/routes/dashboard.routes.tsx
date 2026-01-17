@@ -14,6 +14,12 @@ import StudentsPage from '@/pages/(dashboard)/students';
 import StudentDetailsPage from '@/pages/(dashboard)/students/[id]';
 import CreateInstructorPage from '@/pages/(dashboard)/instructors/create';
 import InstructorDetailsPage from '@/pages/(dashboard)/instructors/[id]';
+import AllQuizzesPage from '@/pages/(dashboard)/quizzes';
+import QuizDetailsPage from '@/pages/(dashboard)/quizzes/quiz-details';
+import AllLessonsPage from '@/pages/(dashboard)/lessons';
+import LessonDetailsPage from '@/pages/(dashboard)/lessons/lesson-details';
+import AllSessionsPage from '@/pages/(dashboard)/sessions';
+import SessionDetailsPage from '@/pages/(dashboard)/sessions/session-details';
 
 export const dashboardRoutes: RouteObject[] = [
     {
@@ -74,9 +80,32 @@ export const dashboardRoutes: RouteObject[] = [
                         path: '/students/:id',
                         element: <StudentDetailsPage />,
                     },
+                    {
+                        path: '/quizzes',
+                        element: <AllQuizzesPage />,
+                    },
+                    {
+                        path: '/quizzes/:id',
+                        element: <QuizDetailsPage />,
+                    },
+                    {
+                        path: '/lessons',
+                        element: <AllLessonsPage />,
+                    },
+                    {
+                        path: '/lessons/:id',
+                        element: <LessonDetailsPage />,
+                    },
+                    {
+                        path: '/sessions',
+                        element: <AllSessionsPage />,
+                    },
+                    {
+                        path: '/sessions/:id',
+                        element: <SessionDetailsPage />,
+                    },
                 ],
             },
-
         ],
     },
 ];

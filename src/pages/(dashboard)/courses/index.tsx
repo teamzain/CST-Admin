@@ -10,7 +10,7 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus } from 'lucide-react';
+import { Plus, Filter } from 'lucide-react';
 import { DataTableClickable } from '@/components/shared/data-table-clickable';
 import { useCoursesStore, TRAINING_TYPE, DELIVERY_MODE, type Course } from '@/stores/courses-store';
 
@@ -21,11 +21,12 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 
 export default function CoursesPage() {
     const navigate = useNavigate();
     const { courses } = useCoursesStore();
+    const [showFilters, setShowFilters] = useState(false);
 
     // Filters
     const [filters, setFilters] = useState({
@@ -33,6 +34,7 @@ export default function CoursesPage() {
         training_type: 'all',
         delivery_mode: 'all',
         instructor_id: 'all',
+        state_id: 'all',
     });
 
     const filteredCourses = courses.filter((course) => {
@@ -40,6 +42,7 @@ export default function CoursesPage() {
         if (filters.training_type !== 'all' && course.training_type !== filters.training_type) return false;
         if (filters.delivery_mode !== 'all' && course.delivery_mode !== filters.delivery_mode) return false;
         if (filters.instructor_id !== 'all' && String(course.instructor_id) !== filters.instructor_id) return false;
+        if (filters.state_id !== 'all' && String(course.state_id) !== filters.state_id) return false;
         return true;
     });
 
@@ -56,13 +59,24 @@ export default function CoursesPage() {
             key: 'title' as const,
             label: 'Course Title',
             sortable: true,
-            filterable: true,
+        },
+        {
+            key: 'state' as const,
+            label: 'State',
+            sortable: true,
+            render: (_: unknown, row: Course) => (
+                <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="font-mono">
+                        {row.state?.code || 'N/A'}
+                    </Badge>
+                    <span className="text-sm">{row.state?.name}</span>
+                </div>
+            ),
         },
         {
             key: 'training_type' as const,
             label: 'Training Type',
             sortable: true,
-            filterable: true,
             render: (value: string) => (
                 <Badge variant="outline" className="capitalize">
                     {value.toLowerCase()}
@@ -99,7 +113,7 @@ export default function CoursesPage() {
             key: 'instructor' as const,
             label: 'Instructor',
             sortable: true,
-            render: (_: any, row: Course) => row.instructor?.name || 'N/A',
+            render: (_: unknown, row: Course) => row.instructor?.name || 'N/A',
         },
         {
             key: 'enrolled_students' as const,
@@ -115,65 +129,128 @@ export default function CoursesPage() {
     ];
 
     // Get unique instructors for filter
-    const instructors = Array.from(
+    const instructors = useMemo(() => Array.from(
         new Map(
             courses
                 .filter((c) => c.instructor_id)
                 .map((c) => [c.instructor_id, c.instructor?.name || ''])
         ).entries()
-    );
+    ), [courses]);
+
+    // Get unique states for filter
+    const states = useMemo(() => Array.from(
+        new Map(
+            courses
+                .filter((c) => c.state_id)
+                .map((c) => [c.state_id, c.state?.name || ''])
+        ).entries()
+    ), [courses]);
+
+    const activeFiltersCount = Object.values(filters).filter(v => v !== 'all').length;
 
     const extraFilters = (
-        <>
-            <Select value={filters.is_active} onValueChange={(val) => setFilters({ ...filters, is_active: val })}>
-                <SelectTrigger className="w-35 bg-background border-input">
-                    <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="true">Published</SelectItem>
-                    <SelectItem value="false">Unpublished</SelectItem>
-                </SelectContent>
-            </Select>
+        <div className="flex flex-col md:flex-row items-start md:items-center gap-3 w-full md:w-auto">
+            {/* Mobile Filter Toggle */}
+            <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowFilters(!showFilters)}
+                className="md:hidden flex items-center gap-2 w-full justify-between h-10 px-4"
+            >
+                <div className="flex items-center gap-2">
+                    <Filter className="w-4 h-4" />
+                    <span>Filters</span>
+                </div>
+                {activeFiltersCount > 0 && (
+                    <Badge variant="secondary" className="ml-2 h-5 min-w-5 flex items-center justify-center p-0">
+                        {activeFiltersCount}
+                    </Badge>
+                )}
+            </Button>
 
-            <Select value={filters.training_type} onValueChange={(val) => setFilters({ ...filters, training_type: val })}>
-                <SelectTrigger className="w-37.5 bg-background border-input">
-                    <SelectValue placeholder="Training Type" />
-                </SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="all">All Types</SelectItem>
-                    <SelectItem value={TRAINING_TYPE.UNARMED}>Unarmed</SelectItem>
-                    <SelectItem value={TRAINING_TYPE.ARMED}>Armed</SelectItem>
-                    <SelectItem value={TRAINING_TYPE.REFRESHER}>Refresher</SelectItem>
-                </SelectContent>
-            </Select>
+            {/* Filters Container */}
+            <div className={`${showFilters ? 'flex' : 'hidden'} md:flex flex-col sm:grid sm:grid-cols-2 md:flex-row gap-2 w-full md:w-auto transition-all duration-200`}>
+                <Select value={filters.state_id} onValueChange={(val) => setFilters({ ...filters, state_id: val })}>
+                    <SelectTrigger className="w-full md:w-32 lg:w-40 bg-background border-input h-10">
+                        <SelectValue placeholder="State" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">All States</SelectItem>
+                        {states.map(([id, name]) => (
+                            <SelectItem key={id} value={String(id)}>
+                                {name}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
 
-            <Select value={filters.delivery_mode} onValueChange={(val) => setFilters({ ...filters, delivery_mode: val })}>
-                <SelectTrigger className="w-37.5 bg-background border-input">
-                    <SelectValue placeholder="Delivery Mode" />
-                </SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="all">All Modes</SelectItem>
-                    <SelectItem value={DELIVERY_MODE.ONLINE}>Online</SelectItem>
-                    <SelectItem value={DELIVERY_MODE.IN_PERSON}>In Person</SelectItem>
-                    <SelectItem value={DELIVERY_MODE.HYBRID}>Hybrid</SelectItem>
-                </SelectContent>
-            </Select>
+                <Select value={filters.is_active} onValueChange={(val) => setFilters({ ...filters, is_active: val })}>
+                    <SelectTrigger className="w-full md:w-28 lg:w-32 bg-background border-input h-10">
+                        <SelectValue placeholder="Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">All Status</SelectItem>
+                        <SelectItem value="true">Published</SelectItem>
+                        <SelectItem value="false">Unpublished</SelectItem>
+                    </SelectContent>
+                </Select>
 
-            <Select value={filters.instructor_id} onValueChange={(val) => setFilters({ ...filters, instructor_id: val })}>
-                <SelectTrigger className="w-40 bg-background border-input">
-                    <SelectValue placeholder="Instructor" />
-                </SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="all">All Instructors</SelectItem>
-                    {instructors.map(([id, name]) => (
-                        <SelectItem key={id} value={String(id)}>
-                            {name}
-                        </SelectItem>
-                    ))}
-                </SelectContent>
-            </Select>
-        </>
+                <Select value={filters.training_type} onValueChange={(val) => setFilters({ ...filters, training_type: val })}>
+                    <SelectTrigger className="w-full md:w-32 lg:w-40 bg-background border-input h-10">
+                        <SelectValue placeholder="Type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">All Types</SelectItem>
+                        <SelectItem value={TRAINING_TYPE.UNARMED}>Unarmed</SelectItem>
+                        <SelectItem value={TRAINING_TYPE.ARMED}>Armed</SelectItem>
+                        <SelectItem value={TRAINING_TYPE.REFRESHER}>Refresher</SelectItem>
+                    </SelectContent>
+                </Select>
+
+                <Select value={filters.delivery_mode} onValueChange={(val) => setFilters({ ...filters, delivery_mode: val })}>
+                    <SelectTrigger className="w-full md:w-32 lg:w-40 bg-background border-input h-10">
+                        <SelectValue placeholder="Mode" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">All Modes</SelectItem>
+                        <SelectItem value={DELIVERY_MODE.ONLINE}>Online</SelectItem>
+                        <SelectItem value={DELIVERY_MODE.IN_PERSON}>In Person</SelectItem>
+                        <SelectItem value={DELIVERY_MODE.HYBRID}>Hybrid</SelectItem>
+                    </SelectContent>
+                </Select>
+
+                <Select value={filters.instructor_id} onValueChange={(val) => setFilters({ ...filters, instructor_id: val })}>
+                    <SelectTrigger className="w-full md:w-32 lg:w-44 bg-background border-input h-10">
+                        <SelectValue placeholder="Instructor" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">All Instructors</SelectItem>
+                        {instructors.map(([id, name]) => (
+                            <SelectItem key={id} value={String(id)}>
+                                {name}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+
+                {activeFiltersCount > 0 && (
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setFilters({
+                            is_active: 'all',
+                            training_type: 'all',
+                            delivery_mode: 'all',
+                            instructor_id: 'all',
+                            state_id: 'all',
+                        })}
+                        className="text-muted-foreground hover:text-foreground h-10"
+                    >
+                        Clear
+                    </Button>
+                )}
+            </div>
+        </div>
     );
 
     return (
@@ -207,7 +284,7 @@ export default function CoursesPage() {
                     extraFilters={extraFilters}
                 />
 
-                {/* Course Builder Preview */}
+                {/* Course Overview */}
                 <Card className="mt-8 bg-card border-border">
                     <CardHeader>
                         <CardTitle>Course Overview</CardTitle>
