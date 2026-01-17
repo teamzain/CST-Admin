@@ -1,0 +1,58 @@
+import type { Instructor } from "@/repositories/instructors";
+
+export const dummyInstructors: Instructor[] = [
+    {
+        id: 1,
+        name: 'John Martinez',
+        email: 'john.m@example.com',
+        license: 'IL-ARM-001',
+        state: 'Illinois',
+        expiry: '2025-07-15',
+        status: 'active',
+    },
+    {
+        id: 2,
+        name: 'Sarah Chen',
+        email: 'sarah.c@example.com',
+        license: 'IL-ARM-002',
+        state: 'Illinois',
+        expiry: '2025-12-30',
+        status: 'active',
+    },
+    {
+        id: 3,
+        name: 'Mike Thompson',
+        email: 'mike.t@example.com',
+        license: 'TX-ARM-001',
+        state: 'Texas',
+        expiry: '2025-08-20',
+        status: 'active',
+    },
+    {
+        id: 4,
+        name: 'Lisa Garcia',
+        email: 'lisa.g@example.com',
+        license: 'CA-ARM-001',
+        state: 'California',
+        expiry: '2024-06-10',
+        status: 'expired',
+    },
+    {
+        id: 5,
+        name: 'Robert Johnson',
+        email: 'robert.j@example.com',
+        license: 'NY-ARM-001',
+        state: 'New York',
+        expiry: '2024-03-15',
+        status: 'expired',
+    },
+    {
+        id: 6,
+        name: 'Emily Wilson',
+        email: 'emily.w@example.com',
+        license: 'FL-ARM-001',
+        state: 'Florida',
+        expiry: '2025-11-25',
+        status: 'pending',
+    },
+];

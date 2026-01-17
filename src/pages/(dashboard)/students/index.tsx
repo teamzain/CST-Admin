@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/shared/DataTable';
 import { type ColumnDef } from '@/components/shared/DataTable';
 import { UsersFilters } from '@/components/users/users-filters';
-import { DateRangePicker } from '@/components/users/date-range-picker';
+import { DateRangePicker } from '@/components/shared/date-range-picker';
 import { getUserColumns } from '@/components/users/user-columns';
 import { dummyUsers } from '@/components/users/dummy-users';
 import type { User } from '@/repositories/users/types';

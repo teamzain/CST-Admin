@@ -5,16 +5,14 @@ import { useState } from 'react';
 import {
     BarChart3,
     BookOpen,
-    Users,
-    Briefcase,
     Calendar,
     FileText,
     LogOut,
     Settings,
-    Shield,
     ChevronDown,
     Menu,
     MapPin,
+    UserCog
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import clsx from 'clsx';
@@ -56,30 +54,22 @@ export function Sidebar({ open, toggleSidebar }: SidebarProps) {
             ],
         },
         {
-            href: '/students',
-            icon: Users,
-            label: 'Students',
+            href: '/user-management',
+            icon: UserCog,
+            label: 'User Management',
             subItems: [
-                { href: '/students', label: 'All Students' },
-                { href: '/students/create', label: 'Create Student' },
-            ],
-        },
-        {
-            href: '/instructors',
-            icon: Shield,
-            label: 'Instructors',
-            subItems: [
-                { href: '/instructors', label: 'All Instructors' },
-                { href: '/instructors/create', label: 'Create Instructor' },
-            ],
-        },
-        {
-            href: '/employers',
-            icon: Briefcase,
-            label: 'Employers',
-            subItems: [
-                { href: '/employers', label: 'All Employers' },
-                { href: '/employers/create', label: 'Create Employer' },
+                {
+                    href: '/students',
+                    label: 'Students',
+                },
+                {
+                    href: '/instructors',
+                    label: 'Instructors',
+                },
+                {
+                    href: '/employers',
+                    label: 'Employers',
+                },
             ],
         },
         {
