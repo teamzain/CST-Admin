@@ -11,6 +11,9 @@ import CourseDetailsPage from '@/pages/(dashboard)/courses/[id]';
 import InstructorsPage from '@/pages/(dashboard)/instructors';
 import EmployersPage from '@/pages/(dashboard)/employers';
 import StudentsPage from '@/pages/(dashboard)/students';
+import StudentDetailsPage from '@/pages/(dashboard)/students/[id]';
+import CreateInstructorPage from '@/pages/(dashboard)/instructors/create';
+import InstructorDetailsPage from '@/pages/(dashboard)/instructors/[id]';
 import AllQuizzesPage from '@/pages/(dashboard)/quizzes';
 import QuizDetailsPage from '@/pages/(dashboard)/quizzes/quiz-details';
 import AllLessonsPage from '@/pages/(dashboard)/lessons';
@@ -58,12 +61,24 @@ export const dashboardRoutes: RouteObject[] = [
                         element: <InstructorsPage />,
                     },
                     {
+                        path: '/instructors/:id',
+                        element: <InstructorDetailsPage />,
+                    },
+                    {
+                        path: '/instructors/create',
+                        element: <CreateInstructorPage />,
+                    },
+                    {
                         path: '/employers',
                         element: <EmployersPage />,
                     },
                     {
                         path: '/students',
                         element: <StudentsPage />,
+                    },
+                    {
+                        path: '/students/:id',
+                        element: <StudentDetailsPage />,
                     },
                     {
                         path: '/quizzes',

@@ -1,88 +1,73 @@
-
 import { Home, ArrowLeft, Ghost } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate, type To } from 'react-router-dom';
 
 export default function NotFoundPage() {
-
     const navigate = useNavigate();
 
-    const handleGoBack = () => {
-        navigate(-1);
-    };
-
-    const handleGoHome = () => {
-        navigate('/');
-    };
-
-    const handleNavigate = (path: To) => {
-        navigate(path);
-    };
+    const handleNavigate = (to: To) => navigate(to);
 
     return (
-        <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
-            {/* Animated background elements */}
-            <div className="absolute inset-0 overflow-hidden">
-                <div className="absolute w-96 h-96 bg-purple-500/20 rounded-full blur-3xl -top-48 -left-48 animate-pulse"></div>
-                <div className="absolute w-96 h-96 bg-blue-500/20 rounded-full blur-3xl -bottom-48 -right-48 animate-pulse delay-700"></div>
+        <div className="relative min-h-screen flex items-center justify-center bg-background text-foreground overflow-hidden px-4">
+            {/* Background effects */}
+            <div className="pointer-events-none absolute inset-0">
+                <div className="absolute -top-40 -left-40 h-96 w-96 rounded-full bg-purple-500/20 blur-3xl dark:bg-purple-500/30" />
+                <div className="absolute -bottom-40 -right-40 h-96 w-96 rounded-full bg-blue-500/20 blur-3xl dark:bg-blue-500/30" />
             </div>
 
             {/* Content */}
-            <div className="relative z-10 max-w-2xl w-full text-center space-y-8">
-                {/* Ghost Icon with animation */}
+            <div className="relative z-10 max-w-xl w-full text-center space-y-8">
+                {/* Icon */}
                 <div className="flex justify-center">
                     <div className="relative">
-                        <Ghost
-                            className="w-32 h-32 text-purple-400 animate-bounce"
-                            strokeWidth={1.5}
-                        />
-                        <div className="absolute inset-0 bg-purple-500/30 blur-2xl rounded-full"></div>
+                        <Ghost className="h-28 w-28 text-primary animate-bounce" />
+                        <div className="absolute inset-0 rounded-full blur-2xl bg-primary/20 dark:bg-primary/30" />
                     </div>
                 </div>
 
-                {/* 404 Text */}
-                <div className="space-y-4">
-                    <h1 className="text-9xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 animate-pulse">
+                {/* Text */}
+                <div className="space-y-3">
+                    <h1 className="text-8xl font-extrabold bg-gradient-to-r from-primary via-pink-500 to-purple-500 bg-clip-text text-transparent">
                         404
                     </h1>
-                    <div className="space-y-2">
-                        <h2 className="text-3xl md:text-4xl font-bold text-white">
-                            Oops! Page Not Found
-                        </h2>
-                        <p className="text-lg text-gray-300 max-w-md mx-auto">
-                            The page you're looking for seems to have wandered
-                            off into the digital void. Let's get you back on
-                            track!
-                        </p>
-                    </div>
+
+                    <h2 className="text-3xl font-bold">Page not found</h2>
+
+                    <p className="mx-auto max-w-md text-muted-foreground">
+                        The page you’re looking for doesn’t exist or was moved.
+                        Let’s get you back to something useful.
+                    </p>
                 </div>
 
-                {/* Action Buttons */}
-                <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
+                {/* Actions */}
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
                     <Button
-                        onClick={handleGoBack}
                         variant="outline"
                         size="lg"
-                        className="bg-white/10 backdrop-blur-sm border-white/20 text-white hover:bg-white/20 hover:text-white transition-all duration-300 group"
+                        onClick={() => navigate(-1)}
+                        className="group"
                     >
-                        <ArrowLeft className="mr-2 h-5 w-5 group-hover:-translate-x-1 transition-transform" />
-                        Go Back
+                        <ArrowLeft className="mr-2 h-4 w-4 transition-transform group-hover:-translate-x-1" />
+                        Go back
                     </Button>
 
                     <Button
-                        onClick={handleGoHome}
                         size="lg"
-                        className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white border-0 transition-all duration-300 shadow-lg shadow-purple-500/50 hover:shadow-purple-500/75 group"
+                        onClick={() => handleNavigate('/')}
+                        className="group shadow-lg dark:shadow-primary/40"
                     >
-                        <Home className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" />
-                        Back to Home
+                        <Home className="mr-2 h-4 w-4 transition-transform group-hover:scale-110" />
+                        Home
                     </Button>
                 </div>
 
-                {/* Helpful Links */}
-                <div className="pt-8 border-t border-white/10">
-                    <p className="text-sm text-gray-400 mb-4">Quick Links:</p>
-                    <div className="flex flex-wrap gap-3 justify-center">
+                {/* Links */}
+                <div className="pt-6 border-t border-border">
+                    <p className="mb-3 text-sm text-muted-foreground">
+                        Quick links
+                    </p>
+
+                    <div className="flex flex-wrap justify-center gap-4">
                         {[
                             { name: 'Dashboard', path: '/' },
                             { name: 'Courses', path: '/courses' },
@@ -92,7 +77,7 @@ export default function NotFoundPage() {
                             <button
                                 key={link.path}
                                 onClick={() => handleNavigate(link.path)}
-                                className="text-sm text-purple-300 hover:text-purple-100 underline underline-offset-4 hover:underline-offset-8 transition-all duration-200"
+                                className="text-sm font-medium text-primary underline-offset-4 hover:underline"
                             >
                                 {link.name}
                             </button>

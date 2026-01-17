@@ -1,213 +1,110 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Plus, AlertTriangle } from 'lucide-react';
-import { DataTable } from '@/components/shared/data-table';
-import { InstructorModal } from './instructor-modal';
-
-interface Instructor {
-    id: number;
-    name: string;
-    email: string;
-    license: string;
-    state: string;
-    expiry: string;
-    status: 'active' | 'expired' | 'pending';
-}
-
-const initialInstructors: Instructor[] = [
-    {
-        id: 1,
-        name: 'John Martinez',
-        email: 'john.m@example.com',
-        license: 'IL-ARM-001',
-        state: 'Illinois',
-        expiry: '2025-07-15',
-        status: 'active',
-    },
-    {
-        id: 2,
-        name: 'Sarah Chen',
-        email: 'sarah.c@example.com',
-        license: 'IL-ARM-002',
-        state: 'Illinois',
-        expiry: '2025-12-30',
-        status: 'active',
-    },
-    {
-        id: 3,
-        name: 'Mike Thompson',
-        email: 'mike.t@example.com',
-        license: 'TX-ARM-001',
-        state: 'Texas',
-        expiry: '2025-08-20',
-        status: 'active',
-    },
-    {
-        id: 4,
-        name: 'Lisa Garcia',
-        email: 'lisa.g@example.com',
-        license: 'CA-ARM-001',
-        state: 'California',
-        expiry: '2024-06-10',
-        status: 'expired',
-    },
-];
+import { DataTable } from '@/components/shared/DataTable';
+import { type ColumnDef } from '@/components/shared/DataTable';
+import { InstructorsFilters } from '@/components/instructors/instructors-filters';
+import { DateRangePicker } from '@/components/shared/date-range-picker';
+import { getInstructorColumns } from '@/components/instructors/instructor-columns';
+import { dummyInstructors } from '@/components/instructors/dummy-instructors';
+import type { Instructor } from '@/repositories/instructors';
+import { useNavigate } from 'react-router-dom';
 
 export default function InstructorsPage() {
-    const [instructors, setInstructors] =
-        useState<Instructor[]>(initialInstructors);
-    const [modalOpen, setModalOpen] = useState(false);
-    const [selectedInstructor, setSelectedInstructor] = useState<
-        Instructor | undefined
-    >();
+    const router = useNavigate();
+    const [instructors] = useState<Instructor[]>(dummyInstructors);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [selectedInstructors, setSelectedInstructors] = useState<
+        Instructor[]
+    >([]);
+    const [stateFilter, setStateFilter] = useState<string>('all');
+    const [statusFilter, setStatusFilter] = useState<string>('All Status');
+    const [dateModalOpen, setDateModalOpen] = useState(false);
 
-    const handleCreateClick = () => {
-        setSelectedInstructor(undefined);
-        setModalOpen(true);
-    };
+    // Filter instructors based on state and status
+    const filteredInstructors = useMemo(() => {
+        return instructors.filter((instructor) => {
+            const matchesState =
+                stateFilter === 'all' || instructor.state === stateFilter;
+            const matchesStatus =
+                statusFilter === 'All Status' ||
+                instructor.status.toLowerCase() === statusFilter.toLowerCase();
 
-    const handleEditClick = (instructor: Instructor) => {
-        setSelectedInstructor(instructor);
-        setModalOpen(true);
-    };
+            return matchesState && matchesStatus;
+        });
+    }, [instructors, stateFilter, statusFilter]);
 
-    const handleDeleteClick = (instructor: Instructor) => {
-        if (window.confirm(`Delete instructor "${instructor.name}"?`)) {
-            setInstructors(instructors.filter((i) => i.id !== instructor.id));
-        }
-    };
-
-    const handleSaveInstructor = (
-        instructorData: Omit<Instructor, 'id'> & { id?: number }
-    ) => {
-        if (instructorData.id) {
-            setInstructors(
-                instructors.map((i) =>
-                    i.id === instructorData.id
-                        ? { ...instructorData, id: instructorData.id }
-                        : i
-                )
-            );
-        } else {
-            const newId = Math.max(...instructors.map((i) => i.id), 0) + 1;
-            setInstructors([...instructors, { ...instructorData, id: newId }]);
-        }
-    };
-
-    const getDaysLeft = (expiry: string) => {
-        const expiryDate = new Date(expiry);
-        const today = new Date();
-        const daysLeft = Math.ceil(
-            (expiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+    // Bulk actions handler
+    const handleBulkAction = (action: string) => {
+        console.log(`Bulk action: ${action}`, selectedInstructors);
+        alert(
+            `${action} will be performed on ${selectedInstructors.length} instructor(s)`
         );
-        return daysLeft;
     };
 
-    const columns = [
-        {
-            key: 'name' as const,
-            label: 'Name',
-            sortable: true,
-            filterable: true,
-        },
-        {
-            key: 'license' as const,
-            label: 'License',
-            sortable: true,
-        },
-        {
-            key: 'state' as const,
-            label: 'State',
-            sortable: true,
-            filterable: true,
-        },
-        {
-            key: 'expiry' as const,
-            label: 'License Expiry',
-            sortable: true,
-        },
-        {
-            key: 'status' as const,
-            label: 'Status',
-            sortable: true,
-            render: (
-                value: 'active' | 'expired' | 'pending',
-                row: Instructor
-            ) => {
-                const daysLeft = getDaysLeft(row.expiry);
-                return (
-                    <div className="flex items-center gap-2">
-                        {daysLeft > 0 && daysLeft <= 7 && (
-                            <AlertTriangle className="w-4 h-4 text-yellow-500" />
-                        )}
-                        <Badge
-                            variant={
-                                value === 'active'
-                                    ? 'default'
-                                    : value === 'expired'
-                                    ? 'destructive'
-                                    : 'secondary'
-                            }
-                        >
-                            {value === 'expired'
-                                ? 'Expired'
-                                : value.charAt(0).toUpperCase() +
-                                  value.slice(1)}
-                        </Badge>
-                        {daysLeft > 0 && daysLeft <= 7 && (
-                            <span className="text-xs text-yellow-500">
-                                {daysLeft} days left
-                            </span>
-                        )}
-                    </div>
-                );
-            },
-        },
-    ];
+    // Date filter handler
+    const handleDateApply = (startDate: string, endDate: string) => {
+        console.log('Date filter applied:', { startDate, endDate });
+        // Implement date filtering logic here
+    };
+
+    const columns: ColumnDef<Instructor>[] = getInstructorColumns();
 
     return (
-        <div className="flex">
-            <div className="flex-1 bg-background">
-                <div className="p-8">
-                    <div className="flex justify-between items-center mb-8">
-                        <div>
-                            <h1 className="text-3xl font-bold text-foreground">
-                                Instructors
-                            </h1>
-                            <p className="text-muted-foreground mt-2">
-                                Manage instructors and certifications
-                            </p>
-                        </div>
-                        <Button
-                            onClick={handleCreateClick}
-                            className="bg-primary hover:bg-primary/90 gap-2"
-                        >
-                            <Plus className="w-4 h-4" />
-                            Add Instructor
-                        </Button>
+        <div className="min-h-screen bg-gray-50 p-4 md:p-6">
+            <div className="mx-auto max-w-400">
+                {/* Header */}
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                    <div>
+                        <h1 className="text-2xl md:text-3xl font-semibold text-gray-900">
+                            All Instructors
+                        </h1>
+                        <p className="text-sm text-gray-600 mt-1">
+                            {filteredInstructors.length} Instructors Found
+                        </p>
                     </div>
+                    <Button
+                        className="bg-primary hover:bg-primary/90 text-secondary font-medium w-full sm:w-auto"
+                        onClick={() => router('/instructors/create')}
+                    >
+                        + Add Instructor
+                    </Button>
+                </div>
 
-                    {/* Instructors Table */}
+                {/* Filters */}
+                <InstructorsFilters
+                    searchTerm={searchTerm}
+                    onSearchChange={setSearchTerm}
+                    stateFilter={stateFilter}
+                    onStateChange={setStateFilter}
+                    statusFilter={statusFilter}
+                    onStatusChange={setStatusFilter}
+                    onDateFilterClick={() => setDateModalOpen(true)}
+                    selectedCount={selectedInstructors.length}
+                    onBulkAction={handleBulkAction}
+                />
+
+                {/* Data Table */}
+                <div className="overflow-x-auto">
                     <DataTable
-                        data={instructors}
                         columns={columns}
-                        onEdit={handleEditClick}
-                        onDelete={handleDeleteClick}
-                        searchPlaceholder="Search instructors..."
+                        data={filteredInstructors}
                         pageSize={10}
+                        enableRowSelection={true}
+                        onRowSelectionChange={setSelectedInstructors}
+                        searchColumn="name"
+                        searchValue={searchTerm}
                     />
                 </div>
-            </div>
 
-            <InstructorModal
-                open={modalOpen}
-                onOpenChange={setModalOpen}
-                instructor={selectedInstructor}
-                onSave={handleSaveInstructor}
-            />
+                {/* Date Range Picker Modal */}
+                <DateRangePicker
+                    open={dateModalOpen}
+                    onOpenChange={setDateModalOpen}
+                    onApply={handleDateApply}
+                />
+            </div>
         </div>
     );
 }

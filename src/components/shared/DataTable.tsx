@@ -180,15 +180,6 @@ export function DataTable<TData, TValue>({
 
             {/* Pagination */}
             <div className="flex items-center justify-between px-2">
-                <div className="text-sm text-gray-600">
-                    {enableRowSelection && (
-                        <>
-                            {table.getFilteredSelectedRowModel().rows.length} of{' '}
-                            {table.getFilteredRowModel().rows.length} row(s)
-                            selected
-                        </>
-                    )}
-                </div>
                 <div className="flex items-center gap-2">
                     <Button
                         variant="outline"
@@ -198,10 +189,6 @@ export function DataTable<TData, TValue>({
                     >
                         Previous
                     </Button>
-                    <div className="text-sm text-gray-600">
-                        Page {table.getState().pagination.pageIndex + 1} of{' '}
-                        {table.getPageCount()}
-                    </div>
                     <Button
                         variant="outline"
                         size="sm"
@@ -210,6 +197,12 @@ export function DataTable<TData, TValue>({
                     >
                         Next
                     </Button>
+                </div>
+                <div className="text-sm text-gray-600">
+                    <div className="text-sm text-gray-600">
+                        Page <b>{table.getState().pagination.pageIndex + 1}</b>{' '}
+                        of {table.getPageCount()}
+                    </div>
                 </div>
             </div>
         </div>

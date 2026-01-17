@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { MoreVertical } from 'lucide-react';
 import type { User } from '@/repositories/users/types';
+import { Link } from 'react-router-dom';
 
 const getStatusColor = (status: string) => {
     switch (status) {
@@ -102,7 +103,11 @@ export const getUserColumns = (): ColumnDef<User>[] => [
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                    <DropdownMenuItem>View Details</DropdownMenuItem>
+                    <DropdownMenuItem>
+                        <Link to={`/students/${row.original.id}`}>
+                        View Details
+                        </Link>
+                    </DropdownMenuItem>
                     <DropdownMenuItem>Edit User</DropdownMenuItem>
                     <DropdownMenuItem>Send Email</DropdownMenuItem>
                     <DropdownMenuItem className="text-red-600">
