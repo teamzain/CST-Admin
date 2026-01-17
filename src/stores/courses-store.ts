@@ -41,12 +41,15 @@ export interface Course {
     instructor?: {
         id: number;
         name: string;
+        avatar?: string;
     };
     state?: {
         id: number;
         name: string;
+        code?: string;
     };
     enrolled_students?: number;
+    modules?: any[];
 }
 
 // Dummy data for states
@@ -147,6 +150,64 @@ export const initialCourses: Course[] = [
         instructor: dummyInstructors[0],
         state: dummyStates[0],
         enrolled_students: 45,
+        modules: [
+            {
+                id: 1,
+                title: 'Module 1: Introduction to Security',
+                description: 'Fundamental concepts and principles',
+                order_index: 0,
+                lessons: [
+                    {
+                        id: 1,
+                        title: 'Welcome to Security Training',
+                        content_type: 'video',
+                        duration_min: 15,
+                        order_index: 0,
+                    },
+                    {
+                        id: 2,
+                        title: 'Security Fundamentals PDF',
+                        content_type: 'pdf',
+                        duration_min: 30,
+                        order_index: 1,
+                    },
+                ],
+                sessions: [
+                    {
+                        id: 1,
+                        title: 'Live Orientation Session',
+                        start_time: new Date('2024-01-16T10:00:00').toISOString(),
+                        end_time: new Date('2024-01-16T11:00:00').toISOString(),
+                        session_type: 'LIVE',
+                        meeting_url: 'https://zoom.us/j/123456789',
+                        order_index: 2,
+                    }
+                ],
+                quizzes: [
+                    {
+                        id: 1,
+                        title: 'Module 1 Quiz',
+                        passing_score: 70,
+                        is_final: false,
+                        order_index: 3,
+                        questions: [
+                            {
+                                id: 1,
+                                text: 'What is the primary role of a security guard?',
+                                options: [
+                                    { id: 1, text: 'To enforce laws' },
+                                    { id: 2, text: 'To protect people and property' },
+                                    { id: 3, text: 'To arrest criminals' }
+                                ],
+                                correct_answers: [2],
+                                points: 10,
+                                order_index: 0
+                            }
+                        ]
+                    },
+                ],
+            },
+        ],
     },
     {
         id: 2,

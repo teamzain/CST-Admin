@@ -43,7 +43,7 @@ export function ModuleModal({ isOpen, onClose, onSave, module }: ModuleModalProp
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-[500px]">
+            <DialogContent className="sm:max-w-[500px]" showCloseButton={false}>
                 <form onSubmit={handleSubmit}>
                     <DialogHeader>
                         <DialogTitle>{module ? 'Edit Module' : 'Create Module'}</DialogTitle>

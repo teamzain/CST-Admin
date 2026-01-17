@@ -15,20 +15,12 @@ import {
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface Column<T> {
     key: keyof T;
     label: string;
     sortable?: boolean;
-    filterable?: boolean;
     render?: (value: any, row: T) => React.ReactNode;
 }
 
@@ -39,6 +31,8 @@ interface DataTableClickableProps<T extends { id: number | string }> {
     searchPlaceholder?: string;
     pageSize?: number;
     extraFilters?: React.ReactNode;
+    emptyState?: React.ReactNode;
+    emptyStateImage?: string;
 }
 
 export function DataTableClickable<T extends { id: number | string }>({
@@ -48,6 +42,8 @@ export function DataTableClickable<T extends { id: number | string }>({
     searchPlaceholder = 'Search...',
     pageSize = 10,
     extraFilters,
+    emptyState,
+    emptyStateImage,
 }: DataTableClickableProps<T>) {
     const [searchTerm, setSearchTerm] = useState('');
     const [sortConfig, setSortConfig] = useState<{
@@ -55,24 +51,16 @@ export function DataTableClickable<T extends { id: number | string }>({
         direction: 'asc' | 'desc';
     } | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
-    const [filteredColumn, setFilteredColumn] = useState<string>('all');
 
     // Filter data
     const filteredData = useMemo(() => {
         return data.filter((item) => {
-            const matchesSearch = columns.some((col) => {
+            return columns.some((col) => {
                 const value = String(item[col.key]).toLowerCase();
                 return value.includes(searchTerm.toLowerCase());
             });
-
-            const matchesFilter =
-                filteredColumn === 'all'
-                    ? true
-                    : String(item[filteredColumn as keyof T]).includes('');
-
-            return matchesSearch && matchesFilter;
         });
-    }, [data, searchTerm, filteredColumn, columns]);
+    }, [data, searchTerm, columns]);
 
     // Sort data
     const sortedData = useMemo(() => {
@@ -112,40 +100,24 @@ export function DataTableClickable<T extends { id: number | string }>({
     return (
         <div className="space-y-4">
             {/* Search and Filter Controls */}
-            <div className="flex gap-4 flex-wrap items-center">
-                <Input
-                    placeholder={searchPlaceholder}
-                    value={searchTerm}
-                    onChange={(e) => {
-                        setSearchTerm(e.target.value);
-                        setCurrentPage(1);
-                    }}
-                    className="flex-1 min-w-64 bg-input border-border"
-                />
-                {extraFilters}
-                {columns.some((col) => col.filterable) && (
-                    <Select
-                        value={filteredColumn}
-                        onValueChange={setFilteredColumn}
-                    >
-                        <SelectTrigger className="w-48 bg-input border-border">
-                            <SelectValue placeholder="Filter by..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">All</SelectItem>
-                            {columns
-                                .filter((col) => col.filterable)
-                                .map((col) => (
-                                    <SelectItem
-                                        key={String(col.key)}
-                                        value={String(col.key)}
-                                    >
-                                        {col.label}
-                                    </SelectItem>
-                                ))}
-                        </SelectContent>
-                    </Select>
-                )}
+            <div className="flex flex-col gap-4">
+                <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
+                    <div className="relative flex-1 w-full">
+                        <Input
+                            placeholder={searchPlaceholder}
+                            value={searchTerm}
+                            onChange={(e) => {
+                                setSearchTerm(e.target.value);
+                                setCurrentPage(1);
+                            }}
+                            className="w-full bg-input border-border pl-4 h-10"
+                        />
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
+                        {extraFilters}
+                    </div>
+                </div>
             </div>
 
             {/* Table */}
@@ -172,7 +144,7 @@ export function DataTableClickable<T extends { id: number | string }>({
                                                 sortConfig?.key === col.key && (
                                                     <span className="text-xs">
                                                         {sortConfig.direction ===
-                                                        'asc'
+                                                            'asc'
                                                             ? '↑'
                                                             : '↓'}
                                                     </span>
@@ -194,9 +166,9 @@ export function DataTableClickable<T extends { id: number | string }>({
                                             <TableCell key={String(col.key)}>
                                                 {col.render
                                                     ? col.render(
-                                                          row[col.key],
-                                                          row
-                                                      )
+                                                        row[col.key],
+                                                        row
+                                                    )
                                                     : String(row[col.key])}
                                             </TableCell>
                                         ))}
@@ -206,9 +178,27 @@ export function DataTableClickable<T extends { id: number | string }>({
                                 <TableRow>
                                     <TableCell
                                         colSpan={columns.length}
-                                        className="text-center text-muted-foreground py-8"
+                                        className="text-center text-muted-foreground py-12"
                                     >
-                                        No data found
+                                        {extraFilters || searchTerm ? (
+                                            'No matching results'
+                                        ) : (
+                                            <div className="flex flex-col items-center justify-center">
+                                                {emptyStateImage && (
+                                                    <img
+                                                        src={emptyStateImage}
+                                                        alt="No data"
+                                                        className="w-64 h-auto mb-4 opacity-80"
+                                                    />
+                                                )}
+                                                <div className="text-lg font-medium text-muted-foreground">
+                                                    {emptyState || 'No data found'}
+                                                </div>
+                                                <p className="text-sm text-muted-foreground mt-1">
+                                                    {searchTerm ? 'Try adjusting your search or filters' : 'Create items to see them here.'}
+                                                </p>
+                                            </div>
+                                        )}
                                     </TableCell>
                                 </TableRow>
                             )}

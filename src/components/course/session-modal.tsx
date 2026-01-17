@@ -63,7 +63,7 @@ export function SessionModal({ isOpen, onClose, onSave, session }: SessionModalP
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-[500px]">
+            <DialogContent className="sm:max-w-[500px]" showCloseButton={false}>
                 <form onSubmit={handleSubmit}>
                     <DialogHeader>
                         <DialogTitle>{session ? 'Edit Session' : 'Add Session'}</DialogTitle>
@@ -135,13 +135,13 @@ export function SessionModal({ isOpen, onClose, onSave, session }: SessionModalP
                                 <Label htmlFor="meeting-url">Meeting URL</Label>
                                 <Input
                                     id="meeting-url"
-                                    value={formData.meeting_url || (session ? '' : 'Will be generated automatically')}
-                                    readOnly
-                                    disabled
-                                    className="bg-muted text-muted-foreground border-input"
+                                    value={formData.meeting_url || ''}
+                                    onChange={(e) => setFormData({ ...formData, meeting_url: e.target.value })}
+                                    className="bg-background border-input"
+                                    placeholder="https://meet.google.com/..."
                                 />
                                 <p className="text-xs text-muted-foreground">
-                                    System automatically generates Google Meet link upon creation.
+                                    System automatically generates Google Meet link upon creation if left empty.
                                 </p>
                             </div>
                         )}

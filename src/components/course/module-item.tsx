@@ -39,12 +39,18 @@ export interface Session {
     location?: string;
     meeting_url?: string;
     order_index: number;
+    description?: string;
+}
+
+export interface Option {
+    id: number;
+    text: string;
 }
 
 export interface Question {
     id: number;
     text: string;
-    options: { id: number; text: string }[];
+    options: Option[];
     correct_answers: number[];
     points: number;
     order_index: number;

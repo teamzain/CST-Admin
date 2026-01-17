@@ -178,7 +178,7 @@ export function LessonModal({ isOpen, onClose, onSave, lesson, courseId, moduleI
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
+            <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto" showCloseButton={false}>
                 <form onSubmit={handleSubmit}>
                     <DialogHeader>
                         <DialogTitle>{lesson ? 'Edit Lesson' : 'Add Lesson'}</DialogTitle>
