@@ -124,4 +124,17 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Hide scrollbars but keep functionality */
+  * {
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE and Edge */
+  }
+
+  /* Chrome, Safari, and Opera */
+  *::-webkit-scrollbar {
+    display: none;
+  }
 }
