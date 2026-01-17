@@ -108,7 +108,12 @@ export function Sidebar({ open, toggleSidebar }: SidebarProps) {
                     {open && (
                         <div className="flex items-center gap-2">
                             <div className="w-12 h-8 rounded-lg flex items-center justify-center">
-                                <img src="logo.png" alt="Logo" />
+                                <img
+                                    src="/logo.png"
+                                    alt="Logo"
+                                    className="w-full h-full object-contain"
+                                    loading="eager"
+                                />
                             </div>
                         </div>
                     )}
@@ -148,7 +153,7 @@ export function Sidebar({ open, toggleSidebar }: SidebarProps) {
                                         />
                                     )}
                                 </Button>
-                                
+
                                 {open && isOpen && (
                                     <div className="ml-4 pl-4 border-l border-sidebar-border space-y-1 mt-1">
                                         {item.subItems.map((subItem) => (
