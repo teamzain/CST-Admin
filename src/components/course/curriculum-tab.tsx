@@ -3,7 +3,6 @@ import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import type { DropResult } from '@hello-pangea/dnd';
 import { ModuleItem, type Module, type Lesson, type Session, type Quiz } from './module-item';
@@ -88,31 +87,66 @@ export function CurriculumTab({ courseId }: CurriculumTabProps) {
         if (!destination) return;
         if (source.droppableId === destination.droppableId && source.index === destination.index) return;
 
-        if (type === 'MODULE') {
-            const reorderedModules = reorder(modules, source.index, destination.index);
-            setModules(reorderedModules.map((m, i) => ({ ...m, order_index: i })));
-            return;
-        }
+        setModules(prevModules => {
+            const newModules = [...prevModules];
 
-        const sourceModuleId = parseInt(source.droppableId.split('-')[1]);
-        const destModuleId = parseInt(destination.droppableId.split('-')[1]);
+            if (type === 'MODULE') {
+                const reordered = reorder(newModules, source.index, destination.index);
+                return reordered.map((m, i) => ({ ...m, order_index: i }));
+            }
 
-        if (sourceModuleId === destModuleId) {
-            setModules(modules.map(module => {
-                if (module.id === sourceModuleId) {
-                    let updatedModule = { ...module };
-                    if (type === 'LESSON') {
-                        updatedModule.lessons = reorder(module.lessons, source.index, destination.index).map((l, i) => ({ ...l, order_index: i }));
-                    } else if (type === 'SESSION') {
-                        updatedModule.sessions = reorder(module.sessions, source.index, destination.index).map((s, i) => ({ ...s, order_index: i }));
-                    } else if (type === 'QUIZ') {
-                        updatedModule.quizzes = reorder(module.quizzes, source.index, destination.index).map((q, i) => ({ ...q, order_index: i }));
-                    }
-                    return updatedModule;
+            if (type === 'MODULE_ITEM') {
+                const sourceModuleId = parseInt(source.droppableId.split('-')[2]);
+                const destModuleId = parseInt(destination.droppableId.split('-')[2]);
+
+                const sourceModuleIndex = newModules.findIndex(m => m.id === sourceModuleId);
+                const destModuleIndex = newModules.findIndex(m => m.id === destModuleId);
+
+                if (sourceModuleIndex === -1 || destModuleIndex === -1) return prevModules;
+
+                const sourceModule = { ...newModules[sourceModuleIndex] };
+
+                const getCombinedItems = (mod: any) => [
+                    ...mod.lessons.map((l: any) => ({ ...l, itemType: 'lesson' as const })),
+                    ...mod.sessions.map((s: any) => ({ ...s, itemType: 'session' as const })),
+                    ...mod.quizzes.map((q: any) => ({ ...q, itemType: 'quiz' as const })),
+                ].sort((a, b) => a.order_index - b.order_index);
+
+                const sourceItems = getCombinedItems(sourceModule);
+
+                if (sourceModuleId === destModuleId) {
+                    const reordered = reorder(sourceItems, source.index, destination.index);
+                    const updated = reordered.map((item, i) => ({ ...item, order_index: i }));
+
+                    sourceModule.lessons = updated.filter(i => i.itemType === 'lesson').map(({ itemType, ...rest }) => rest as any);
+                    sourceModule.sessions = updated.filter(i => i.itemType === 'session').map(({ itemType, ...rest }) => rest as any);
+                    sourceModule.quizzes = updated.filter(i => i.itemType === 'quiz').map(({ itemType, ...rest }) => rest as any);
+
+                    newModules[sourceModuleIndex] = sourceModule;
+                } else {
+                    const destModule = { ...newModules[destModuleIndex] };
+                    const destItems = getCombinedItems(destModule);
+                    const [removed] = sourceItems.splice(source.index, 1);
+                    destItems.splice(destination.index, 0, removed);
+
+                    const updatedSource = sourceItems.map((item, i) => ({ ...item, order_index: i }));
+                    const updatedDest = destItems.map((item, i) => ({ ...item, order_index: i }));
+
+                    sourceModule.lessons = updatedSource.filter(i => i.itemType === 'lesson').map(({ itemType, ...rest }) => rest as any);
+                    sourceModule.sessions = updatedSource.filter(i => i.itemType === 'session').map(({ itemType, ...rest }) => rest as any);
+                    sourceModule.quizzes = updatedSource.filter(i => i.itemType === 'quiz').map(({ itemType, ...rest }) => rest as any);
+
+                    destModule.lessons = updatedDest.filter(i => i.itemType === 'lesson').map(({ itemType, ...rest }) => rest as any);
+                    destModule.sessions = updatedDest.filter(i => i.itemType === 'session').map(({ itemType, ...rest }) => rest as any);
+                    destModule.quizzes = updatedDest.filter(i => i.itemType === 'quiz').map(({ itemType, ...rest }) => rest as any);
+
+                    newModules[sourceModuleIndex] = sourceModule;
+                    newModules[destModuleIndex] = destModule;
                 }
-                return module;
-            }));
-        }
+            }
+
+            return newModules;
+        });
     };
 
     const handleAddModule = () => {
@@ -256,21 +290,17 @@ export function CurriculumTab({ courseId }: CurriculumTabProps) {
 
     return (
         <div className="space-y-6">
-            <Card className="bg-card border-border">
-                <CardHeader>
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <CardTitle>Course Curriculum</CardTitle>
-                            <CardDescription>
-                                Organize your course content into modules. Drag and drop to reorder.
-                            </CardDescription>
-                        </div>
-                        <Button onClick={handleAddModule} className="gap-2 bg-primary hover:bg-primary/90">
-                            <Plus className="w-4 h-4" /> Add Module
-                        </Button>
-                    </div>
-                </CardHeader>
-            </Card>
+            <div className="flex items-center justify-between mb-6">
+                <div>
+                    <h2 className="text-xl font-semibold">Course Curriculum</h2>
+                    <p className="text-sm text-muted-foreground">
+                        Organize your course content into modules. Drag and drop to reorder.
+                    </p>
+                </div>
+                <Button onClick={handleAddModule} className="gap-2 bg-primary hover:bg-primary/90 text-black font-medium">
+                    <Plus className="w-4 h-4" /> Add Module
+                </Button>
+            </div>
 
             <DragDropContext onDragEnd={handleDragEnd}>
                 <Droppable droppableId="modules" type="MODULE">

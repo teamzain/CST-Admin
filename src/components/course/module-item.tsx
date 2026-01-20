@@ -178,18 +178,21 @@ export function ModuleItem({
             {/* Module Content */}
             {isExpanded && (
                 <div className="p-4 space-y-3">
-                    {/* Lessons Droppable */}
-                    <Droppable droppableId={`lessons-${module.id}`} type="LESSON">
+                    <Droppable droppableId={`module-items-${module.id}`} type="MODULE_ITEM">
                         {(provided, snapshot) => (
                             <div
                                 {...provided.droppableProps}
                                 ref={provided.innerRef}
                                 className={`space-y-2 ${snapshot.isDraggingOver ? 'bg-accent/10 rounded-lg p-2' : ''}`}
                             >
-                                {module.lessons.map((lesson, index) => (
+                                {[
+                                    ...module.lessons.map(l => ({ ...l, itemType: 'lesson' as const })),
+                                    ...module.sessions.map(s => ({ ...s, itemType: 'session' as const })),
+                                    ...module.quizzes.map(q => ({ ...q, itemType: 'quiz' as const })),
+                                ].sort((a, b) => a.order_index - b.order_index).map((item, index) => (
                                     <Draggable
-                                        key={lesson.id}
-                                        draggableId={`lesson-${lesson.id}`}
+                                        key={`${item.itemType}-${item.id}`}
+                                        draggableId={`${item.itemType}-${item.id}`}
                                         index={index}
                                     >
                                         {(provided, snapshot) => (
@@ -203,152 +206,30 @@ export function ModuleItem({
                                                 </div>
 
                                                 <div className="flex items-center gap-2 text-muted-foreground">
-                                                    {getContentIcon(lesson.content_type)}
+                                                    {item.itemType === 'lesson' && getContentIcon((item as Lesson).content_type)}
+                                                    {item.itemType === 'session' && ((item as Session).session_type === 'PHYSICAL' ? <MapPin className="w-4 h-4" /> : <Calendar className="w-4 h-4" />)}
+                                                    {item.itemType === 'quiz' && <HelpCircle className="w-4 h-4" />}
                                                 </div>
 
                                                 <div className="flex-1">
-                                                    <p className="font-medium text-sm">{lesson.title}</p>
+                                                    <p className="font-medium text-sm">{item.title}</p>
                                                     <div className="flex items-center gap-2 mt-1">
                                                         <Badge variant="outline" className="text-xs capitalize">
-                                                            {lesson.content_type}
+                                                            {item.itemType === 'lesson' ? (item as Lesson).content_type :
+                                                                item.itemType === 'session' ? (item as Session).session_type :
+                                                                    `Pass: ${(item as Quiz).passing_score}%`}
                                                         </Badge>
-                                                        {lesson.duration_min && (
+                                                        {item.itemType === 'lesson' && (item as Lesson).duration_min && (
                                                             <span className="text-xs text-muted-foreground">
-                                                                {lesson.duration_min} min
+                                                                {(item as Lesson).duration_min} min
                                                             </span>
                                                         )}
-                                                    </div>
-                                                </div>
-
-                                                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => onEditLesson(lesson)}
-                                                        className="h-7 w-7 p-0"
-                                                    >
-                                                        <Edit className="w-3.5 h-3.5" />
-                                                    </Button>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => onDeleteLesson(lesson.id)}
-                                                        className="h-7 w-7 p-0 text-destructive hover:text-destructive"
-                                                    >
-                                                        <Trash2 className="w-3.5 h-3.5" />
-                                                    </Button>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </Draggable>
-                                ))}
-                                {provided.placeholder}
-                            </div>
-                        )}
-                    </Droppable>
-
-                    {/* Sessions Droppable */}
-                    <Droppable droppableId={`sessions-${module.id}`} type="SESSION">
-                        {(provided, snapshot) => (
-                            <div
-                                {...provided.droppableProps}
-                                ref={provided.innerRef}
-                                className={`space-y-2 ${snapshot.isDraggingOver ? 'bg-accent/10 rounded-lg p-2' : ''}`}
-                            >
-                                {module.sessions.map((session, index) => (
-                                    <Draggable
-                                        key={session.id}
-                                        draggableId={`session-${session.id}`}
-                                        index={index}
-                                    >
-                                        {(provided, snapshot) => (
-                                            <div
-                                                ref={provided.innerRef}
-                                                {...provided.draggableProps}
-                                                className={`flex items-center gap-3 p-3 bg-background border border-border rounded-lg hover:border-primary/50 transition-all group ${snapshot.isDragging ? 'shadow-md' : ''}`}
-                                            >
-                                                <div {...provided.dragHandleProps} className="cursor-grab active:cursor-grabbing hover:bg-accent/50 p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <GripVertical className="w-4 h-4 text-muted-foreground" />
-                                                </div>
-
-                                                <div className="flex items-center gap-2 text-muted-foreground">
-                                                    {session.session_type === 'PHYSICAL' ? <MapPin className="w-4 h-4" /> : <Calendar className="w-4 h-4" />}
-                                                </div>
-
-                                                <div className="flex-1">
-                                                    <p className="font-medium text-sm">{session.title}</p>
-                                                    <div className="flex items-center gap-2 mt-1">
-                                                        <Badge variant="outline" className="text-xs capitalize">
-                                                            {session.session_type}
-                                                        </Badge>
-                                                        <span className="text-xs text-muted-foreground">
-                                                            {new Date(session.start_time).toLocaleDateString()}
-                                                        </span>
-                                                    </div>
-                                                </div>
-
-                                                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => onEditSession(session)}
-                                                        className="h-7 w-7 p-0"
-                                                    >
-                                                        <Edit className="w-3.5 h-3.5" />
-                                                    </Button>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => onDeleteSession(session.id)}
-                                                        className="h-7 w-7 p-0 text-destructive hover:text-destructive"
-                                                    >
-                                                        <Trash2 className="w-3.5 h-3.5" />
-                                                    </Button>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </Draggable>
-                                ))}
-                                {provided.placeholder}
-                            </div>
-                        )}
-                    </Droppable>
-
-                    {/* Quizzes Droppable */}
-                    <Droppable droppableId={`quizzes-${module.id}`} type="QUIZ">
-                        {(provided, snapshot) => (
-                            <div
-                                {...provided.droppableProps}
-                                ref={provided.innerRef}
-                                className={`space-y-2 ${snapshot.isDraggingOver ? 'bg-accent/10 rounded-lg p-2' : ''}`}
-                            >
-                                {module.quizzes.map((quiz, index) => (
-                                    <Draggable
-                                        key={quiz.id}
-                                        draggableId={`quiz-${quiz.id}`}
-                                        index={index}
-                                    >
-                                        {(provided, snapshot) => (
-                                            <div
-                                                ref={provided.innerRef}
-                                                {...provided.draggableProps}
-                                                className={`flex items-center gap-3 p-3 bg-background border border-border rounded-lg hover:border-primary/50 transition-all group ${snapshot.isDragging ? 'shadow-md' : ''}`}
-                                            >
-                                                <div {...provided.dragHandleProps} className="cursor-grab active:cursor-grabbing hover:bg-accent/50 p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <GripVertical className="w-4 h-4 text-muted-foreground" />
-                                                </div>
-
-                                                <div className="flex items-center gap-2 text-muted-foreground">
-                                                    <HelpCircle className="w-4 h-4" />
-                                                </div>
-
-                                                <div className="flex-1">
-                                                    <p className="font-medium text-sm">{quiz.title}</p>
-                                                    <div className="flex items-center gap-2 mt-1">
-                                                        <Badge variant="outline" className="text-xs">
-                                                            Pass: {quiz.passing_score}%
-                                                        </Badge>
-                                                        {quiz.is_final && (
+                                                        {item.itemType === 'session' && (
+                                                            <span className="text-xs text-muted-foreground">
+                                                                {new Date((item as Session).start_time).toLocaleDateString()}
+                                                            </span>
+                                                        )}
+                                                        {item.itemType === 'quiz' && (item as Quiz).is_final && (
                                                             <Badge variant="default" className="text-xs">
                                                                 Final Quiz
                                                             </Badge>
@@ -360,7 +241,11 @@ export function ModuleItem({
                                                     <Button
                                                         variant="ghost"
                                                         size="sm"
-                                                        onClick={() => onEditQuiz(quiz)}
+                                                        onClick={() => {
+                                                            if (item.itemType === 'lesson') onEditLesson(item as Lesson);
+                                                            else if (item.itemType === 'session') onEditSession(item as Session);
+                                                            else if (item.itemType === 'quiz') onEditQuiz(item as Quiz);
+                                                        }}
                                                         className="h-7 w-7 p-0"
                                                     >
                                                         <Edit className="w-3.5 h-3.5" />
@@ -368,7 +253,11 @@ export function ModuleItem({
                                                     <Button
                                                         variant="ghost"
                                                         size="sm"
-                                                        onClick={() => onDeleteQuiz(quiz.id)}
+                                                        onClick={() => {
+                                                            if (item.itemType === 'lesson') onDeleteLesson(item.id);
+                                                            else if (item.itemType === 'session') onDeleteSession(item.id);
+                                                            else if (item.itemType === 'quiz') onDeleteQuiz(item.id);
+                                                        }}
                                                         className="h-7 w-7 p-0 text-destructive hover:text-destructive"
                                                     >
                                                         <Trash2 className="w-3.5 h-3.5" />

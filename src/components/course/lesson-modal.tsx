@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
-import { Upload, FileText, Video, CheckCircle2, File as FileIcon, AlignLeft } from 'lucide-react';
+import { Upload, Video, AlignLeft, FileText } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
 // import axios from 'axios';
 import type { Lesson } from './module-item';
@@ -101,20 +101,6 @@ export function LessonModal({ isOpen, onClose, onSave, lesson, courseId, moduleI
         setUploadProgress(0);
 
         try {
-            // UNIFIED FLOW: Create Lesson -> Upload to Bunny -> Update Status
-            // This applies to both Video and PDF as per the backend response structure provided.
-
-            // 1. Create Lesson & Get Upload URL
-            // const createRes = await axios.post(`http://localhost:3012/api/course/${courseId}/lesson/video/initiate`, {
-            //     title: formData.title || file.name,
-            //     content_type: formData.content_type, // 'video' or 'pdf'
-            //     order_index: 1, // Should be calculated or passed
-            //     module_id: moduleId,
-            //     video: formData.content_type === 'video', // true for video, false for pdf
-            //     description: formData.description
-            // });
-            // const { lesson_id, upload_url, video_id } = createRes.data;
-
             // Simulate progress
             const interval = setInterval(() => {
                 setUploadProgress((prev) => {
@@ -126,25 +112,11 @@ export function LessonModal({ isOpen, onClose, onSave, lesson, courseId, moduleI
                 });
             }, 500);
 
-            // 2. Upload File to Bunny (PUT to the returned upload_url)
-            // await axios.put(upload_url, file, {
-            //     headers: { 
-            //         'Content-Type': file.type, // e.g., video/mp4 or application/pdf
-            //         'AccessKey': '...' // If required by the specific Bunny URL type, usually included in URL or header
-            //     }, 
-            // });
-
-            // 3. Update Status
-            // await axios.patch(`http://localhost:3012/api/course/lesson/${lesson_id}/video-status`);
-
             // Mock completion
             setTimeout(() => {
                 clearInterval(interval);
                 setUploadProgress(100);
                 setUploadStatus('success');
-
-                // Optional: Call onSave here if we want to close/update parent immediately
-                // onSave({ ...formData, id: lesson_id }, file); 
             }, 3000);
 
         } catch (error) {
@@ -152,7 +124,7 @@ export function LessonModal({ isOpen, onClose, onSave, lesson, courseId, moduleI
             setUploadStatus('error');
             setUploadProgress(0);
         }
-    }, [courseId, moduleId, formData.content_type, formData.title, formData.description]);
+    }, []);
 
     const { getRootProps, getInputProps, isDragActive } = useDropzone({
         onDrop,
@@ -198,7 +170,7 @@ export function LessonModal({ isOpen, onClose, onSave, lesson, courseId, moduleI
                                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                                     placeholder="e.g., Introduction to Firearms Safety"
                                     required
-                                    className="bg-background border-input"
+                                    className="bg-background border-border mt-2"
                                 />
                             </div>
                             {formData.content_type !== 'video' && (
@@ -211,7 +183,7 @@ export function LessonModal({ isOpen, onClose, onSave, lesson, courseId, moduleI
                                         onChange={(e) => setFormData({ ...formData, duration_min: parseInt(e.target.value) })}
                                         placeholder="30"
                                         min="0"
-                                        className="bg-background border-input"
+                                        className="bg-background border-border mt-2"
                                     />
                                 </div>
                             )}
@@ -226,7 +198,7 @@ export function LessonModal({ isOpen, onClose, onSave, lesson, courseId, moduleI
                                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                                 placeholder="Brief description of what this lesson covers..."
                                 rows={2}
-                                className="bg-background border-input resize-none"
+                                className="bg-background border-border mt-2 resize-none"
                             />
                         </div>
 
@@ -240,7 +212,7 @@ export function LessonModal({ isOpen, onClose, onSave, lesson, courseId, moduleI
                                     setUploadStatus('idle');
                                     setSelectedFile(null);
                                 }}
-                                className="w-full"
+                                className="w-full mt-2"
                             >
                                 <TabsList className="grid w-full grid-cols-3 bg-muted/50 p-1">
                                     <TabsTrigger value="video" className="data-[state=active]:bg-white data-[state=active]:shadow-sm">
@@ -252,24 +224,24 @@ export function LessonModal({ isOpen, onClose, onSave, lesson, courseId, moduleI
                                         Text
                                     </TabsTrigger>
                                     <TabsTrigger value="pdf" className="data-[state=active]:bg-white data-[state=active]:shadow-sm">
-                                        <FileIcon className="w-4 h-4 mr-2" />
+                                        <FileText className="w-4 h-4 mr-2" />
                                         PDF
                                     </TabsTrigger>
                                 </TabsList>
 
-                                <div className={`mt-6 border-2 border-dashed rounded-xl p-8 transition-colors ${isDragActive ? 'border-primary bg-primary/5' : 'border-slate-200 hover:bg-slate-50/50'}`}>
+                                <div className={`mt-6 border-2 border-dashed rounded-xl p-8 transition-colors ${isDragActive ? 'border-primary bg-primary/5' : 'border-border hover:bg-slate-50/50'}`}>
                                     <TabsContent value="video" className="mt-0">
                                         {uploadStatus === 'idle' ? (
                                             <div {...getRootProps()} className="flex flex-col items-center justify-center text-center cursor-pointer">
                                                 <input {...getInputProps()} />
-                                                <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-4">
-                                                    <Video className="w-6 h-6 text-slate-400" />
+                                                <div className="w-16 h-16 flex items-center justify-center mb-4">
+                                                    <img src="/course/video_upload.svg" alt="" className="w-full h-full" />
                                                 </div>
                                                 <h3 className="text-lg font-semibold mb-1">Upload Video</h3>
                                                 <p className="text-sm text-muted-foreground mb-6">
                                                     Click on the button to upload or drag and drop your file
                                                 </p>
-                                                <Button type="button" className="bg-yellow-400 hover:bg-yellow-500 text-black font-medium px-8">
+                                                <Button type="button" className="bg-primary hover:bg-primary/90 text-black font-medium px-8">
                                                     <Upload className="w-4 h-4 mr-2" />
                                                     Upload Video
                                                 </Button>
@@ -278,8 +250,8 @@ export function LessonModal({ isOpen, onClose, onSave, lesson, courseId, moduleI
                                             <div className="flex flex-col items-center justify-center py-4">
                                                 {uploadStatus === 'success' ? (
                                                     <>
-                                                        <div className="w-16 h-16 rounded-full bg-yellow-100 flex items-center justify-center mb-4 animate-in zoom-in duration-300">
-                                                            <CheckCircle2 className="w-8 h-8 text-yellow-600" />
+                                                        <div className="w-16 h-16 flex items-center justify-center mb-4 animate-in zoom-in duration-300">
+                                                            <img src="/course/upload_completed.svg" alt="" className="w-full h-full" />
                                                         </div>
                                                         <h3 className="text-lg font-semibold mb-2">Video Uploaded</h3>
                                                         <p className="text-sm text-muted-foreground">{uploadedFileName}</p>
@@ -299,14 +271,14 @@ export function LessonModal({ isOpen, onClose, onSave, lesson, courseId, moduleI
                                                 ) : (
                                                     <div className="w-full max-w-md space-y-4">
                                                         <div className="flex flex-col items-center mb-4">
-                                                            <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-3">
-                                                                <Upload className="w-6 h-6 text-slate-400 animate-bounce" />
+                                                            <div className="w-16 h-16 flex items-center justify-center mb-3">
+                                                                <img src="/course/uploading_document.svg" alt="" className="w-full h-full animate-pulse" />
                                                             </div>
                                                             <h3 className="font-medium">Uploading Document</h3>
                                                             <p className="text-sm text-muted-foreground">{uploadedFileName}</p>
                                                         </div>
                                                         <div className="flex items-center gap-3">
-                                                            <Progress value={uploadProgress} className="h-2 bg-slate-100 [&>div]:bg-yellow-400" />
+                                                            <Progress value={uploadProgress} className="h-2 bg-slate-100 [&>div]:bg-primary" />
                                                             <span className="text-sm font-medium w-10">{uploadProgress}%</span>
                                                         </div>
                                                     </div>
@@ -319,15 +291,15 @@ export function LessonModal({ isOpen, onClose, onSave, lesson, courseId, moduleI
                                         {uploadStatus === 'idle' ? (
                                             <div {...getRootProps()} className="flex flex-col items-center justify-center text-center cursor-pointer">
                                                 <input {...getInputProps()} />
-                                                <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-4">
-                                                    <FileText className="w-6 h-6 text-slate-400" />
+                                                <div className="w-16 h-16 flex items-center justify-center mb-4">
+                                                    <img src="/course/pdf_upload.svg" alt="" className="w-full h-full" />
                                                 </div>
                                                 <h3 className="text-lg font-semibold mb-1">PDF</h3>
                                                 <p className="text-sm text-muted-foreground mb-1">Upload PDF file</p>
                                                 <p className="text-xs text-muted-foreground mb-6">
                                                     Click on the button to upload or drag and drop your file
                                                 </p>
-                                                <Button type="button" className="bg-yellow-400 hover:bg-yellow-500 text-black font-medium px-8">
+                                                <Button type="button" className="bg-primary hover:bg-primary/90 text-black font-medium px-8">
                                                     <Upload className="w-4 h-4 mr-2" />
                                                     Upload PDF
                                                 </Button>
@@ -336,8 +308,8 @@ export function LessonModal({ isOpen, onClose, onSave, lesson, courseId, moduleI
                                             <div className="flex flex-col items-center justify-center py-4">
                                                 {uploadStatus === 'success' ? (
                                                     <>
-                                                        <div className="w-16 h-16 rounded-full bg-yellow-100 flex items-center justify-center mb-4 animate-in zoom-in duration-300">
-                                                            <CheckCircle2 className="w-8 h-8 text-yellow-600" />
+                                                        <div className="w-16 h-16 flex items-center justify-center mb-4 animate-in zoom-in duration-300">
+                                                            <img src="/course/upload_completed.svg" alt="" className="w-full h-full" />
                                                         </div>
                                                         <h3 className="text-lg font-semibold mb-2">PDF Uploaded</h3>
                                                         <p className="text-sm text-muted-foreground">{uploadedFileName}</p>
@@ -357,14 +329,14 @@ export function LessonModal({ isOpen, onClose, onSave, lesson, courseId, moduleI
                                                 ) : (
                                                     <div className="w-full max-w-md space-y-4">
                                                         <div className="flex flex-col items-center mb-4">
-                                                            <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-3">
-                                                                <Upload className="w-6 h-6 text-slate-400 animate-bounce" />
+                                                            <div className="w-16 h-16 flex items-center justify-center mb-3">
+                                                                <img src="/course/uploading_document.svg" alt="" className="w-full h-full animate-pulse" />
                                                             </div>
                                                             <h3 className="font-medium">Uploading Document</h3>
                                                             <p className="text-sm text-muted-foreground">{uploadedFileName}</p>
                                                         </div>
                                                         <div className="flex items-center gap-3">
-                                                            <Progress value={uploadProgress} className="h-2 bg-slate-100 [&>div]:bg-yellow-400" />
+                                                            <Progress value={uploadProgress} className="h-2 bg-slate-100 [&>div]:bg-primary" />
                                                             <span className="text-sm font-medium w-10">{uploadProgress}%</span>
                                                         </div>
                                                     </div>
@@ -386,7 +358,7 @@ export function LessonModal({ isOpen, onClose, onSave, lesson, courseId, moduleI
                                                 onChange={(e) => setFormData({ ...formData, content_url: e.target.value })}
                                                 placeholder="Enter lesson text content here..."
                                                 rows={8}
-                                                className="bg-background border-input font-mono text-sm resize-none"
+                                                className="bg-background border-border font-mono text-sm resize-none mt-2"
                                             />
                                         </div>
                                     </TabsContent>
@@ -415,7 +387,7 @@ export function LessonModal({ isOpen, onClose, onSave, lesson, courseId, moduleI
                         </Button>
                         <Button
                             type="submit"
-                            className="bg-primary hover:bg-primary/90"
+                            className="bg-primary hover:bg-primary/90 text-black font-medium"
                             disabled={uploadStatus === 'uploading'}
                         >
                             {lesson ? 'Update Lesson' : 'Add Lesson'}

@@ -61,7 +61,7 @@ export function ModuleModal({ isOpen, onClose, onSave, module }: ModuleModalProp
                                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                                 placeholder="e.g., Introduction to Security Fundamentals"
                                 required
-                                className="bg-background border-input"
+                                className="bg-background border-border mt-2"
                             />
                         </div>
 
@@ -73,7 +73,7 @@ export function ModuleModal({ isOpen, onClose, onSave, module }: ModuleModalProp
                                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                                 placeholder="Brief description of what this module covers..."
                                 rows={3}
-                                className="bg-background border-input"
+                                className="bg-background border-border mt-2"
                             />
                         </div>
                     </div>

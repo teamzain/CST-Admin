@@ -1,6 +1,5 @@
 'use client';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -19,67 +18,57 @@ interface GeneralInformationTabProps {
 
 export function GeneralInformationTab({ course, formData, isEditing, onInputChange }: GeneralInformationTabProps) {
     return (
-        <div className="space-y-6">
+        <div className="space-y-8">
             {/* Quick Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <Card className="bg-card border-border">
-                    <CardContent className="pt-6">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm text-muted-foreground mb-1">Duration</p>
-                                <p className="text-2xl font-bold">{course.duration_hours}h</p>
-                            </div>
-                            <Calendar className="w-8 h-8 text-muted-foreground" />
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <div className="bg-muted/30 p-6 rounded-xl border border-border/50">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <p className="text-sm text-muted-foreground mb-1">Duration</p>
+                            <p className="text-2xl font-bold">{course.duration_hours}h</p>
                         </div>
-                    </CardContent>
-                </Card>
+                        <Calendar className="w-8 h-8 text-muted-foreground/50" />
+                    </div>
+                </div>
 
-                <Card className="bg-card border-border">
-                    <CardContent className="pt-6">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm text-muted-foreground mb-1">Enrolled</p>
-                                <p className="text-2xl font-bold">{course.enrolled_students || 0}</p>
-                            </div>
-                            <Users className="w-8 h-8 text-muted-foreground" />
+                <div className="bg-muted/30 p-6 rounded-xl border border-border/50">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <p className="text-sm text-muted-foreground mb-1">Enrolled</p>
+                            <p className="text-2xl font-bold">{course.enrolled_students || 0}</p>
                         </div>
-                    </CardContent>
-                </Card>
+                        <Users className="w-8 h-8 text-muted-foreground/50" />
+                    </div>
+                </div>
 
-                <Card className="bg-card border-border">
-                    <CardContent className="pt-6">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm text-muted-foreground mb-1">Price</p>
-                                <p className="text-2xl font-bold">${course.price.toFixed(2)}</p>
-                            </div>
-                            <DollarSign className="w-8 h-8 text-muted-foreground" />
+                <div className="bg-muted/30 p-6 rounded-xl border border-border/50">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <p className="text-sm text-muted-foreground mb-1">Price</p>
+                            <p className="text-2xl font-bold">${course.price.toFixed(2)}</p>
                         </div>
-                    </CardContent>
-                </Card>
+                        <DollarSign className="w-8 h-8 text-muted-foreground/50" />
+                    </div>
+                </div>
 
-                <Card className="bg-card border-border">
-                    <CardContent className="pt-6">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm text-muted-foreground mb-1">Instructor</p>
-                                <p className="text-lg font-bold truncate">{course.instructor?.name || 'N/A'}</p>
-                            </div>
-                            <Award className="w-8 h-8 text-muted-foreground" />
+                <div className="bg-muted/30 p-6 rounded-xl border border-border/50">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <p className="text-sm text-muted-foreground mb-1">Instructor</p>
+                            <p className="text-lg font-bold truncate">{course.instructor?.name || 'N/A'}</p>
                         </div>
-                    </CardContent>
-                </Card>
+                        <Award className="w-8 h-8 text-muted-foreground/50" />
+                    </div>
+                </div>
             </div>
 
             {/* Course Description */}
-            <Card className="bg-card border-border">
-                <CardHeader>
-                    <CardTitle>Course Description</CardTitle>
-                    <CardDescription>
-                        Detailed description of the course
-                    </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
+            <div className="space-y-4">
+                <div>
+                    <h3 className="text-lg font-semibold">Course Description</h3>
+                    <p className="text-sm text-muted-foreground">Detailed description of the course</p>
+                </div>
+                <div className="bg-muted/10 p-6 rounded-xl border border-border/50">
                     {isEditing ? (
                         <Textarea
                             value={formData.description || ''}
@@ -89,18 +78,16 @@ export function GeneralInformationTab({ course, formData, isEditing, onInputChan
                             className="bg-background border-border"
                         />
                     ) : (
-                        <p className="text-foreground">{course.description}</p>
+                        <p className="text-foreground leading-relaxed">{course.description}</p>
                     )}
-                </CardContent>
-            </Card>
+                </div>
+            </div>
 
             {/* Basic Information & Pricing */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Card className="bg-card border-border">
-                    <CardHeader>
-                        <CardTitle className="text-lg">Basic Information</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-4">
+                    <h3 className="text-lg font-semibold">Basic Information</h3>
+                    <div className="bg-muted/10 p-6 rounded-xl border border-border/50 space-y-4">
                         {isEditing ? (
                             <>
                                 <div className="grid grid-cols-2 gap-4">
@@ -159,7 +146,7 @@ export function GeneralInformationTab({ course, formData, isEditing, onInputChan
                                 </div>
                             </>
                         ) : (
-                            <>
+                            <div className="grid grid-cols-2 gap-y-4">
                                 <div>
                                     <p className="text-sm text-muted-foreground">Training Type</p>
                                     <p className="font-semibold capitalize">{course.training_type.toLowerCase()}</p>
@@ -172,16 +159,14 @@ export function GeneralInformationTab({ course, formData, isEditing, onInputChan
                                     <p className="text-sm text-muted-foreground">Duration</p>
                                     <p className="font-semibold">{course.duration_hours} hours</p>
                                 </div>
-                            </>
+                            </div>
                         )}
-                    </CardContent>
-                </Card>
+                    </div>
+                </div>
 
-                <Card className="bg-card border-border">
-                    <CardHeader>
-                        <CardTitle className="text-lg">Pricing & Location</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
+                <div className="space-y-4">
+                    <h3 className="text-lg font-semibold">Pricing & Location</h3>
+                    <div className="bg-muted/10 p-6 rounded-xl border border-border/50 space-y-4">
                         {isEditing ? (
                             <>
                                 <div>
@@ -213,35 +198,33 @@ export function GeneralInformationTab({ course, formData, isEditing, onInputChan
                                 </div>
                             </>
                         ) : (
-                            <>
+                            <div className="space-y-4">
                                 <div>
                                     <p className="text-sm text-muted-foreground">Price</p>
-                                    <p className="text-2xl font-bold">${course.price.toFixed(2)}</p>
+                                    <p className="text-2xl font-bold text-primary-foreground bg-primary px-3 py-1 rounded-lg inline-block">${course.price.toFixed(2)}</p>
                                 </div>
                                 {course.location && (
                                     <div>
                                         <p className="text-sm text-muted-foreground">Location</p>
                                         <div className="flex items-center gap-2">
-                                            <MapPin className="w-4 h-4" />
+                                            <MapPin className="w-4 h-4 text-muted-foreground" />
                                             <p className="font-semibold">{course.location}</p>
                                         </div>
                                     </div>
                                 )}
                                 {course.is_price_negotiable && (
-                                    <Badge variant="outline">Price Negotiable</Badge>
+                                    <Badge variant="outline" className="border-primary text-primary">Price Negotiable</Badge>
                                 )}
-                            </>
+                            </div>
                         )}
-                    </CardContent>
-                </Card>
+                    </div>
+                </div>
             </div>
 
             {/* Course Status */}
-            <Card className="bg-card border-border">
-                <CardHeader>
-                    <CardTitle>Course Status</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
+            <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Course Status</h3>
+                <div className="bg-muted/10 p-6 rounded-xl border border-border/50">
                     {isEditing ? (
                         <div className="flex items-center gap-2">
                             <Checkbox
@@ -253,13 +236,13 @@ export function GeneralInformationTab({ course, formData, isEditing, onInputChan
                         </div>
                     ) : (
                         <div>
-                            <Badge variant={course.is_active ? 'default' : 'secondary'} className="text-base">
+                            <Badge variant={course.is_active ? 'default' : 'secondary'} className="text-base px-4 py-1">
                                 {course.is_active ? '✓ Published' : '○ Unpublished'}
                             </Badge>
                         </div>
                     )}
-                </CardContent>
-            </Card>
+                </div>
+            </div>
         </div>
     );
 }

@@ -49,7 +49,6 @@ export function Sidebar({ open, toggleSidebar }: SidebarProps) {
             icon: BookOpen,
             label: 'Courses',
             subItems: [
-                { href: '/courses/create', label: 'Create Course' },
                 { href: '/courses', label: 'All Courses' },
                 { href: '/quizzes', label: 'All Quizzes' },
                 { href: '/lessons', label: 'All Lessons' },
