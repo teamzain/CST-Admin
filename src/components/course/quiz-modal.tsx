@@ -213,7 +213,7 @@ export function QuizModal({ isOpen, onClose, onSave, quiz, moduleId: _moduleId }
                                         value={currentQuestion.text}
                                         onChange={(e) => setCurrentQuestion({ ...currentQuestion, text: e.target.value })}
                                         placeholder="Enter your question here..."
-                                        className="min-h-[100px] resize-none"
+                                        className="min-h-[100px] resize-none bg-background border-border mt-2"
                                     />
                                 </div>
 
@@ -240,7 +240,7 @@ export function QuizModal({ isOpen, onClose, onSave, quiz, moduleId: _moduleId }
                                                     value={opt.text}
                                                     onChange={(e) => handleOptionChange(idx, e.target.value)}
                                                     placeholder={`Option ${idx + 1}`}
-                                                    className="flex-1"
+                                                    className="flex-1 bg-background border-border"
                                                 />
                                                 <Button
                                                     variant="ghost"
@@ -264,7 +264,7 @@ export function QuizModal({ isOpen, onClose, onSave, quiz, moduleId: _moduleId }
                                                 type="number"
                                                 value={currentQuestion.points}
                                                 onChange={(e) => setCurrentQuestion({ ...currentQuestion, points: parseInt(e.target.value) || 1 })}
-                                                className="w-20"
+                                                className="w-20 bg-background border-border"
                                                 min={1}
                                             />
                                         </div>
@@ -350,6 +350,7 @@ export function QuizModal({ isOpen, onClose, onSave, quiz, moduleId: _moduleId }
                                         value={quizSettings.title}
                                         onChange={(e) => setQuizSettings({ ...quizSettings, title: e.target.value })}
                                         placeholder="e.g., Final Assessment"
+                                        className="bg-background border-border mt-2"
                                     />
                                 </div>
 
@@ -369,12 +370,13 @@ export function QuizModal({ isOpen, onClose, onSave, quiz, moduleId: _moduleId }
                                 <div className="space-y-4 pt-4 border-t">
                                     <div className="space-y-2">
                                         <Label>Passing Score (%)</Label>
-                                        <div className="flex items-center gap-2">
+                                        <div className="flex items-center gap-2 mt-2">
                                             <Input
                                                 type="number"
                                                 value={quizSettings.passing_score}
                                                 onChange={(e) => setQuizSettings({ ...quizSettings, passing_score: parseInt(e.target.value) || 0 })}
                                                 max={100}
+                                                className="bg-background border-border"
                                             />
                                             <span className="text-sm text-muted-foreground">%</span>
                                         </div>
@@ -387,13 +389,14 @@ export function QuizModal({ isOpen, onClose, onSave, quiz, moduleId: _moduleId }
                                             value={quizSettings.time_limit_minutes || ''}
                                             onChange={(e) => setQuizSettings({ ...quizSettings, time_limit_minutes: parseInt(e.target.value) || 0 })}
                                             placeholder="e.g. 30"
+                                            className="bg-background border-border mt-2"
                                         />
                                     </div>
 
                                     <div className="space-y-2">
                                         <Label>Attempts Allowed</Label>
                                         <Select defaultValue="unlimited">
-                                            <SelectTrigger>
+                                            <SelectTrigger className="bg-background border-border mt-2">
                                                 <SelectValue placeholder="Select attempts" />
                                             </SelectTrigger>
                                             <SelectContent>

@@ -86,7 +86,7 @@ export default function CreateCoursePage() {
 
         if (formData.training_type === TRAINING_TYPE.UNARMED) {
             requiredHours = selectedState.unarmed_hours || 20;
-            requiresRange = false; 
+            requiresRange = false;
         } else if (formData.training_type === TRAINING_TYPE.ARMED) {
             requiredHours = selectedState.armed_hours || 40;
             requiresRange = selectedState.requires_range_training || false;
@@ -137,7 +137,7 @@ export default function CreateCoursePage() {
             instructor: selectedInstructor,
             enrolled_students: 0,
         };
-        
+
         addCourse(newCourse);
         navigate('/courses');
     };
@@ -172,13 +172,12 @@ export default function CreateCoursePage() {
                         <button
                             key={s}
                             onClick={() => setStep(s)}
-                            className={`flex items-center justify-center w-10 h-10 rounded-full font-semibold cursor-pointer transition-all ${
-                                step === s
-                                    ? 'bg-primary text-white scale-110'
+                            className={`flex items-center justify-center w-10 h-10 rounded-full font-semibold cursor-pointer transition-all ${step === s
+                                    ? 'bg-primary text-black scale-110 shadow-md'
                                     : step > s
-                                    ? 'bg-primary/30 text-primary'
-                                    : 'bg-muted text-muted-foreground'
-                            }`}
+                                        ? 'bg-primary/20 text-primary border-2 border-primary/30'
+                                        : 'bg-muted text-muted-foreground'
+                                }`}
                         >
                             {s}
                         </button>

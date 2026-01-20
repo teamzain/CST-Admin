@@ -81,7 +81,7 @@ export function SessionModal({ isOpen, onClose, onSave, session }: SessionModalP
                                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                                 placeholder="e.g., Live Range Training"
                                 required
-                                className="bg-background border-input"
+                                className="bg-background border-border mt-2"
                             />
                         </div>
 
@@ -92,7 +92,7 @@ export function SessionModal({ isOpen, onClose, onSave, session }: SessionModalP
                                     value={formData.session_type}
                                     onValueChange={(value) => setFormData({ ...formData, session_type: value as 'LIVE' | 'PHYSICAL' })}
                                 >
-                                    <SelectTrigger id="session-type" className="bg-background border-input">
+                                    <SelectTrigger id="session-type" className="bg-background border-border mt-2">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -110,7 +110,7 @@ export function SessionModal({ isOpen, onClose, onSave, session }: SessionModalP
                                     onChange={(e) => setFormData({ ...formData, capacity: parseInt(e.target.value) })}
                                     placeholder="20"
                                     min="1"
-                                    className="bg-background border-input"
+                                    className="bg-background border-border mt-2"
                                 />
                             </div>
                         </div>
@@ -118,7 +118,7 @@ export function SessionModal({ isOpen, onClose, onSave, session }: SessionModalP
                         {formData.session_type === 'PHYSICAL' ? (
                             <div className="space-y-2">
                                 <Label htmlFor="location">Location *</Label>
-                                <div className="relative">
+                                <div className="relative mt-2">
                                     <MapPin className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                                     <Input
                                         id="location"
@@ -126,7 +126,7 @@ export function SessionModal({ isOpen, onClose, onSave, session }: SessionModalP
                                         onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                                         placeholder="e.g., Main Training Hall, Building A"
                                         required
-                                        className="bg-background border-input pl-9"
+                                        className="bg-background border-border pl-9"
                                     />
                                 </div>
                             </div>
@@ -137,10 +137,10 @@ export function SessionModal({ isOpen, onClose, onSave, session }: SessionModalP
                                     id="meeting-url"
                                     value={formData.meeting_url || ''}
                                     onChange={(e) => setFormData({ ...formData, meeting_url: e.target.value })}
-                                    className="bg-background border-input"
+                                    className="bg-background border-border mt-2"
                                     placeholder="https://meet.google.com/..."
                                 />
-                                <p className="text-xs text-muted-foreground">
+                                <p className="text-xs text-muted-foreground mt-1">
                                     System automatically generates Google Meet link upon creation if left empty.
                                 </p>
                             </div>
@@ -155,7 +155,7 @@ export function SessionModal({ isOpen, onClose, onSave, session }: SessionModalP
                                     value={formData.start_time}
                                     onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
                                     required
-                                    className="bg-background border-input"
+                                    className="bg-background border-border mt-2"
                                 />
                             </div>
 
@@ -167,7 +167,7 @@ export function SessionModal({ isOpen, onClose, onSave, session }: SessionModalP
                                     value={formData.end_time}
                                     onChange={(e) => setFormData({ ...formData, end_time: e.target.value })}
                                     required
-                                    className="bg-background border-input"
+                                    className="bg-background border-border mt-2"
                                 />
                             </div>
                         </div>

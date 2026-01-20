@@ -1,6 +1,5 @@
 'use client';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -16,16 +15,14 @@ interface ComplianceTabProps {
 
 export function ComplianceTab({ course, formData, isEditing, onInputChange }: ComplianceTabProps) {
     return (
-        <div className="space-y-6">
+        <div className="space-y-8">
             {/* Pre-Requirements */}
-            <Card className="bg-card border-border">
-                <CardHeader>
-                    <CardTitle>Pre-Requirements</CardTitle>
-                    <CardDescription>
-                        Prerequisites students must meet before enrolling
-                    </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
+            <div className="space-y-4">
+                <div>
+                    <h3 className="text-lg font-semibold">Pre-Requirements</h3>
+                    <p className="text-sm text-muted-foreground">Prerequisites students must meet before enrolling</p>
+                </div>
+                <div className="bg-muted/10 p-6 rounded-xl border border-border/50">
                     {isEditing ? (
                         <div className="space-y-2">
                             <Label htmlFor="pre-requirements">Requirements (one per line)</Label>
@@ -35,7 +32,7 @@ export function ComplianceTab({ course, formData, isEditing, onInputChange }: Co
                                 onChange={(e) => onInputChange('pre_requirements', e.target.value.split('\n').filter(r => r.trim()))}
                                 placeholder="Enter one requirement per line&#10;Example:&#10;Must be 18 years or older&#10;Valid government-issued ID&#10;Background check clearance"
                                 rows={6}
-                                className="bg-input border-border font-mono text-sm"
+                                className="bg-background border-border font-mono text-sm"
                             />
                         </div>
                     ) : (
@@ -52,20 +49,18 @@ export function ComplianceTab({ course, formData, isEditing, onInputChange }: Co
                             )}
                         </div>
                     )}
-                </CardContent>
-            </Card>
+                </div>
+            </div>
 
             {/* Assessments & Verification */}
-            <Card className="bg-card border-border">
-                <CardHeader>
-                    <CardTitle>Assessments & Verification</CardTitle>
-                    <CardDescription>
-                        Required assessments and verification procedures
-                    </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
+            <div className="space-y-4">
+                <div>
+                    <h3 className="text-lg font-semibold">Assessments & Verification</h3>
+                    <p className="text-sm text-muted-foreground">Required assessments and verification procedures</p>
+                </div>
+                <div className="bg-muted/10 p-6 rounded-xl border border-border/50">
                     {isEditing ? (
-                        <div className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="flex items-center gap-2">
                                 <Checkbox
                                     id="requires-exam"
@@ -108,7 +103,7 @@ export function ComplianceTab({ course, formData, isEditing, onInputChange }: Co
                             </div>
                         </div>
                     ) : (
-                        <div className="space-y-3">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                             {course.requires_exam && (
                                 <div className="flex items-center gap-2 text-sm">
                                     <span className="text-green-600">✓</span>
@@ -138,109 +133,94 @@ export function ComplianceTab({ course, formData, isEditing, onInputChange }: Co
                             )}
                         </div>
                     )}
-                </CardContent>
-            </Card>
+                </div>
+            </div>
 
             {/* Course Settings */}
-            <Card className="bg-card border-border">
-                <CardHeader>
-                    <CardTitle>Course Settings</CardTitle>
-                    <CardDescription>
-                        Additional course configuration options
-                    </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    {isEditing ? (
-                        <div className="space-y-4">
-                            <div className="flex items-center gap-2">
-                                <Checkbox
-                                    id="is-refresher"
-                                    checked={formData.is_refresher || false}
-                                    onCheckedChange={(checked) => onInputChange('is_refresher', checked)}
-                                />
-                                <Label htmlFor="is-refresher" className="font-normal cursor-pointer">
-                                    This is a Refresher Course
-                                </Label>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <Checkbox
-                                    id="attendance-enabled"
-                                    checked={formData.attendance_enabled || false}
-                                    onCheckedChange={(checked) => onInputChange('attendance_enabled', checked)}
-                                />
-                                <Label htmlFor="attendance-enabled" className="font-normal cursor-pointer">
-                                    Enable Attendance Tracking
-                                </Label>
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="required-hours">Required Hours for Completion</Label>
-                                <Input
-                                    id="required-hours"
-                                    type="number"
-                                    value={formData.required_hours || 0}
-                                    onChange={(e) => onInputChange('required_hours', parseFloat(e.target.value))}
-                                    className="bg-input border-border max-w-xs"
-                                    min="0"
-                                    step="0.5"
-                                />
-                                <p className="text-xs text-muted-foreground">
-                                    Minimum hours students must complete to finish the course
-                                </p>
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="space-y-3">
-                            {course.is_refresher && (
-                                <div className="flex items-center gap-2 text-sm">
-                                    <span className="text-green-600">✓</span>
-                                    <span>Refresher Course</span>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-4">
+                    <h3 className="text-lg font-semibold">Course Settings</h3>
+                    <div className="bg-muted/10 p-6 rounded-xl border border-border/50 space-y-4">
+                        {isEditing ? (
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-2">
+                                    <Checkbox
+                                        id="is-refresher"
+                                        checked={formData.is_refresher || false}
+                                        onCheckedChange={(checked) => onInputChange('is_refresher', checked)}
+                                    />
+                                    <Label htmlFor="is-refresher" className="font-normal cursor-pointer">
+                                        This is a Refresher Course
+                                    </Label>
                                 </div>
-                            )}
-                            {course.attendance_enabled && (
-                                <div className="flex items-center gap-2 text-sm">
-                                    <span className="text-green-600">✓</span>
-                                    <span>Attendance Tracking Enabled</span>
+                                <div className="flex items-center gap-2">
+                                    <Checkbox
+                                        id="attendance-enabled"
+                                        checked={formData.attendance_enabled || false}
+                                        onCheckedChange={(checked) => onInputChange('attendance_enabled', checked)}
+                                    />
+                                    <Label htmlFor="attendance-enabled" className="font-normal cursor-pointer">
+                                        Enable Attendance Tracking
+                                    </Label>
                                 </div>
-                            )}
-                            <div className="text-sm">
-                                <span className="text-muted-foreground">Required Hours: </span>
-                                <span className="font-semibold">{course.required_hours || 0} hours</span>
+                                <div className="space-y-2">
+                                    <Label htmlFor="required-hours">Required Hours for Completion</Label>
+                                    <Input
+                                        id="required-hours"
+                                        type="number"
+                                        value={formData.required_hours || 0}
+                                        onChange={(e) => onInputChange('required_hours', parseFloat(e.target.value))}
+                                        className="bg-background border-border max-w-xs"
+                                        min="0"
+                                        step="0.5"
+                                    />
+                                </div>
                             </div>
-                        </div>
-                    )}
-                </CardContent>
-            </Card>
+                        ) : (
+                            <div className="space-y-3">
+                                {course.is_refresher && (
+                                    <div className="flex items-center gap-2 text-sm">
+                                        <span className="text-green-600">✓</span>
+                                        <span>Refresher Course</span>
+                                    </div>
+                                )}
+                                {course.attendance_enabled && (
+                                    <div className="flex items-center gap-2 text-sm">
+                                        <span className="text-green-600">✓</span>
+                                        <span>Attendance Tracking Enabled</span>
+                                    </div>
+                                )}
+                                <div className="text-sm">
+                                    <span className="text-muted-foreground">Required Hours: </span>
+                                    <span className="font-semibold">{course.required_hours || 0} hours</span>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
 
-            {/* System Information */}
-            <Card className="bg-card border-border">
-                <CardHeader>
-                    <CardTitle className="text-sm">System Information</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                        <span className="text-muted-foreground">Course ID</span>
-                        <span className="font-mono">{course.id}</span>
-                    </div>
-                    <div className="flex justify-between">
-                        <span className="text-muted-foreground">State</span>
-                        <span>{course.state?.name || 'N/A'}</span>
-                    </div>
-                    <div className="flex justify-between">
-                        <span className="text-muted-foreground">Created</span>
-                        <span>{new Date(course.created_at).toLocaleDateString()}</span>
-                    </div>
-                    <div className="flex justify-between">
-                        <span className="text-muted-foreground">Last Updated</span>
-                        <span>{new Date(course.updated_at).toLocaleDateString()}</span>
-                    </div>
-                    {course.published_at && (
+                <div className="space-y-4">
+                    <h3 className="text-lg font-semibold">System Information</h3>
+                    <div className="bg-muted/10 p-6 rounded-xl border border-border/50 space-y-2 text-sm">
                         <div className="flex justify-between">
-                            <span className="text-muted-foreground">Published</span>
-                            <span>{new Date(course.published_at).toLocaleDateString()}</span>
+                            <span className="text-muted-foreground">Course ID</span>
+                            <span className="font-mono">{course.id}</span>
                         </div>
-                    )}
-                </CardContent>
-            </Card>
+                        <div className="flex justify-between">
+                            <span className="text-muted-foreground">State</span>
+                            <span>{course.state?.name || 'N/A'}</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-muted-foreground">Created</span>
+                            <span>{new Date(course.created_at).toLocaleDateString()}</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-muted-foreground">Last Updated</span>
+                            <span>{new Date(course.updated_at).toLocaleDateString()}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 }
