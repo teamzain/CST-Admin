@@ -1,5 +1,13 @@
 import { type ColumnDef } from '@tanstack/react-table';
-import { Video, FileText } from 'lucide-react';
+import { Video, FileText, MoreHorizontal } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface Lesson {
     id: number | string;
@@ -10,7 +18,7 @@ interface Lesson {
     duration_min: number;
 }
 
-export const getLessonColumns = (): ColumnDef<Lesson>[] => [
+export const getLessonColumns = (onView: (lesson: Lesson) => void, onDelete: (lesson: Lesson) => void): ColumnDef<Lesson>[] => [
     {
         accessorKey: 'title',
         header: 'Lesson Title',
@@ -51,6 +59,33 @@ export const getLessonColumns = (): ColumnDef<Lesson>[] => [
         cell: ({ row }) => {
             const value = row.getValue<number>('duration_min');
             return <span className="text-gray-600">{value ? `${value} min` : '-'}</span>;
+        },
+    },
+    {
+        id: 'actions',
+        cell: ({ row }) => {
+            const lesson = row.original;
+            return (
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="h-8 w-8 p-0">
+                            <MoreHorizontal className="w-4 h-4" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                        <DropdownMenuItem onClick={() => onView(lesson)}>
+                            View Lesson
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                            onClick={() => onDelete(lesson)}
+                            className="text-red-600"
+                        >
+                            Delete Lesson
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            );
         },
     },
 ];

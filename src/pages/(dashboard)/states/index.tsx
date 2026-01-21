@@ -15,13 +15,16 @@ import { StatesFilters } from '@/components/states/states-filters';
 import { getStateColumns } from '@/components/states/state-columns';
 import { useStatesStore } from '@/stores/states-store';
 import { Plus } from 'lucide-react';
+import { DeleteConfirmationDialog } from '@/components/shared/delete-confirmation-dialog';
 
 export default function StatesPage() {
     const navigate = useNavigate();
-    const { states } = useStatesStore();
+    const { states, deleteState } = useStatesStore();
 
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+    const [stateToDelete, setStateToDelete] = useState<any>(null);
 
     const filteredStates = useMemo(() => {
         return states.filter((state) => {
@@ -31,11 +34,27 @@ export default function StatesPage() {
         });
     }, [states, searchTerm, statusFilter]);
 
-    const columns = getStateColumns();
+    const handleView = (state: any) => {
+        navigate(`/states/${state.id}`);
+    };
+
+    const handleDeleteClick = (state: any) => {
+        setStateToDelete(state);
+        setIsDeleteDialogOpen(true);
+    };
+
+    const handleConfirmDelete = () => {
+        if (stateToDelete) {
+            deleteState(stateToDelete.id);
+            setStateToDelete(null);
+        }
+    };
 
     const handleCreateClick = () => {
         navigate('/states/create');
     };
+
+    const columns = getStateColumns(handleView, handleDeleteClick);
 
     return (
         <div className="min-h-screen bg-gray-50 p-4 md:p-6">
@@ -109,6 +128,16 @@ export default function StatesPage() {
                     </CardContent>
                 </Card>
             </div>
+
+            <DeleteConfirmationDialog
+                isOpen={isDeleteDialogOpen}
+                onClose={() => setIsDeleteDialogOpen(false)}
+                onConfirm={handleConfirmDelete}
+                title="Delete State"
+                description="Are you sure you want to delete this state? This action cannot be undone and may affect associated courses and instructors."
+                itemType="State"
+                itemName={stateToDelete?.name || ''}
+            />
         </div>
     );
 }

@@ -8,6 +8,7 @@ import { SessionsFilters } from '@/components/sessions/sessions-filters';
 import { getSessionColumns } from '@/components/sessions/session-columns';
 import { useCoursesStore } from '@/stores/courses-store';
 import { Plus } from 'lucide-react';
+import { DeleteConfirmationDialog } from '@/components/shared/delete-confirmation-dialog';
 
 export default function AllSessionsPage() {
     const navigate = useNavigate();
@@ -16,6 +17,8 @@ export default function AllSessionsPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [sessionTypeFilter, setSessionTypeFilter] = useState<string>('all');
     const [courseFilter, setCourseFilter] = useState<string>('all');
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+    const [sessionToDelete, setSessionToDelete] = useState<any>(null);
 
     const allSessions = useMemo(() => {
         return courses.flatMap(course =>
@@ -41,11 +44,28 @@ export default function AllSessionsPage() {
         });
     }, [allSessions, searchTerm, courseFilter, sessionTypeFilter]);
 
-    const columns = getSessionColumns();
+    const handleView = (session: any) => {
+        navigate(`/sessions/${session.id}`);
+    };
+
+    const handleDeleteClick = (session: any) => {
+        setSessionToDelete(session);
+        setIsDeleteDialogOpen(true);
+    };
+
+    const handleConfirmDelete = () => {
+        if (sessionToDelete) {
+            // Implement session deletion logic here
+            console.log('Delete session:', sessionToDelete);
+            setSessionToDelete(null);
+        }
+    };
 
     const handleCreateClick = () => {
         navigate('/sessions/create');
     };
+
+    const columns = getSessionColumns(handleView, handleDeleteClick);
 
     return (
         <div className="min-h-screen bg-gray-50 p-4 md:p-6">
@@ -92,6 +112,16 @@ export default function AllSessionsPage() {
                     />
                 </div>
             </div>
+
+            <DeleteConfirmationDialog
+                isOpen={isDeleteDialogOpen}
+                onClose={() => setIsDeleteDialogOpen(false)}
+                onConfirm={handleConfirmDelete}
+                title="Delete Session"
+                description="Are you sure you want to delete this session? This action cannot be undone."
+                itemType="Session"
+                itemName={sessionToDelete?.title || ''}
+            />
         </div>
     );
 }

@@ -8,6 +8,7 @@ import { QuizzesFilters } from '@/components/quizzes/quizzes-filters';
 import { getQuizColumns } from '@/components/quizzes/quiz-columns';
 import { useCoursesStore } from '@/stores/courses-store';
 import { Plus } from 'lucide-react';
+import { DeleteConfirmationDialog } from '@/components/shared/delete-confirmation-dialog';
 
 export default function AllQuizzesPage() {
     const navigate = useNavigate();
@@ -16,6 +17,8 @@ export default function AllQuizzesPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [quizTypeFilter, setQuizTypeFilter] = useState<string>('all');
     const [courseFilter, setCourseFilter] = useState<string>('all');
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+    const [quizToDelete, setQuizToDelete] = useState<any>(null);
 
     // Flatten quizzes from all courses
     const allQuizzes = useMemo(() => {
@@ -42,11 +45,28 @@ export default function AllQuizzesPage() {
         });
     }, [allQuizzes, searchTerm, courseFilter, quizTypeFilter]);
 
-    const columns = getQuizColumns();
+    const handleView = (quiz: any) => {
+        navigate(`/quizzes/${quiz.id}`);
+    };
+
+    const handleDeleteClick = (quiz: any) => {
+        setQuizToDelete(quiz);
+        setIsDeleteDialogOpen(true);
+    };
+
+    const handleConfirmDelete = () => {
+        if (quizToDelete) {
+            // Implement quiz deletion logic here
+            console.log('Delete quiz:', quizToDelete);
+            setQuizToDelete(null);
+        }
+    };
 
     const handleCreateClick = () => {
         navigate('/quizzes/create');
     };
+
+    const columns = getQuizColumns(handleView, handleDeleteClick);
 
     return (
         <div className="min-h-screen bg-gray-50 p-4 md:p-6">
@@ -93,6 +113,16 @@ export default function AllQuizzesPage() {
                     />
                 </div>
             </div>
+
+            <DeleteConfirmationDialog
+                isOpen={isDeleteDialogOpen}
+                onClose={() => setIsDeleteDialogOpen(false)}
+                onConfirm={handleConfirmDelete}
+                title="Delete Quiz"
+                description="Are you sure you want to delete this quiz? This action cannot be undone."
+                itemType="Quiz"
+                itemName={quizToDelete?.title || ''}
+            />
         </div>
     );
 }

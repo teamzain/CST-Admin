@@ -1,5 +1,14 @@
 import { type ColumnDef } from '@tanstack/react-table';
 import { Badge } from '@/components/ui/badge';
+import { MoreHorizontal } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface State {
     id: number | string;
@@ -11,7 +20,7 @@ interface State {
     is_active: boolean;
 }
 
-export const getStateColumns = (): ColumnDef<State>[] => [
+export const getStateColumns = (onView: (state: State) => void, onDelete: (state: State) => void): ColumnDef<State>[] => [
     {
         accessorKey: 'name',
         header: 'State Name',
@@ -61,6 +70,33 @@ export const getStateColumns = (): ColumnDef<State>[] => [
                 <Badge variant={value ? 'default' : 'secondary'}>
                     {value ? 'Published' : 'Unpublished'}
                 </Badge>
+            );
+        },
+    },
+    {
+        id: 'actions',
+        cell: ({ row }) => {
+            const state = row.original;
+            return (
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="h-8 w-8 p-0">
+                            <MoreHorizontal className="w-4 h-4" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                        <DropdownMenuItem onClick={() => onView(state)}>
+                            View State
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                            onClick={() => onDelete(state)}
+                            className="text-red-600"
+                        >
+                            Delete State
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
             );
         },
     },

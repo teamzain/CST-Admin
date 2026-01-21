@@ -1,5 +1,13 @@
 import { type ColumnDef } from '@tanstack/react-table';
-import { Calendar, MapPin } from 'lucide-react';
+import { Calendar, MapPin, MoreHorizontal } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface Session {
     id: number | string;
@@ -12,7 +20,7 @@ interface Session {
     meeting_url?: string;
 }
 
-export const getSessionColumns = (): ColumnDef<Session>[] => [
+export const getSessionColumns = (onView: (session: Session) => void, onDelete: (session: Session) => void): ColumnDef<Session>[] => [
     {
         accessorKey: 'title',
         header: 'Session Title',
@@ -63,6 +71,33 @@ export const getSessionColumns = (): ColumnDef<Session>[] => [
                 <span className="text-gray-600">
                     {session.session_type === 'PHYSICAL' ? session.location : (session.meeting_url || 'System Generated')}
                 </span>
+            );
+        },
+    },
+    {
+        id: 'actions',
+        cell: ({ row }) => {
+            const session = row.original;
+            return (
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="h-8 w-8 p-0">
+                            <MoreHorizontal className="w-4 h-4" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                        <DropdownMenuItem onClick={() => onView(session)}>
+                            View Session
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                            onClick={() => onDelete(session)}
+                            className="text-red-600"
+                        >
+                            Delete Session
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
             );
         },
     },

@@ -8,6 +8,7 @@ import { LessonsFilters } from '@/components/lessons/lessons-filters';
 import { getLessonColumns } from '@/components/lessons/lesson-columns';
 import { useCoursesStore } from '@/stores/courses-store';
 import { Plus } from 'lucide-react';
+import { DeleteConfirmationDialog } from '@/components/shared/delete-confirmation-dialog';
 
 export default function AllLessonsPage() {
     const navigate = useNavigate();
@@ -16,6 +17,8 @@ export default function AllLessonsPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [contentTypeFilter, setContentTypeFilter] = useState<string>('all');
     const [courseFilter, setCourseFilter] = useState<string>('all');
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+    const [lessonToDelete, setLessonToDelete] = useState<any>(null);
 
     const allLessons = useMemo(() => {
         return courses.flatMap(course =>
@@ -41,11 +44,28 @@ export default function AllLessonsPage() {
         });
     }, [allLessons, searchTerm, courseFilter, contentTypeFilter]);
 
-    const columns = getLessonColumns();
+    const handleView = (lesson: any) => {
+        navigate(`/lessons/${lesson.id}`);
+    };
+
+    const handleDeleteClick = (lesson: any) => {
+        setLessonToDelete(lesson);
+        setIsDeleteDialogOpen(true);
+    };
+
+    const handleConfirmDelete = () => {
+        if (lessonToDelete) {
+            // Implement lesson deletion logic here
+            console.log('Delete lesson:', lessonToDelete);
+            setLessonToDelete(null);
+        }
+    };
 
     const handleCreateClick = () => {
         navigate('/lessons/create');
     };
+
+    const columns = getLessonColumns(handleView, handleDeleteClick);
 
     return (
         <div className="min-h-screen bg-gray-50 p-4 md:p-6">
@@ -92,6 +112,16 @@ export default function AllLessonsPage() {
                     />
                 </div>
             </div>
+
+            <DeleteConfirmationDialog
+                isOpen={isDeleteDialogOpen}
+                onClose={() => setIsDeleteDialogOpen(false)}
+                onConfirm={handleConfirmDelete}
+                title="Delete Lesson"
+                description="Are you sure you want to delete this lesson? This action cannot be undone."
+                itemType="Lesson"
+                itemName={lessonToDelete?.title || ''}
+            />
         </div>
     );
 }
