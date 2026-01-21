@@ -197,7 +197,7 @@ export default function StateDetailsPage() {
                                             type="number"
                                             value={formData.unarmed_passing_score || 0}
                                             onChange={(e) => handleInputChange('unarmed_passing_score', parseInt(e.target.value))}
-                                            className="bg-input border-border mt-2"
+                                            className="mt-2"
                                         />
                                     </div>
                                     <div>
@@ -206,7 +206,7 @@ export default function StateDetailsPage() {
                                             type="number"
                                             value={formData.armed_passing_score || 0}
                                             onChange={(e) => handleInputChange('armed_passing_score', parseInt(e.target.value))}
-                                            className="bg-input border-border mt-2"
+                                            className="mt-2"
                                         />
                                     </div>
                                 </div>
@@ -251,7 +251,7 @@ export default function StateDetailsPage() {
                                         type="number"
                                         value={formData.certificate_validity_years || ''}
                                         onChange={(e) => handleInputChange('certificate_validity_years', parseInt(e.target.value))}
-                                        className="bg-input border-border mt-2"
+                                        className="mt-2"
                                     />
                                 </div>
                                 <div>
@@ -260,7 +260,7 @@ export default function StateDetailsPage() {
                                         value={formData.certificate_template || ''}
                                         onChange={(e) => handleInputChange('certificate_template', e.target.value)}
                                         placeholder="template_id_v1"
-                                        className="bg-input border-border mt-2"
+                                        className="mt-2"
                                     />
                                 </div>
                             </CardContent>

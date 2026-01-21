@@ -90,7 +90,7 @@ export default function CreateStatePage() {
                                             value={formData.name}
                                             onChange={(e) => handleInputChange('name', e.target.value)}
                                             placeholder="e.g. Illinois"
-                                            className="bg-input border-border mt-2"
+                                            className="mt-2"
                                         />
                                     </div>
                                     <div>
@@ -99,7 +99,7 @@ export default function CreateStatePage() {
                                             value={formData.code}
                                             onChange={(e) => handleInputChange('code', e.target.value.toUpperCase())}
                                             placeholder="e.g. IL"
-                                            className="bg-input border-border mt-2"
+                                            className="mt-2"
                                             maxLength={2}
                                         />
                                     </div>
@@ -129,7 +129,7 @@ export default function CreateStatePage() {
                                             type="number"
                                             value={formData.unarmed_hours}
                                             onChange={(e) => handleInputChange('unarmed_hours', parseInt(e.target.value))}
-                                            className="bg-input border-border mt-2"
+                                            className="mt-2"
                                         />
                                     </div>
                                     <div>
@@ -138,7 +138,7 @@ export default function CreateStatePage() {
                                             type="number"
                                             value={formData.armed_hours}
                                             onChange={(e) => handleInputChange('armed_hours', parseInt(e.target.value))}
-                                            className="bg-input border-border mt-2"
+                                            className="mt-2"
                                         />
                                     </div>
                                 </div>
@@ -159,7 +159,7 @@ export default function CreateStatePage() {
                                             type="number"
                                             value={formData.unarmed_passing_score}
                                             onChange={(e) => handleInputChange('unarmed_passing_score', parseInt(e.target.value))}
-                                            className="bg-input border-border mt-2"
+                                            className="mt-2"
                                         />
                                     </div>
                                     <div>
@@ -168,7 +168,7 @@ export default function CreateStatePage() {
                                             type="number"
                                             value={formData.armed_passing_score}
                                             onChange={(e) => handleInputChange('armed_passing_score', parseInt(e.target.value))}
-                                            className="bg-input border-border mt-2"
+                                            className="mt-2"
                                         />
                                     </div>
                                 </div>
@@ -213,7 +213,7 @@ export default function CreateStatePage() {
                                         type="number"
                                         value={formData.certificate_validity_years || ''}
                                         onChange={(e) => handleInputChange('certificate_validity_years', parseInt(e.target.value))}
-                                        className="bg-input border-border mt-2"
+                                        className="mt-2"
                                     />
                                 </div>
                                 <div>
@@ -222,7 +222,7 @@ export default function CreateStatePage() {
                                         value={formData.certificate_template || ''}
                                         onChange={(e) => handleInputChange('certificate_template', e.target.value)}
                                         placeholder="template_id_v1"
-                                        className="bg-input border-border mt-2"
+                                        className="mt-2"
                                     />
                                 </div>
                             </CardContent>
