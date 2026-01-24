@@ -18,9 +18,11 @@ interface State {
     armed_hours: number;
     requires_range_training: boolean;
     is_active: boolean;
+    is_seat_time_enabled: boolean;
+    id_check_frequency: number;
 }
 
-export const getStateColumns = (onView: (state: State) => void, onDelete: (state: State) => void): ColumnDef<State>[] => [
+export const getStateColumns = (onView: (state: State) => void, onDelete: (state: State) => void, onUnpublish: (state: State) => void): ColumnDef<State>[] => [
     {
         accessorKey: 'name',
         header: 'State Name',
@@ -62,6 +64,25 @@ export const getStateColumns = (onView: (state: State) => void, onDelete: (state
         },
     },
     {
+        accessorKey: 'is_seat_time_enabled',
+        header: 'Seat Time',
+        cell: ({ row }) => {
+            const value = row.getValue<boolean>('is_seat_time_enabled');
+            return (
+                <Badge variant={value ? 'default' : 'secondary'}>
+                    {value ? 'Enabled' : 'Disabled'}
+                </Badge>
+            );
+        },
+    },
+    {
+        accessorKey: 'id_check_frequency',
+        header: 'ID Check',
+        cell: ({ row }) => (
+            <span className="text-gray-600">{row.getValue<number>('id_check_frequency')}</span>
+        ),
+    },
+    {
         accessorKey: 'is_active',
         header: 'Status',
         cell: ({ row }) => {
@@ -89,6 +110,11 @@ export const getStateColumns = (onView: (state: State) => void, onDelete: (state
                         <DropdownMenuItem onClick={() => onView(state)}>
                             View State
                         </DropdownMenuItem>
+                        {state.is_active && (
+                            <DropdownMenuItem onClick={() => onUnpublish(state)}>
+                                Unpublish State
+                            </DropdownMenuItem>
+                        )}
                         <DropdownMenuItem
                             onClick={() => onDelete(state)}
                             className="text-red-600"
