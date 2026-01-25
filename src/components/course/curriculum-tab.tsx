@@ -35,6 +35,16 @@ const reorder = <T,>(list: T[], startIndex: number, endIndex: number): T[] => {
     return result;
 };
 
+// Helper to get the next order_index for a new item in a module
+const getNextOrderIndex = (module: Module): number => {
+    const allItems = [
+        ...(module.lessons || []).map(l => l.order_index || 0),
+        ...(module.sessions || []).map(s => s.order_index || 0),
+        ...(module.quizzes || []).map(q => q.order_index || 0),
+    ];
+    return allItems.length > 0 ? Math.max(...allItems) + 1 : 1;
+};
+
 export function CurriculumTab({ courseId }: CurriculumTabProps) {
     const navigate = useNavigate();
     const [modules, setModules] = useState<Module[]>([]);
@@ -97,58 +107,130 @@ export function CurriculumTab({ courseId }: CurriculumTabProps) {
             }
 
             if (type === 'MODULE_ITEM') {
-                setModules(prevModules => {
-                    const newModules = [...prevModules];
-                    const sourceModuleId = parseInt(source.droppableId.split('-')[2]);
-                    const destModuleId = parseInt(destination.droppableId.split('-')[2]);
+                const sourceModuleId = parseInt(source.droppableId.split('-')[2]);
+                const destModuleId = parseInt(destination.droppableId.split('-')[2]);
 
-                    const sourceModuleIndex = newModules.findIndex(m => m.id === sourceModuleId);
-                    const destModuleIndex = newModules.findIndex(m => m.id === destModuleId);
+                console.log('Drag operation:', { sourceModuleId, destModuleId, sourceIndex: source.index, destIndex: destination.index });
 
-                    if (sourceModuleIndex === -1 || destModuleIndex === -1) return prevModules;
+                const sourceModuleIndex = modules.findIndex(m => m.id === sourceModuleId);
+                const destModuleIndex = modules.findIndex(m => m.id === destModuleId);
 
-                    const sourceModule = { ...newModules[sourceModuleIndex] };
+                if (sourceModuleIndex === -1 || destModuleIndex === -1) {
+                    console.error('Module not found:', { sourceModuleIndex, destModuleIndex });
+                    return;
+                }
 
-                    const getCombinedItems = (mod: any) => [
-                        ...(mod.lessons || []).map((l: any) => ({ ...l, itemType: 'lesson' as const })),
-                        ...(mod.sessions || []).map((s: any) => ({ ...s, itemType: 'session' as const })),
-                        ...(mod.quizzes || []).map((q: any) => ({ ...q, itemType: 'quiz' as const })),
-                    ].sort((a, b) => a.order_index - b.order_index);
+                const newModules = [...modules];
+                const sourceModule = { ...newModules[sourceModuleIndex] };
 
-                    const sourceItems = getCombinedItems(sourceModule);
+                // Combine all items and assign initial order if missing
+                const getCombinedItems = (mod: any) => {
+                    const items = [
+                        ...(mod.lessons || []).map((l: any, idx: number) => ({ ...l, itemType: 'lesson' as const, order_index: l.order_index || idx + 1 })),
+                        ...(mod.sessions || []).map((s: any, idx: number) => ({ ...s, itemType: 'session' as const, order_index: s.order_index || idx + 1 })),
+                        ...(mod.quizzes || []).map((q: any, idx: number) => ({ ...q, itemType: 'quiz' as const, order_index: q.order_index || idx + 1 })),
+                    ];
+                    return items.sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
+                };
 
-                    if (sourceModuleId === destModuleId) {
-                        const reordered = reorder(sourceItems, source.index, destination.index);
-                        const updated = reordered.map((item, i) => ({ ...item, order_index: i + 1 }));
+                const sourceItems = getCombinedItems(sourceModule);
+                console.log('Source items before reorder:', sourceItems.map(i => ({ id: i.id, type: i.itemType, order: i.order_index })));
 
-                        sourceModule.lessons = updated.filter(i => i.itemType === 'lesson').map(({ itemType, ...rest }) => rest as any);
-                        sourceModule.sessions = updated.filter(i => i.itemType === 'session').map(({ itemType, ...rest }) => rest as any);
-                        sourceModule.quizzes = updated.filter(i => i.itemType === 'quiz').map(({ itemType, ...rest }) => rest as any);
+                let itemsToUpdate: { id: number; itemType: string; order_index: number; module_id?: number }[] = [];
 
-                        newModules[sourceModuleIndex] = sourceModule;
-                    } else {
-                        const destModule = { ...newModules[destModuleIndex] };
-                        const destItems = getCombinedItems(destModule);
-                        const [removed] = sourceItems.splice(source.index, 1);
-                        destItems.splice(destination.index, 0, removed);
+                if (sourceModuleId === destModuleId) {
+                    const reordered = reorder(sourceItems, source.index, destination.index);
+                    const updated = reordered.map((item, i) => ({ ...item, order_index: i + 1 }));
 
-                        const updatedSource = sourceItems.map((item, i) => ({ ...item, order_index: i + 1 }));
-                        const updatedDest = destItems.map((item, i) => ({ ...item, order_index: i + 1 }));
+                    console.log('Items after reorder:', updated.map(i => ({ id: i.id, type: i.itemType, order: i.order_index })));
 
-                        sourceModule.lessons = updatedSource.filter(i => i.itemType === 'lesson').map(({ itemType, ...rest }) => rest as any);
-                        sourceModule.sessions = updatedSource.filter(i => i.itemType === 'session').map(({ itemType, ...rest }) => rest as any);
-                        sourceModule.quizzes = updatedSource.filter(i => i.itemType === 'quiz').map(({ itemType, ...rest }) => rest as any);
+                    sourceModule.lessons = updated.filter(i => i.itemType === 'lesson').map(({ itemType, ...rest }) => rest as any);
+                    sourceModule.sessions = updated.filter(i => i.itemType === 'session').map(({ itemType, ...rest }) => rest as any);
+                    sourceModule.quizzes = updated.filter(i => i.itemType === 'quiz').map(({ itemType, ...rest }) => rest as any);
 
-                        destModule.lessons = updatedDest.filter(i => i.itemType === 'lesson').map(({ itemType, ...rest }) => rest as any);
-                        destModule.sessions = updatedDest.filter(i => i.itemType === 'session').map(({ itemType, ...rest }) => rest as any);
-                        destModule.quizzes = updatedDest.filter(i => i.itemType === 'quiz').map(({ itemType, ...rest }) => rest as any);
+                    newModules[sourceModuleIndex] = sourceModule;
 
-                        newModules[sourceModuleIndex] = sourceModule;
-                        newModules[destModuleIndex] = destModule;
+                    // Collect items to update in backend
+                    itemsToUpdate = updated.map(item => ({
+                        id: item.id,
+                        itemType: item.itemType,
+                        order_index: item.order_index,
+                    }));
+                } else {
+                    const destModule = { ...newModules[destModuleIndex] };
+                    const destItems = getCombinedItems(destModule);
+                    const [removed] = sourceItems.splice(source.index, 1);
+                    destItems.splice(destination.index, 0, removed);
+
+                    const updatedSource = sourceItems.map((item, i) => ({ ...item, order_index: i + 1 }));
+                    const updatedDest = destItems.map((item, i) => ({ ...item, order_index: i + 1 }));
+
+                    console.log('Source items after move:', updatedSource.map(i => ({ id: i.id, type: i.itemType, order: i.order_index })));
+                    console.log('Dest items after move:', updatedDest.map(i => ({ id: i.id, type: i.itemType, order: i.order_index })));
+
+                    sourceModule.lessons = updatedSource.filter(i => i.itemType === 'lesson').map(({ itemType, ...rest }) => rest as any);
+                    sourceModule.sessions = updatedSource.filter(i => i.itemType === 'session').map(({ itemType, ...rest }) => rest as any);
+                    sourceModule.quizzes = updatedSource.filter(i => i.itemType === 'quiz').map(({ itemType, ...rest }) => rest as any);
+
+                    destModule.lessons = updatedDest.filter(i => i.itemType === 'lesson').map(({ itemType, ...rest }) => rest as any);
+                    destModule.sessions = updatedDest.filter(i => i.itemType === 'session').map(({ itemType, ...rest }) => rest as any);
+                    destModule.quizzes = updatedDest.filter(i => i.itemType === 'quiz').map(({ itemType, ...rest }) => rest as any);
+
+                    newModules[sourceModuleIndex] = sourceModule;
+                    newModules[destModuleIndex] = destModule;
+
+                    // Collect items to update in backend (source module items)
+                    itemsToUpdate = [
+                        ...updatedSource.map(item => ({
+                            id: item.id,
+                            itemType: item.itemType,
+                            order_index: item.order_index,
+                        })),
+                        // Destination module items (including module_id change for the moved item)
+                        ...updatedDest.map(item => ({
+                            id: item.id,
+                            itemType: item.itemType,
+                            order_index: item.order_index,
+                            module_id: destModuleId,
+                        })),
+                    ];
+                }
+
+                setModules(newModules);
+
+                // Persist order changes to backend
+                console.log('Items to update:', itemsToUpdate);
+                const updatePromises: Promise<any>[] = [];
+
+                for (const item of itemsToUpdate) {
+                    console.log(`Updating ${item.itemType} id=${item.id} order_index=${item.order_index}`, item.module_id ? `module_id=${item.module_id}` : '');
+
+                    if (item.itemType === 'lesson') {
+                        updatePromises.push(
+                            lessonsService.updateLesson(item.id, {
+                                order_index: item.order_index,
+                                ...(item.module_id && { module_id: item.module_id }),
+                            })
+                        );
+                    } else if (item.itemType === 'session') {
+                        updatePromises.push(
+                            sessionsService.updateSession(item.id, {
+                                order_index: item.order_index,
+                                ...(item.module_id && { module_id: item.module_id }),
+                            })
+                        );
+                    } else if (item.itemType === 'quiz') {
+                        updatePromises.push(
+                            quizzesService.updateQuiz(item.id, {
+                                order_index: item.order_index,
+                            })
+                        );
                     }
-                    return newModules;
-                });
-                toast.info('Item reordered locally');
+                }
+
+                const results = await Promise.all(updatePromises);
+                console.log('Update results:', results);
+                toast.success('Order updated successfully');
             }
         } catch (error) {
             console.error('Failed to update order:', error);
@@ -233,7 +315,6 @@ export function CurriculumTab({ courseId }: CurriculumTabProps) {
     };
 
     const handleSaveLesson = async (lessonData: Partial<Lesson>, file?: File) => {
-        console.log('CurriculumTab handleSaveLesson received:', lessonData, 'file:', file?.name);
         if (!currentModuleId) return;
         try {
             const targetModule = modules.find(m => m.id === currentModuleId);
@@ -309,7 +390,7 @@ export function CurriculumTab({ courseId }: CurriculumTabProps) {
                     }
                 }
 
-                const nextOrderIndex = (targetModule.lessons || []).reduce((max, l) => Math.max(max, l.order_index || 0), 0) + 1;
+                const nextOrderIndex = getNextOrderIndex(targetModule);
 
                 let apiResult;
                 if (file && lessonData.content_type === 'video') {
@@ -341,7 +422,6 @@ export function CurriculumTab({ courseId }: CurriculumTabProps) {
                         pdf_url: finalPdfUrl,
                         content_url: lessonData.content_url || '',
                     };
-                    console.log('Creating lesson with JSON payload:', payload);
                     apiResult = await lessonsService.createLesson(courseId, payload);
                 }
 
@@ -415,6 +495,9 @@ export function CurriculumTab({ courseId }: CurriculumTabProps) {
             } else {
                 if (!currentModuleId) return;
 
+                const targetModule = modules.find(m => m.id === currentModuleId);
+                const nextOrderIndex = targetModule ? getNextOrderIndex(targetModule) : 1;
+
                 const apiResult = await sessionsService.createSessionForCourse(courseId, {
                     title: sessionData.title || '',
                     start_time: startTime,
@@ -424,6 +507,7 @@ export function CurriculumTab({ courseId }: CurriculumTabProps) {
                     location: sessionData.location,
                     meeting_url: sessionData.meeting_url,
                     module_id: currentModuleId,
+                    order_index: nextOrderIndex,
                 });
 
                 setModules(modules.map(module => {
@@ -462,11 +546,13 @@ export function CurriculumTab({ courseId }: CurriculumTabProps) {
             const targetModule = modules.find(m => m.id === currentModuleId);
             if (!targetModule) return;
 
+            const nextOrderIndex = getNextOrderIndex(targetModule);
+
             const newQuiz = await quizzesService.createQuiz(currentModuleId, {
                 title: quizData.title || '',
                 passing_score: quizData.passing_score || 70,
                 is_final: quizData.is_final || false,
-                order_index: (targetModule.quizzes || []).length + 1,
+                order_index: nextOrderIndex,
             });
 
             setModules(modules.map(module => {

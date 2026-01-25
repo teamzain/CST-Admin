@@ -2,12 +2,12 @@
 
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
+
 import { DataTable } from '@/components/shared/DataTable';
 import { QuizzesFilters } from '@/components/quizzes/quizzes-filters';
 import { getQuizColumns } from '@/components/quizzes/quiz-columns';
 import { useCoursesStore } from '@/stores/courses-store';
-import { Plus } from 'lucide-react';
+
 import { DeleteConfirmationDialog } from '@/components/shared/delete-confirmation-dialog';
 
 export default function AllQuizzesPage() {
@@ -61,9 +61,7 @@ export default function AllQuizzesPage() {
         }
     };
 
-    const handleCreateClick = () => {
-        navigate('/quizzes/create');
-    };
+
 
     const columns = getQuizColumns(handleView, handleDeleteClick);
 
@@ -80,13 +78,7 @@ export default function AllQuizzesPage() {
                             {filteredQuizzes.length} Quizzes Found
                         </p>
                     </div>
-                    <Button
-                        className="bg-primary hover:bg-primary/90 text-black font-medium gap-2"
-                        onClick={handleCreateClick}
-                    >
-                        <Plus className="w-4 h-4" />
-                        New Quiz
-                    </Button>
+
                 </div>
 
                 {/* Filters */}

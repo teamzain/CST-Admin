@@ -2,12 +2,12 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
+
 import { DataTable } from '@/components/shared/DataTable';
 import { SessionsFilters } from '@/components/sessions/sessions-filters';
 import { getSessionColumns } from '@/components/sessions/session-columns';
 import { useCoursesStore } from '@/stores/courses-store';
-import { Plus } from 'lucide-react';
+
 import { DeleteConfirmationDialog } from '@/components/shared/delete-confirmation-dialog';
 import { sessionsService, type Session } from '@/api/sessions';
 import { toast } from 'sonner';
@@ -87,9 +87,7 @@ export default function AllSessionsPage() {
         }
     };
 
-    const handleCreateClick = () => {
-        navigate('/sessions/create');
-    };
+
 
     const columns = getSessionColumns(handleView, handleDeleteClick);
 
@@ -106,13 +104,7 @@ export default function AllSessionsPage() {
                             {filteredSessions.length} Sessions Found
                         </p>
                     </div>
-                    <Button
-                        className="bg-primary hover:bg-primary/90 text-black font-medium gap-2"
-                        onClick={handleCreateClick}
-                    >
-                        <Plus className="w-4 h-4" />
-                        New Session
-                    </Button>
+
                 </div>
 
                 {/* Filters */}

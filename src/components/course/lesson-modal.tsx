@@ -146,7 +146,6 @@ export function LessonModal({ isOpen, onClose, onSave, lesson }: LessonModalProp
             ...formData,
             enable_download: isDownloadEnabled,
         };
-        console.log('LessonModal submitting data:', data);
         onSave(data, selectedFile || undefined);
         onClose();
     };
@@ -290,6 +289,19 @@ export function LessonModal({ isOpen, onClose, onSave, lesson }: LessonModalProp
                                                         >
                                                             Remove
                                                         </Button>
+                                                        {formData.content_url && (
+                                                            <Button
+                                                                type="button"
+                                                                variant="link"
+                                                                size="sm"
+                                                                asChild
+                                                                className="mt-2"
+                                                            >
+                                                                <a href={formData.content_url} target="_blank" rel="noopener noreferrer">
+                                                                    View Video
+                                                                </a>
+                                                            </Button>
+                                                        )}
                                                     </>
                                                 ) : (
                                                     <div className="w-full max-w-md space-y-4">
@@ -370,6 +382,19 @@ export function LessonModal({ isOpen, onClose, onSave, lesson }: LessonModalProp
                                                         >
                                                             Remove
                                                         </Button>
+                                                        {formData.pdf_url && (
+                                                            <Button
+                                                                type="button"
+                                                                variant="link"
+                                                                size="sm"
+                                                                asChild
+                                                                className="mt-2"
+                                                            >
+                                                                <a href={formData.pdf_url} target="_blank" rel="noopener noreferrer">
+                                                                    View PDF
+                                                                </a>
+                                                            </Button>
+                                                        )}
                                                     </>
                                                 ) : (
                                                     <div className="w-full max-w-md space-y-4">
@@ -401,7 +426,6 @@ export function LessonModal({ isOpen, onClose, onSave, lesson }: LessonModalProp
                                             <Textarea
                                                 value={formData.content_text || ''}
                                                 onChange={(e) => {
-                                                    console.log('Textarea onChange:', e.target.value);
                                                     setFormData({ ...formData, content_text: e.target.value });
                                                 }}
                                                 placeholder="Enter lesson text content here..."

@@ -46,7 +46,6 @@ class LessonsService {
             if (token) {
                 config.headers.Authorization = `Bearer ${token}`;
             }
-            console.log(`Lessons API Request [${config.method?.toUpperCase()}]:`, config.url, config.data);
             return config;
         });
 
@@ -163,9 +162,15 @@ class LessonsService {
             const apiKey = import.meta.env.VITE_BUNNY_API_KEY;
             if (!apiKey) throw new Error('Bunny API Key not found in environment');
 
-            const streamUrl = import.meta.env.VITE_BUNNY_STREAM_URL;
+            let streamUrl = import.meta.env.VITE_BUNNY_STREAM_URL || 'https://video.bunnycdn.com/library/';
+            if (!streamUrl.endsWith('/')) {
+                streamUrl += '/';
+            }
 
-            await axios.delete(`${streamUrl}${libraryId}/videos/${videoId}`, {
+            const url = `${streamUrl}${libraryId}/videos/${videoId}`;
+            console.log('Deleting Bunny video at:', url);
+
+            await axios.delete(url, {
                 headers: {
                     'AccessKey': apiKey,
                     'accept': 'application/json',

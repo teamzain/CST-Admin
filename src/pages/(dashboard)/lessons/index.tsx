@@ -1,11 +1,11 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
+
 import { DataTable } from '@/components/shared/DataTable';
 import { LessonsFilters } from '@/components/lessons/lessons-filters';
 import { getLessonColumns } from '@/components/lessons/lesson-columns';
 import { useCoursesStore } from '@/stores/courses-store';
-import { Plus, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { DeleteConfirmationDialog } from '@/components/shared/delete-confirmation-dialog';
 import { lessonsService, type Lesson } from '@/api/lessons';
 import { toast } from 'sonner';
@@ -74,9 +74,7 @@ export default function AllLessonsPage() {
         }
     };
 
-    const handleCreateClick = () => {
-        navigate('/lessons/create');
-    };
+
 
     const columns = getLessonColumns(handleView, handleDeleteClick);
 
@@ -93,13 +91,7 @@ export default function AllLessonsPage() {
                             {filteredLessons.length} Lessons Found
                         </p>
                     </div>
-                    <Button
-                        className="bg-primary hover:bg-primary/90 text-black font-medium gap-2"
-                        onClick={handleCreateClick}
-                    >
-                        <Plus className="w-4 h-4" />
-                        New Lesson
-                    </Button>
+
                 </div>
 
                 {/* Filters */}
