@@ -22,8 +22,7 @@ export default function AllLessonsPage() {
 
     const allLessons = useMemo(() => {
         return courses.flatMap(course =>
-            (course.modules || []).flatMap(module =>
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (course.modules || []).flatMap((module: any) =>
                 (module.lessons || []).map((lesson: any) => ({
                     ...lesson,
                     course_title: course.title,

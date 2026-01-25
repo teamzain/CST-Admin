@@ -23,8 +23,7 @@ export default function AllQuizzesPage() {
     // Flatten quizzes from all courses
     const allQuizzes = useMemo(() => {
         return courses.flatMap(course =>
-            (course.modules || []).flatMap(module =>
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (course.modules || []).flatMap((module: any) =>
                 (module.quizzes || []).map((quiz: any) => ({
                     ...quiz,
                     course_title: course.title,

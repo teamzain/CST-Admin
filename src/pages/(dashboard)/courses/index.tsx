@@ -1,18 +1,21 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/shared/DataTable';
 import { CoursesFilters } from '@/components/courses/courses-filters';
 import { getCourseColumns } from '@/components/courses/course-columns';
 import { useCoursesStore, type Course } from '@/stores/courses-store';
+import { statesApiService } from '@/api/states-api';
+import type { State } from '@/api/states-api';
 import { Plus, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function CoursesPage() {
     const navigate = useNavigate();
-    const { courses } = useCoursesStore();
+    const { courses, fetchCourses } = useCoursesStore();
+    const [allStates, setAllStates] = useState<State[]>([]);
 
     const [searchTerm, setSearchTerm] = useState('');
     const [stateFilter, setStateFilter] = useState<string>('all');
@@ -20,6 +23,29 @@ export default function CoursesPage() {
     const [typeFilter, setTypeFilter] = useState<string>('all');
     const [modeFilter, setModeFilter] = useState<string>('all');
     const [instructorFilter, setInstructorFilter] = useState<string>('all');
+
+    // Fetch courses and states on mount
+    useEffect(() => {
+        const loadData = async () => {
+            try {
+                // Fetch courses from API
+                await fetchCourses();
+            } catch (error) {
+                console.error('Error loading courses:', error);
+            }
+
+            try {
+                // Fetch states from API
+                const states = await statesApiService.getAllStates();
+                setAllStates(states);
+            } catch (error) {
+                console.error('Error loading states:', error);
+                toast.error('Failed to load states');
+            }
+        };
+
+        loadData();
+    }, [fetchCourses]);
 
     // Filter courses
     const filteredCourses = useMemo(() => {
@@ -58,14 +84,11 @@ export default function CoursesPage() {
         ).entries()
     ), [courses]);
 
-    // Get unique states for filter
-    const states = useMemo(() => Array.from(
-        new Map(
-            courses
-                .filter((c) => c.state_id)
-                .map((c) => [c.state_id as number, c.state?.name || ''])
-        ).entries()
-    ), [courses]);
+    // Use API states for filter (already have all states)
+    const states = useMemo(() => 
+        allStates.map((state) => [state.id, state.name] as [number, string]),
+        [allStates]
+    );
 
     return (
         <div className="min-h-screen bg-gray-50 p-4 md:p-6">

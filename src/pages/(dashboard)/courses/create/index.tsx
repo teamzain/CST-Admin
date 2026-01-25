@@ -1,7 +1,7 @@
 'use client';
 
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Upload as UploadIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -16,13 +16,20 @@ import {
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useState, useEffect } from 'react';
-import { useCoursesStore, TRAINING_TYPE, DELIVERY_MODE, type Course, dummyStates, dummyInstructors } from '@/stores/courses-store';
+import { useCoursesStore, TRAINING_TYPE, DELIVERY_MODE, dummyStates, dummyInstructors } from '@/stores/courses-store';
+import { statesApiService } from '@/api/states-api';
+import type { State } from '@/api/states-api';
+import { bunnyUploadService } from '@/api/bunny-upload';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { toast } from 'sonner';
 
 export default function CreateCoursePage() {
     const navigate = useNavigate();
-    const { addCourse, courses } = useCoursesStore();
+    const { addCourse } = useCoursesStore();
     const [step, setStep] = useState(1);
+    const [allStates, setAllStates] = useState<State[]>([]);
+    const [thumbnailPreview, setThumbnailPreview] = useState<string | undefined>();
+    const [isUploadingThumbnail, setIsUploadingThumbnail] = useState(false);
     const [formData, setFormData] = useState<{
         title: string;
         description: string;
@@ -69,6 +76,25 @@ export default function CreateCoursePage() {
         instructor_id: undefined,
     });
 
+    // Fetch states on mount
+    useEffect(() => {
+        const loadStates = async () => {
+            try {
+                const states = await statesApiService.getAllStates();
+                setAllStates(states);
+                // Set first state as default
+                if (states.length > 0) {
+                    setFormData(prev => ({ ...prev, state_id: states[0].id }));
+                }
+            } catch (error) {
+                console.error('Error loading states:', error);
+                // Fallback to dummy states
+                setAllStates(dummyStates as State[]);
+            }
+        };
+        loadStates();
+    }, []);
+
     const handleInputChange = (field: string, value: string | number | boolean | string[] | undefined) => {
         setFormData(prev => ({
             ...prev,
@@ -76,9 +102,30 @@ export default function CreateCoursePage() {
         }));
     };
 
+    const handleThumbnailUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setIsUploadingThumbnail(true);
+        try {
+            const response = await bunnyUploadService.uploadFile(file, 'course/');
+            setFormData(prev => ({ ...prev, thumbnail: response.url }));
+            setThumbnailPreview(response.url);
+            toast.success('Thumbnail uploaded successfully');
+        } catch (error) {
+            console.error('Error uploading thumbnail:', error);
+            toast.error('Failed to upload thumbnail');
+        } finally {
+            setIsUploadingThumbnail(false);
+        }
+    };
+
     // Auto-fill requirements based on State and Training Type
     useEffect(() => {
-        const selectedState = dummyStates.find(s => s.id === formData.state_id);
+        const selectedState = allStates.length > 0 
+            ? allStates.find(s => s.id === formData.state_id)
+            : dummyStates.find(s => s.id === formData.state_id);
+            
         if (!selectedState) return;
 
         let requiredHours = 0;
@@ -96,49 +143,40 @@ export default function CreateCoursePage() {
             setFormData(prev => ({
                 ...prev,
                 required_hours: requiredHours,
-                // Only update duration if it's 0 or same as previous required
                 duration_hours: prev.duration_hours === 0 ? requiredHours : prev.duration_hours,
                 requires_range: requiresRange,
             }));
         }
-    }, [formData.state_id, formData.training_type]);
+    }, [formData.state_id, formData.training_type, allStates]);
 
     const handleSubmit = () => {
-        const newId = Math.max(...courses.map(c => c.id), 0) + 1;
         const selectedState = dummyStates.find(s => s.id === formData.state_id);
-        const selectedInstructor = formData.instructor_id ? dummyInstructors.find(i => i.id === formData.instructor_id) : undefined;
+        const stateName = selectedState?.name || '';
 
-        const newCourse: Course = {
-            id: newId,
+        // Send only the fields the backend expects
+        const courseData = {
             title: formData.title,
             description: formData.description,
-            thumbnail: formData.thumbnail,
             duration_hours: formData.duration_hours,
-            training_type: formData.training_type as TRAINING_TYPE,
-            delivery_mode: formData.delivery_mode as DELIVERY_MODE,
             required_hours: formData.required_hours,
-            is_refresher: formData.is_refresher,
-            certificate_template: formData.certificate_template,
+            training_type: formData.training_type,
+            delivery_mode: formData.delivery_mode,
+            thumbnail: formData.thumbnail,
+            price: formData.price,
+            state: stateName,
             location: formData.location,
-            pre_requirements: formData.pre_requirements,
             requires_exam: formData.requires_exam,
             requires_range: formData.requires_range,
             attendance_required: formData.attendance_required,
             attendance_enabled: formData.attendance_enabled,
             requires_id_verification: formData.requires_id_verification,
-            price: formData.price,
+            is_refresher: formData.is_refresher,
             is_price_negotiable: formData.is_price_negotiable,
-            state_id: formData.state_id,
-            instructor_id: formData.instructor_id,
-            is_active: formData.is_active,
-            created_at: new Date(),
-            updated_at: new Date(),
-            state: selectedState,
-            instructor: selectedInstructor,
-            enrolled_students: 0,
-        };
+            pre_requirements: formData.pre_requirements,
+            certificate_template: formData.certificate_template,
+        } as never;
 
-        addCourse(newCourse);
+        addCourse(courseData);
         navigate('/courses');
     };
 
@@ -226,7 +264,7 @@ export default function CreateCoursePage() {
                                             <SelectValue placeholder="Select State" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            {dummyStates.map((state) => (
+                                            {(allStates.length > 0 ? allStates : dummyStates).map((state) => (
                                                 <SelectItem key={state.id} value={String(state.id)}>
                                                     {state.name} ({state.code})
                                                 </SelectItem>
@@ -374,6 +412,40 @@ export default function CreateCoursePage() {
                                         placeholder="e.g., Chicago, IL"
                                         className="bg-input border-border mt-2"
                                     />
+                                </div>
+                            </div>
+
+                            <div>
+                                <Label>Course Thumbnail Image</Label>
+                                <div className="mt-2 border-2 border-dashed border-border rounded-lg p-6 text-center cursor-pointer hover:border-primary hover:bg-primary/5 transition-all">
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleThumbnailUpload}
+                                        disabled={isUploadingThumbnail}
+                                        className="hidden"
+                                        id="thumbnail-input"
+                                    />
+                                    <label htmlFor="thumbnail-input" className="cursor-pointer block">
+                                        {thumbnailPreview ? (
+                                            <div className="space-y-2">
+                                                <img 
+                                                    src={thumbnailPreview} 
+                                                    alt="Thumbnail preview" 
+                                                    className="h-32 w-32 object-cover rounded mx-auto"
+                                                />
+                                                <p className="text-sm text-muted-foreground">Click to change thumbnail</p>
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-2">
+                                                <UploadIcon className="w-8 h-8 mx-auto text-muted-foreground" />
+                                                <p className="text-sm font-medium">
+                                                    {isUploadingThumbnail ? 'Uploading...' : 'Click to upload thumbnail'}
+                                                </p>
+                                                <p className="text-xs text-muted-foreground">PNG, JPG, GIF up to 5MB</p>
+                                            </div>
+                                        )}
+                                    </label>
                                 </div>
                             </div>
 

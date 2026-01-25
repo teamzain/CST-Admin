@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/shared/DataTable';
@@ -9,34 +9,54 @@ import { getSessionColumns } from '@/components/sessions/session-columns';
 import { useCoursesStore } from '@/stores/courses-store';
 import { Plus } from 'lucide-react';
 import { DeleteConfirmationDialog } from '@/components/shared/delete-confirmation-dialog';
+import { sessionsService, type Session } from '@/api/sessions';
+import { toast } from 'sonner';
 
 export default function AllSessionsPage() {
     const navigate = useNavigate();
     const { courses } = useCoursesStore();
 
+    const [sessions, setSessions] = useState<Session[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [sessionTypeFilter, setSessionTypeFilter] = useState<string>('all');
     const [courseFilter, setCourseFilter] = useState<string>('all');
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [sessionToDelete, setSessionToDelete] = useState<any>(null);
 
+    useEffect(() => {
+        const fetchSessions = async () => {
+            try {
+                setIsLoading(true);
+                const data = await sessionsService.getAllSessions();
+                setSessions(data);
+            } catch (error) {
+                console.error('Failed to fetch sessions:', error);
+                toast.error('Failed to load sessions');
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchSessions();
+    }, []);
+
     const allSessions = useMemo(() => {
-        return courses.flatMap(course =>
-            (course.modules || []).flatMap(module =>
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                (module.sessions || []).map((session: any) => ({
-                    ...session,
-                    course_title: course.title,
-                    course_id: course.id,
-                    module_title: module.title
-                }))
-            )
-        );
-    }, [courses]);
+        return sessions.map((session: any) => {
+            // Find course and module titles if not provided by API
+            const course = (courses as any[]).find((c: any) => c.id === session.course_id);
+            const module = course?.modules?.find((m: any) => m.id === session.module_id);
+
+            return {
+                ...session,
+                course_title: session.course_title || course?.title || 'Unknown Course',
+                module_title: session.module_title || module?.title || 'Unknown Module'
+            };
+        });
+    }, [sessions, courses]);
 
     const filteredSessions = useMemo(() => {
-        return allSessions.filter((session) => {
-            const matchesSearch = session.title.toLowerCase().includes(searchTerm.toLowerCase());
+        return allSessions.filter((session: any) => {
+            const matchesSearch = (session.title || '').toLowerCase().includes(searchTerm.toLowerCase());
             const matchesCourse = courseFilter === 'all' || String(session.course_id) === courseFilter;
             const matchesSessionType = sessionTypeFilter === 'all' || session.session_type === sessionTypeFilter;
 
@@ -53,11 +73,19 @@ export default function AllSessionsPage() {
         setIsDeleteDialogOpen(true);
     };
 
-    const handleConfirmDelete = () => {
+    const handleConfirmDelete = async () => {
         if (sessionToDelete) {
-            // Implement session deletion logic here
-            console.log('Delete session:', sessionToDelete);
-            setSessionToDelete(null);
+            try {
+                await sessionsService.deleteSession(sessionToDelete.id);
+                setSessions(prev => prev.filter(s => s.id !== sessionToDelete.id));
+                toast.success('Session deleted successfully');
+            } catch (error) {
+                console.error('Failed to delete session:', error);
+                toast.error('Failed to delete session');
+            } finally {
+                setSessionToDelete(null);
+                setIsDeleteDialogOpen(false);
+            }
         }
     };
 
@@ -102,14 +130,22 @@ export default function AllSessionsPage() {
 
                 {/* Data Table */}
                 <div className="overflow-x-auto">
-                    <DataTable
-                        columns={columns}
-                        data={filteredSessions}
-                        pageSize={10}
-                        enableRowSelection={true}
-                        searchColumn="title"
-                        searchValue={searchTerm}
-                    />
+                    {isLoading ? (
+                        <div className="flex items-center justify-center p-12">
+                            <div className="text-center">
+                                <p className="text-muted-foreground">Loading sessions...</p>
+                            </div>
+                        </div>
+                    ) : (
+                        <DataTable
+                            columns={columns}
+                            data={filteredSessions}
+                            pageSize={10}
+                            enableRowSelection={true}
+                            searchColumn="title"
+                            searchValue={searchTerm}
+                        />
+                    )}
                 </div>
             </div>
 

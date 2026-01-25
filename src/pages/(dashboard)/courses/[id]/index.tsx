@@ -5,7 +5,7 @@ import { ArrowLeft, Save, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useCoursesStore, type Course } from '@/stores/courses-store';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { DeleteConfirmationDialog } from '@/components/shared/delete-confirmation-dialog';
 import { GeneralInformationTab } from '@/components/course/general-information-tab';
 import { CurriculumTab } from '@/components/course/curriculum-tab';
@@ -14,30 +14,52 @@ import { ComplianceTab } from '@/components/course/compliance-tab';
 export default function CourseDetailsPage() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
-    const { getCourseById, updateCourse, deleteCourse } = useCoursesStore();
-    const [course, setCourse] = useState<Course | null>(() => {
-        return getCourseById(Number(id)) || null;
-    });
+    const { courses, fetchCourseById, updateCourse, deleteCourse, isLoading } = useCoursesStore();
+    const course = id ? courses.find(c => c.id === Number(id)) : null;
     const [isEditing, setIsEditing] = useState(false);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-    const [formData, setFormData] = useState<Partial<Course>>(() => {
-        const foundCourse = getCourseById(Number(id));
-        return foundCourse || {};
-    });
+    const [formData, setFormData] = useState<Partial<Course>>({});
+
+    useEffect(() => {
+        if (id && !course) {
+            fetchCourseById(Number(id));
+        }
+    }, [id, course, fetchCourseById]);
+
+    useEffect(() => {
+        if (course && !isEditing) {
+            setFormData(course);
+        }
+    }, [course, isEditing]);
+
+    if (isLoading && !course) {
+        return (
+            <div className="flex-1 bg-background p-8 flex items-center justify-center">
+                <p className="text-muted-foreground">Loading course...</p>
+            </div>
+        );
+    }
 
     if (!course) {
         return (
             <div className="flex-1 bg-background p-8">
                 <div className="text-center">
                     <p className="text-muted-foreground">Course not found</p>
+                    <Button 
+                        variant="link" 
+                        onClick={() => navigate('/courses')}
+                        className="mt-4"
+                    >
+                        Back to Courses
+                    </Button>
                 </div>
             </div>
         );
     }
 
-    const handleSave = () => {
-        updateCourse(course.id, formData);
-        setCourse({ ...course, ...formData });
+    const handleSave = async () => {
+        if (!course) return;
+        await updateCourse(course.id, formData);
         setIsEditing(false);
     };
 
@@ -127,7 +149,7 @@ export default function CourseDetailsPage() {
                 {/* Course Title & Subtitle outside the card */}
                 <div className="mb-8">
                     <h1 className="text-3xl font-bold text-foreground mb-2">
-                        {course.title}
+                        {isEditing ? (formData.title || course.title) : course.title}
                     </h1>
                     <p className="text-muted-foreground">
                         Manage and organize modules and lessons for your course.

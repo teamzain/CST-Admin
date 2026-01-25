@@ -13,19 +13,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useCoursesStore, type Course } from '@/stores/courses-store';
 import { toast } from 'sonner';
-import type { Quiz, Question, Option, Module } from '@/components/course/module-item';
-
-interface QuizWithContext extends Partial<Quiz> {
-    courseId?: number;
-    moduleId?: number;
-}
 
 export default function QuizDetailsPage() {
     const { id } = useParams();
     const navigate = useNavigate();
     const { courses, updateCourse } = useCoursesStore();
 
-    const [quizSettings, setQuizSettings] = useState<QuizWithContext>({
+    const [quizSettings, setQuizSettings] = useState<any>({
         title: '',
         passing_score: 70,
         time_limit_minutes: 30,
@@ -34,7 +28,7 @@ export default function QuizDetailsPage() {
     });
 
     // Current Question State
-    const [currentQuestion, setCurrentQuestion] = useState<Partial<Question>>({
+    const [currentQuestion, setCurrentQuestion] = useState<any>({
         text: '',
         points: 1,
         options: [
@@ -46,13 +40,13 @@ export default function QuizDetailsPage() {
 
     useEffect(() => {
         if (id) {
-            let foundQuiz: Quiz | undefined;
+            let foundQuiz: any;
             let foundCourseId: number | undefined;
             let foundModuleId: number | undefined;
 
             for (const course of courses) {
-                for (const module of course.modules || []) {
-                    const quiz = module.quizzes?.find((q: Quiz) => String(q.id) === id);
+                for (const module of (course.modules || []) as any[]) {
+                    const quiz = module.quizzes?.find((q: any) => String(q.id) === id);
                     if (quiz) {
                         foundQuiz = quiz;
                         foundCourseId = course.id;
@@ -74,17 +68,17 @@ export default function QuizDetailsPage() {
     }, [id, courses]);
 
     const handleAddOption = () => {
-        setCurrentQuestion(prev => ({
+        setCurrentQuestion((prev: any) => ({
             ...prev,
             options: [...(prev.options || []), { id: (prev.options?.length || 0) + 1, text: '' }]
         }));
     };
 
     const handleRemoveOption = (index: number) => {
-        setCurrentQuestion(prev => ({
+        setCurrentQuestion((prev: any) => ({
             ...prev,
-            options: prev.options?.filter((_, i) => i !== index),
-            correct_answers: prev.correct_answers?.filter(id => id !== index + 1)
+            options: prev.options?.filter((_: any, i: number) => i !== index),
+            correct_answers: prev.correct_answers?.filter((id: any) => id !== index + 1)
         }));
     };
 
@@ -95,10 +89,10 @@ export default function QuizDetailsPage() {
     };
 
     const toggleCorrectAnswer = (optionId: number) => {
-        const currentCorrect = currentQuestion.correct_answers || [];
+        const currentCorrect = (currentQuestion.correct_answers || []) as any[];
         let newCorrect;
         if (currentCorrect.includes(optionId)) {
-            newCorrect = currentCorrect.filter(id => id !== optionId);
+            newCorrect = currentCorrect.filter((id: any) => id !== optionId);
         } else {
             newCorrect = [...currentCorrect, optionId];
         }
@@ -108,16 +102,16 @@ export default function QuizDetailsPage() {
     const handleAddQuestion = () => {
         if (!currentQuestion.text || !currentQuestion.options?.length) return;
 
-        const newQuestion: Question = {
+        const newQuestion: any = {
             id: Date.now(),
             text: currentQuestion.text,
             points: currentQuestion.points || 1,
-            options: currentQuestion.options as Option[],
+            options: currentQuestion.options as any[],
             correct_answers: currentQuestion.correct_answers || [],
             order_index: quizSettings.questions?.length || 0,
         };
 
-        setQuizSettings(prev => ({
+        setQuizSettings((prev: any) => ({
             ...prev,
             questions: [...(prev.questions || []), newQuestion]
         }));
@@ -134,9 +128,9 @@ export default function QuizDetailsPage() {
     };
 
     const handleDeleteQuestion = (id: number) => {
-        setQuizSettings(prev => ({
+        setQuizSettings((prev: any) => ({
             ...prev,
-            questions: prev.questions?.filter(q => q.id !== id)
+            questions: prev.questions?.filter((q: any) => q.id !== id)
         }));
     };
 
@@ -151,11 +145,11 @@ export default function QuizDetailsPage() {
         const course = courses.find((c: Course) => c.id === courseId);
         if (!course) return;
 
-        const updatedModules = course.modules?.map((m: Module) => {
+        const updatedModules = (course.modules as any[])?.map((m: any) => {
             if (m.id === moduleId) {
                 return {
                     ...m,
-                    quizzes: m.quizzes?.map((q: Quiz) => String(q.id) === id ? { ...q, ...quizData } : q)
+                    quizzes: m.quizzes?.map((q: any) => String(q.id) === id ? { ...q, ...quizData } : q)
                 };
             }
             return m;
@@ -174,7 +168,7 @@ export default function QuizDetailsPage() {
         reader.onload = (event) => {
             const text = event.target?.result as string;
             const lines = text.split('\n');
-            const newQuestions: Question[] = [];
+            const newQuestions: any[] = [];
 
             lines.forEach((line, index) => {
                 if (!line.trim() || (index === 0 && line.toLowerCase().includes('question'))) return;
@@ -198,7 +192,7 @@ export default function QuizDetailsPage() {
             });
 
             if (newQuestions.length > 0) {
-                setQuizSettings(prev => ({
+                setQuizSettings((prev: any) => ({
                     ...prev,
                     questions: [...(prev.questions || []), ...newQuestions]
                 }));
@@ -261,7 +255,7 @@ export default function QuizDetailsPage() {
 
                                 <div className="space-y-2">
                                     {/* MCQ Options (Dynamic) */}
-                                    {currentQuestion.options?.map((opt, idx) => (
+                                    {(currentQuestion.options as any[])?.map((opt: any, idx: number) => (
                                         <div key={idx} className="flex items-center gap-3">
                                             <div className="flex items-center justify-center pt-2">
                                                 <Checkbox
@@ -329,7 +323,7 @@ export default function QuizDetailsPage() {
                         </div>
 
                         <div className="space-y-3">
-                            {quizSettings.questions?.map((q, i) => (
+                            {quizSettings.questions?.map((q: any, i: number) => (
                                 <Card key={q.id} className="bg-card border-border hover:border-primary/50 transition-colors">
                                     <CardContent className="p-4 flex gap-4">
                                         <div className="flex flex-col items-center gap-2 text-muted-foreground">
@@ -347,7 +341,7 @@ export default function QuizDetailsPage() {
                                                 </div>
                                             </div>
                                             <div className="grid grid-cols-2 gap-2 text-sm text-muted-foreground">
-                                                {q.options.map((opt) => (
+                                                {q.options.map((opt: any) => (
                                                     <div key={opt.id} className={`flex items-center gap-2 ${q.correct_answers.includes(opt.id) ? 'text-green-600 font-medium' : ''}`}>
                                                         {q.correct_answers.includes(opt.id) ? <CheckCircle2 className="w-3 h-3" /> : <div className="w-3 h-3 rounded-full border border-muted-foreground/30" />}
                                                         {opt.text}

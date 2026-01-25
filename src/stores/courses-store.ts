@@ -1,4 +1,26 @@
 import { create } from 'zustand';
+import { CoursesRepository } from '@/repositories/courses';
+import { toast } from 'sonner';
+import { AxiosError } from 'axios';
+import type { State } from '@/api/states-api';
+import type { Module } from '@/api/modules';
+
+// Helper function to extract error messages from backend response
+const getErrorMessage = (error: unknown): string => {
+    if (error instanceof AxiosError) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const data = error.response?.data as any;
+        if (data?.message) {
+            // If message is an array of validation errors
+            if (Array.isArray(data.message)) {
+                return data.message.join(', ');
+            }
+            // If message is a string
+            return data.message;
+        }
+    }
+    return 'Something went wrong';
+};
 
 export enum TRAINING_TYPE {
     UNARMED = 'UNARMED',
@@ -32,7 +54,7 @@ export interface Course {
     requires_id_verification: boolean;
     price: number;
     is_price_negotiable: boolean;
-    state_id: number;
+    state_id?: number;
     instructor_id?: number;
     is_active: boolean;
     published_at?: Date;
@@ -49,67 +71,11 @@ export interface Course {
         code?: string;
     };
     enrolled_students?: number;
-    modules?: any[];
+    modules?: Module[];
 }
 
 // Dummy data for states
-export const dummyStates = [
-    {
-        id: 1,
-        name: 'Illinois',
-        code: 'IL',
-        unarmed_hours: 20,
-        armed_hours: 40,
-        unarmed_passing_score: 70,
-        armed_passing_score: 80,
-        requires_range_training: true,
-        certificate_validity_years: 1
-    },
-    {
-        id: 2,
-        name: 'Texas',
-        code: 'TX',
-        unarmed_hours: 6,
-        armed_hours: 30,
-        unarmed_passing_score: 70,
-        armed_passing_score: 75,
-        requires_range_training: true,
-        certificate_validity_years: 2
-    },
-    {
-        id: 3,
-        name: 'California',
-        code: 'CA',
-        unarmed_hours: 8,
-        armed_hours: 32,
-        unarmed_passing_score: 75,
-        armed_passing_score: 85,
-        requires_range_training: true,
-        certificate_validity_years: 1
-    },
-    {
-        id: 4,
-        name: 'Florida',
-        code: 'FL',
-        unarmed_hours: 40,
-        armed_hours: 28,
-        unarmed_passing_score: 70,
-        armed_passing_score: 70,
-        requires_range_training: true,
-        certificate_validity_years: 2
-    },
-    {
-        id: 5,
-        name: 'New York',
-        code: 'NY',
-        unarmed_hours: 16,
-        armed_hours: 47,
-        unarmed_passing_score: 70,
-        armed_passing_score: 80,
-        requires_range_training: false,
-        certificate_validity_years: 1
-    },
-];
+export const dummyStates: any[] = [];
 
 // Dummy data for instructors
 export const dummyInstructors = [
@@ -121,377 +87,268 @@ export const dummyInstructors = [
     { id: 6, name: 'Emily Davis', avatar: 'https://github.com/shadcn.png' },
 ];
 
-export const initialCourses: Course[] = [
-    {
-        id: 1,
-        title: 'Illinois Unarmed 20-Hour',
-        description: 'Comprehensive unarmed security training course covering basic techniques and procedures.',
-        thumbnail: 'https://via.placeholder.com/150',
-        duration_hours: 20,
-        training_type: TRAINING_TYPE.UNARMED,
-        delivery_mode: DELIVERY_MODE.IN_PERSON,
-        required_hours: 20,
-        is_refresher: false,
-        location: 'Chicago, IL',
-        pre_requirements: ['High School Diploma', 'Valid ID'],
-        requires_exam: true,
-        requires_range: false,
-        attendance_required: true,
-        attendance_enabled: true,
-        requires_id_verification: true,
-        price: 199,
-        is_price_negotiable: false,
-        state_id: 1,
-        instructor_id: 1,
-        is_active: true,
-        published_at: new Date('2024-01-15'),
-        created_at: new Date('2024-01-01'),
-        updated_at: new Date('2024-01-15'),
-        instructor: dummyInstructors[0],
-        state: dummyStates[0],
-        enrolled_students: 45,
-        modules: [
-            {
-                id: 1,
-                title: 'Module 1: Introduction to Security',
-                description: 'Fundamental concepts and principles',
-                order_index: 0,
-                lessons: [
-                    {
-                        id: 1,
-                        title: 'Welcome to Security Training',
-                        content_type: 'video',
-                        duration_min: 15,
-                        order_index: 0,
-                    },
-                    {
-                        id: 2,
-                        title: 'Security Fundamentals PDF',
-                        content_type: 'pdf',
-                        duration_min: 30,
-                        order_index: 1,
-                    },
-                ],
-                sessions: [
-                    {
-                        id: 1,
-                        title: 'Live Orientation Session',
-                        start_time: new Date('2024-01-16T10:00:00').toISOString(),
-                        end_time: new Date('2024-01-16T11:00:00').toISOString(),
-                        session_type: 'LIVE',
-                        meeting_url: 'https://zoom.us/j/123456789',
-                        order_index: 2,
-                    }
-                ],
-                quizzes: [
-                    {
-                        id: 1,
-                        title: 'Module 1 Quiz',
-                        passing_score: 70,
-                        is_final: false,
-                        order_index: 3,
-                        questions: [
-                            {
-                                id: 1,
-                                text: 'What is the primary role of a security guard?',
-                                options: [
-                                    { id: 1, text: 'To enforce laws' },
-                                    { id: 2, text: 'To protect people and property' },
-                                    { id: 3, text: 'To arrest criminals' }
-                                ],
-                                correct_answers: [2],
-                                points: 10,
-                                order_index: 0
-                            }
-                        ]
-                    },
-                ],
-            },
-        ],
-    },
-    {
-        id: 2,
-        title: 'Illinois Armed 40-Hour',
-        description: 'Advanced armed security training with firearms certification.',
-        thumbnail: 'https://via.placeholder.com/150',
-        duration_hours: 40,
-        training_type: TRAINING_TYPE.ARMED,
-        delivery_mode: DELIVERY_MODE.IN_PERSON,
-        required_hours: 40,
-        is_refresher: false,
-        location: 'Chicago, IL',
-        pre_requirements: ['Valid License', 'Background Check'],
-        requires_exam: true,
-        requires_range: true,
-        attendance_required: true,
-        attendance_enabled: true,
-        requires_id_verification: true,
-        price: 499,
-        is_price_negotiable: false,
-        state_id: 1,
-        instructor_id: 2,
-        is_active: true,
-        published_at: new Date('2024-01-10'),
-        created_at: new Date('2024-01-01'),
-        updated_at: new Date('2024-01-10'),
-        instructor: dummyInstructors[1],
-        state: dummyStates[0],
-        enrolled_students: 28,
-    },
-    {
-        id: 3,
-        title: 'Texas Unarmed 6-Hour',
-        description: 'Quick refresher course on basic security procedures.',
-        thumbnail: 'https://via.placeholder.com/150',
-        duration_hours: 6,
-        training_type: TRAINING_TYPE.UNARMED,
-        delivery_mode: DELIVERY_MODE.ONLINE,
-        required_hours: 6,
-        is_refresher: true,
-        pre_requirements: ['Registered Account'],
-        requires_exam: false,
-        requires_range: false,
-        attendance_required: false,
-        attendance_enabled: false,
-        requires_id_verification: false,
-        price: 79,
-        is_price_negotiable: false,
-        state_id: 2,
-        instructor_id: 3,
-        is_active: true,
-        published_at: new Date('2024-02-01'),
-        created_at: new Date('2024-01-20'),
-        updated_at: new Date('2024-02-01'),
-        instructor: dummyInstructors[2],
-        state: dummyStates[1],
-        enrolled_students: 120,
-    },
-    {
-        id: 4,
-        title: 'California Armed 32-Hour',
-        description: 'State-specific armed security certification program.',
-        thumbnail: 'https://via.placeholder.com/150',
-        duration_hours: 32,
-        training_type: TRAINING_TYPE.ARMED,
-        delivery_mode: DELIVERY_MODE.HYBRID,
-        required_hours: 32,
-        is_refresher: false,
-        location: 'Los Angeles, CA',
-        pre_requirements: ['Valid License', 'Medical Clearance'],
-        requires_exam: true,
-        requires_range: true,
-        attendance_required: true,
-        attendance_enabled: true,
-        requires_id_verification: true,
-        price: 449,
-        is_price_negotiable: true,
-        state_id: 3,
-        instructor_id: 4,
-        is_active: false,
-        created_at: new Date('2024-01-05'),
-        updated_at: new Date('2024-01-05'),
-        instructor: dummyInstructors[3],
-        state: dummyStates[2],
-        enrolled_students: 0,
-    },
-    {
-        id: 5,
-        title: 'Florida Refresher Course',
-        description: 'Annual refresher training for active security professionals.',
-        thumbnail: 'https://via.placeholder.com/150',
-        duration_hours: 8,
-        training_type: TRAINING_TYPE.REFRESHER,
-        delivery_mode: DELIVERY_MODE.ONLINE,
-        required_hours: 8,
-        is_refresher: true,
-        pre_requirements: ['Valid License'],
-        requires_exam: false,
-        requires_range: false,
-        attendance_required: false,
-        attendance_enabled: true,
-        requires_id_verification: false,
-        price: 99,
-        is_price_negotiable: false,
-        state_id: 4,
-        instructor_id: 5,
-        is_active: true,
-        published_at: new Date('2024-03-01'),
-        created_at: new Date('2024-02-15'),
-        updated_at: new Date('2024-03-01'),
-        instructor: dummyInstructors[4],
-        state: dummyStates[3],
-        enrolled_students: 34,
-    },
-    {
-        id: 6,
-        title: 'New York Basic Training',
-        description: 'Basic security training meeting NY state requirements.',
-        thumbnail: 'https://via.placeholder.com/150',
-        duration_hours: 16,
-        training_type: TRAINING_TYPE.UNARMED,
-        delivery_mode: DELIVERY_MODE.IN_PERSON,
-        required_hours: 16,
-        is_refresher: false,
-        location: 'New York, NY',
-        pre_requirements: ['High School Diploma', 'Background Check'],
-        requires_exam: true,
-        requires_range: false,
-        attendance_required: true,
-        attendance_enabled: true,
-        requires_id_verification: true,
-        price: 149,
-        is_price_negotiable: false,
-        state_id: 5,
-        instructor_id: 6,
-        is_active: true,
-        published_at: new Date('2024-02-20'),
-        created_at: new Date('2024-02-10'),
-        updated_at: new Date('2024-02-20'),
-        instructor: dummyInstructors[5],
-        state: dummyStates[4],
-        enrolled_students: 22,
-    },
-    {
-        id: 7,
-        title: 'Advanced Pistol Marksmanship',
-        description: 'Advanced firearms training with emphasis on accuracy and safety.',
-        thumbnail: 'https://via.placeholder.com/150',
-        duration_hours: 10,
-        training_type: TRAINING_TYPE.ARMED,
-        delivery_mode: DELIVERY_MODE.IN_PERSON,
-        required_hours: 10,
-        is_refresher: false,
-        location: 'Chicago, IL',
-        pre_requirements: ['Armed License', 'Range Experience'],
-        requires_exam: true,
-        requires_range: true,
-        attendance_required: true,
-        attendance_enabled: true,
-        requires_id_verification: true,
-        price: 299,
-        is_price_negotiable: false,
-        state_id: 1,
-        instructor_id: 1,
-        is_active: true,
-        published_at: new Date('2024-03-05'),
-        created_at: new Date('2024-02-25'),
-        updated_at: new Date('2024-03-05'),
-        instructor: dummyInstructors[0],
-        state: dummyStates[0],
-        enrolled_students: 15,
-    },
-    {
-        id: 8,
-        title: 'Security Law & Ethics',
-        description: 'Comprehensive course on security laws and professional ethics.',
-        thumbnail: 'https://via.placeholder.com/150',
-        duration_hours: 4,
-        training_type: TRAINING_TYPE.UNARMED,
-        delivery_mode: DELIVERY_MODE.ONLINE,
-        required_hours: 4,
-        is_refresher: false,
-        pre_requirements: ['None'],
-        requires_exam: true,
-        requires_range: false,
-        attendance_required: false,
-        attendance_enabled: false,
-        requires_id_verification: false,
-        price: 49,
-        is_price_negotiable: false,
-        state_id: 2,
-        instructor_id: 3,
-        is_active: true,
-        published_at: new Date('2024-01-25'),
-        created_at: new Date('2024-01-15'),
-        updated_at: new Date('2024-01-25'),
-        instructor: dummyInstructors[2],
-        state: dummyStates[1],
-        enrolled_students: 56,
-    },
-    {
-        id: 9,
-        title: 'Crisis Management Workshop',
-        description: 'Workshop on handling crisis situations and emergency response.',
-        thumbnail: 'https://via.placeholder.com/150',
-        duration_hours: 3,
-        training_type: TRAINING_TYPE.REFRESHER,
-        delivery_mode: DELIVERY_MODE.HYBRID,
-        required_hours: 3,
-        is_refresher: false,
-        pre_requirements: ['Basic Training'],
-        requires_exam: false,
-        requires_range: false,
-        attendance_required: false,
-        attendance_enabled: true,
-        requires_id_verification: false,
-        price: 89,
-        is_price_negotiable: false,
-        state_id: 4,
-        instructor_id: 2,
-        is_active: false,
-        created_at: new Date('2024-01-10'),
-        updated_at: new Date('2024-01-10'),
-        instructor: dummyInstructors[1],
-        state: dummyStates[3],
-        enrolled_students: 0,
-    },
-    {
-        id: 10,
-        title: 'Active Shooter Response',
-        description: 'Specialized training for response to active threat situations.',
-        thumbnail: 'https://via.placeholder.com/150',
-        duration_hours: 8,
-        training_type: TRAINING_TYPE.ARMED,
-        delivery_mode: DELIVERY_MODE.IN_PERSON,
-        required_hours: 8,
-        is_refresher: false,
-        location: 'Los Angeles, CA',
-        pre_requirements: ['Armed License', 'Tactical Training'],
-        requires_exam: true,
-        requires_range: true,
-        attendance_required: true,
-        attendance_enabled: true,
-        requires_id_verification: true,
-        price: 199,
-        is_price_negotiable: false,
-        state_id: 3,
-        instructor_id: 4,
-        is_active: true,
-        published_at: new Date('2024-02-28'),
-        created_at: new Date('2024-02-15'),
-        updated_at: new Date('2024-02-28'),
-        instructor: dummyInstructors[3],
-        state: dummyStates[2],
-        enrolled_students: 40,
-    },
-];
+export const initialCourses: Course[] = [];
 
 interface CoursesStore {
     courses: Course[];
-    addCourse: (course: Course) => void;
-    updateCourse: (id: number, course: Partial<Course>) => void;
-    deleteCourse: (id: number) => void;
+    isLoading: boolean;
+    error: string | null;
+    currentFilters: {
+        search?: string;
+        is_active?: boolean;
+        training_type?: string;
+        delivery_mode?: string;
+        instructor_id?: number;
+        state_id?: number;
+    };
+    fetchCourses: (filters?: Record<string, unknown>) => Promise<void>;
+    fetchCourseById: (id: number) => Promise<Course | undefined>;
+    addCourse: (course: Omit<Course, 'id' | 'created_at' | 'updated_at'>) => Promise<void>;
+    updateCourse: (id: number, courseData: Partial<Course>) => Promise<void>;
+    deleteCourse: (id: number) => Promise<void>;
+    publishCourse: (id: number) => Promise<void>;
+    unpublishCourse: (id: number) => Promise<void>;
     getCourseById: (id: number) => Course | undefined;
+    setFilters: (filters: Record<string, unknown>) => void;
 }
 
 export const useCoursesStore = create<CoursesStore>((set, get) => ({
     courses: initialCourses,
-    addCourse: (course) =>
-        set((state) => ({
-            courses: [...state.courses, course],
-        })),
-    updateCourse: (id, courseData) =>
-        set((state) => ({
-            courses: state.courses.map((course) =>
-                course.id === id ? { ...course, ...courseData } : course
-            ),
-        })),
-    deleteCourse: (id) =>
-        set((state) => ({
-            courses: state.courses.filter((course) => course.id !== id),
-        })),
+    isLoading: false,
+    error: null,
+    currentFilters: {
+        is_active: true,
+    },
+
+    fetchCourses: async (filters?: Record<string, unknown>) => {
+        set({ isLoading: true, error: null });
+        try {
+            const queryFilters = {
+                search: filters?.search as string | undefined,
+                is_active: filters?.is_active !== undefined ? Boolean(filters.is_active) : undefined,
+                training_type: filters?.training_type as TRAINING_TYPE | undefined,
+                delivery_mode: filters?.delivery_mode as DELIVERY_MODE | undefined,
+                instructorId: filters?.instructor_id as number | undefined,
+                state_id: filters?.state_id as number | undefined,
+            };
+
+            const apiCourses = await CoursesRepository.fetchAll(queryFilters);
+
+            // Fetch states to populate state objects in courses
+            let allStates = dummyStates as State[];
+            try {
+                const statesApiService = (await import('@/api/states-api')).statesApiService;
+                allStates = await statesApiService.getAllStates();
+            } catch (error) {
+                console.warn('Failed to fetch states from API, using dummy states:', error);
+            }
+
+            // Convert API courses to store courses and populate state object
+            const courses = apiCourses.map((c) => {
+                const stateObj = allStates.find(s => s.id === c.state_id);
+                return {
+                    ...c,
+                    state: stateObj,
+                    created_at: new Date(c.created_at),
+                    updated_at: new Date(c.updated_at),
+                } as Course;
+            });
+            set((state) => ({ ...state, courses, currentFilters: queryFilters }));
+        } catch (error) {
+            console.error('Failed to fetch courses:', error);
+            set({ isLoading: false });
+        } finally {
+            set({ isLoading: false });
+        }
+    },
+
+    fetchCourseById: async (id: number) => {
+        set({ isLoading: true, error: null });
+        try {
+            const apiCourse = await CoursesRepository.fetchById(id);
+
+            // Fetch states to populate state object
+            let allStates = dummyStates as State[];
+            try {
+                const statesApiService = (await import('@/api/states-api')).statesApiService;
+                allStates = await statesApiService.getAllStates();
+            } catch (error) {
+                console.warn('Failed to fetch states:', error);
+            }
+
+            const stateObj = allStates.find(s => s.id === apiCourse.state_id);
+            const convertedCourse = {
+                ...apiCourse,
+                state: stateObj,
+                created_at: new Date(apiCourse.created_at),
+                updated_at: new Date(apiCourse.updated_at),
+            } as Course;
+
+            set((state) => {
+                const courseExists = state.courses.some(c => c.id === id);
+                return {
+                    courses: courseExists
+                        ? state.courses.map(c => c.id === id ? convertedCourse : c)
+                        : [...state.courses, convertedCourse]
+                };
+            });
+            return convertedCourse;
+        } catch (error) {
+            console.error('Failed to fetch course details:', error);
+            return undefined;
+        } finally {
+            set({ isLoading: false });
+        }
+    },
+
+    addCourse: async (courseData) => {
+        set({ isLoading: true, error: null });
+        try {
+            const newCourse = await CoursesRepository.create(courseData as never);
+
+            // Fetch states to populate state object
+            let allStates = dummyStates as State[];
+            try {
+                const statesApiService = (await import('@/api/states-api')).statesApiService;
+                allStates = await statesApiService.getAllStates();
+            } catch (error) {
+                console.warn('Failed to fetch states:', error);
+            }
+
+            const stateObj = allStates.find(s => s.id === newCourse.state_id);
+            const convertedCourse = {
+                ...newCourse,
+                state: stateObj,
+                created_at: new Date(newCourse.created_at),
+                updated_at: new Date(newCourse.updated_at),
+            } as Course;
+            set((state) => ({
+                courses: [...state.courses, convertedCourse],
+            }));
+            toast.success('Course created successfully');
+            set({ isLoading: false });
+        } catch (error) {
+            const errorMessage = getErrorMessage(error);
+            console.error('Failed to create course:', error);
+            toast.error(errorMessage);
+            set({ error: errorMessage, isLoading: false });
+        }
+    },
+
+    updateCourse: async (id, courseData) => {
+        set({ isLoading: true, error: null });
+        try {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const dataToSend: any = { ...courseData };
+
+            // Fetch states for state name lookup
+            let allStates = dummyStates as State[];
+            try {
+                const statesApiService = (await import('@/api/states-api')).statesApiService;
+                allStates = await statesApiService.getAllStates();
+            } catch (error) {
+                console.warn('Failed to fetch states:', error);
+            }
+
+            if (dataToSend.state_id) {
+                const newState = allStates.find(s => s.id === dataToSend.state_id);
+                if (newState) {
+                    dataToSend.state = newState.name;
+                }
+                delete dataToSend.state_id;
+            } else {
+                delete dataToSend.state_id;
+            }
+
+            const updated = await CoursesRepository.update(id, dataToSend as never);
+
+            const stateObj = allStates.find(s => s.id === updated.state_id);
+            const convertedCourse = {
+                ...updated,
+                state: stateObj,
+                created_at: new Date(updated.created_at),
+                updated_at: new Date(updated.updated_at),
+            } as Course;
+            set((state) => ({
+                courses: state.courses.map((c) => (c.id === id ? convertedCourse : c)),
+            }));
+            toast.success('Course updated successfully');
+            set({ isLoading: false });
+        } catch (error) {
+            const errorMessage = getErrorMessage(error);
+            console.error('Failed to update course:', error);
+            toast.error(errorMessage);
+            set({ error: errorMessage, isLoading: false });
+        }
+    },
+
+    deleteCourse: async (id) => {
+        set({ isLoading: true, error: null });
+        try {
+            await CoursesRepository.delete(id);
+            set((state) => ({
+                courses: state.courses.filter((c) => c.id !== id),
+            }));
+            toast.success('Course deleted successfully');
+        } catch (error) {
+            console.error('Failed to delete course:', error);
+            toast.error('Failed to delete course');
+            set({ error: 'Failed to delete course' });
+        } finally {
+            set({ isLoading: false });
+        }
+    },
+
+    publishCourse: async (id) => {
+        set({ isLoading: true, error: null });
+        try {
+            const updated = await CoursesRepository.publish(id);
+            const convertedCourse = {
+                ...updated,
+                created_at: new Date(updated.created_at),
+                updated_at: new Date(updated.updated_at),
+            } as Course;
+            set((state) => ({
+                courses: state.courses.map((c) => (c.id === id ? convertedCourse : c)),
+            }));
+            toast.success('Course published successfully');
+        } catch (error) {
+            console.error('Failed to publish course:', error);
+            toast.error('Failed to publish course');
+            set({ error: 'Failed to publish course' });
+        } finally {
+            set({ isLoading: false });
+        }
+    },
+
+    unpublishCourse: async (id) => {
+        set({ isLoading: true, error: null });
+        try {
+            const updated = await CoursesRepository.unpublish(id);
+            const convertedCourse = {
+                ...updated,
+                created_at: new Date(updated.created_at),
+                updated_at: new Date(updated.updated_at),
+            } as Course;
+            set((state) => ({
+                courses: state.courses.map((c) => (c.id === id ? convertedCourse : c)),
+            }));
+            toast.success('Course unpublished successfully');
+        } catch (error) {
+            console.error('Failed to unpublish course:', error);
+            toast.error('Failed to unpublish course');
+            set({ error: 'Failed to unpublish course' });
+        } finally {
+            set({ isLoading: false });
+        }
+    },
+
     getCourseById: (id) => {
         const state = get();
         return state.courses.find((course) => course.id === id);
+    },
+
+    setFilters: (filters) => {
+        set({ currentFilters: filters as never });
     },
 }));
