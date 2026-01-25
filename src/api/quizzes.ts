@@ -73,7 +73,7 @@ class QuizzesService {
 
     async createQuiz(moduleId: number, data: Partial<Quiz>): Promise<Quiz> {
         try {
-            const response = await this.axiosInstance.post<any>(`/module/${moduleId}/quizzes`, data);
+            const response = await this.axiosInstance.post<any>(`module/${moduleId}/quizzes`, data);
             return this.getData<Quiz>(response);
         } catch (error) {
             console.error('Error creating quiz:', error);
@@ -83,7 +83,7 @@ class QuizzesService {
 
     async updateQuiz(quizId: number, data: Partial<Quiz>): Promise<Quiz> {
         try {
-            const response = await this.axiosInstance.patch<any>(`/quiz/${quizId}`, data);
+            const response = await this.axiosInstance.patch<any>(`quiz/${quizId}`, data);
             return this.getData<Quiz>(response);
         } catch (error) {
             console.error('Error updating quiz:', error);
@@ -93,7 +93,7 @@ class QuizzesService {
 
     async deleteQuiz(quizId: number): Promise<void> {
         try {
-            await this.axiosInstance.delete(`/quiz/${quizId}`);
+            await this.axiosInstance.delete(`quiz/${quizId}`);
         } catch (error) {
             console.error('Error deleting quiz:', error);
             throw error;

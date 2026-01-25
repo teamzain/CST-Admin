@@ -87,7 +87,7 @@ class SessionsService {
      */
     async getAllSessions(): Promise<Session[]> {
         try {
-            const response = await this.axiosInstance.get<Record<string, unknown>>('/live-sessions');
+            const response = await this.axiosInstance.get<Record<string, unknown>>('live-sessions');
             const data = this.getData<Session[]>(response);
             return Array.isArray(data) ? data : [];
         } catch (error) {
@@ -106,7 +106,7 @@ class SessionsService {
      */
     async getSessionsByCourse(courseId: number): Promise<Session[]> {
         try {
-            const response = await this.axiosInstance.get<Record<string, unknown>>(`/${courseId}/live-sessions`);
+            const response = await this.axiosInstance.get<Record<string, unknown>>(`${courseId}/live-sessions`);
             const data = this.getData<Session[]>(response);
             return Array.isArray(data) ? data : [];
         } catch (error) {
@@ -126,7 +126,7 @@ class SessionsService {
      */
     async getSessionById(sessionId: number): Promise<Session> {
         try {
-            const response = await this.axiosInstance.get<Record<string, unknown>>(`/live-sessions/${sessionId}`);
+            const response = await this.axiosInstance.get<Record<string, unknown>>(`live-sessions/${sessionId}`);
             return this.getData<Session>(response);
         } catch (error) {
             const axiosError = error as AxiosError;
@@ -157,7 +157,7 @@ class SessionsService {
             };
 
             console.log('Creating session with payload:', { courseId, ...payload });
-            const response = await this.axiosInstance.post<Record<string, unknown>>(`/${courseId}/live-sessions`, payload);
+            const response = await this.axiosInstance.post<Record<string, unknown>>(`${courseId}/live-sessions`, payload);
             return this.getData<Session>(response);
         } catch (error) {
             const axiosError = error as AxiosError<Record<string, unknown>>;
@@ -177,7 +177,7 @@ class SessionsService {
      */
     async updateSession(sessionId: number, data: Partial<CreateSessionInput>): Promise<Session> {
         try {
-            const response = await this.axiosInstance.patch<Record<string, unknown>>(`/live-sessions/${sessionId}`, data);
+            const response = await this.axiosInstance.patch<Record<string, unknown>>(`live-sessions/${sessionId}`, data);
             return this.getData<Session>(response);
         } catch (error) {
             const axiosError = error as AxiosError<Record<string, unknown>>;
@@ -197,7 +197,7 @@ class SessionsService {
      */
     async deleteSession(sessionId: number): Promise<void> {
         try {
-            await this.axiosInstance.delete(`/live-sessions/${sessionId}`);
+            await this.axiosInstance.delete(`live-sessions/${sessionId}`);
         } catch (error) {
             const axiosError = error as AxiosError;
             console.error('Error deleting session:', {

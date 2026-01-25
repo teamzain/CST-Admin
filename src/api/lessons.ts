@@ -5,12 +5,14 @@ const API_BASE_URL = import.meta.env.VITE_API_COURSE_URL || 'http://localhost:30
 export interface Lesson {
     id: number;
     title: string;
-    content_type: string;
+    content_type: 'video' | 'pdf' | 'text';
     duration_min?: number;
     order_index: number;
     description?: string;
     content_url?: string;
     pdf_url?: string;
+    content_text?: string;
+    enable_download?: boolean;
     course_id?: number;
     module_id?: number;
     bunny_video_id?: string;
@@ -19,6 +21,14 @@ export interface Lesson {
     video_status?: string;
     thumbnail_url?: string;
     video_length?: number;
+    course?: {
+        id: number;
+        title: string;
+    };
+    module?: {
+        id: number;
+        title: string;
+    };
 }
 
 class LessonsService {
@@ -36,6 +46,7 @@ class LessonsService {
             if (token) {
                 config.headers.Authorization = `Bearer ${token}`;
             }
+            console.log(`Lessons API Request [${config.method?.toUpperCase()}]:`, config.url, config.data);
             return config;
         });
 
@@ -82,9 +93,29 @@ class LessonsService {
         return error.message || defaultMessage;
     }
 
-    async createLesson(moduleId: number, data: Partial<Lesson>): Promise<Lesson> {
+    async getAllLessons(): Promise<Lesson[]> {
         try {
-            const response = await this.axiosInstance.post<any>(`/module/${moduleId}/lessons`, data);
+            const response = await this.axiosInstance.get<any>('lessons/all');
+            return this.getData<Lesson[]>(response);
+        } catch (error) {
+            console.error('Error fetching all lessons:', error);
+            throw error;
+        }
+    }
+
+    async getLessonById(lessonId: number): Promise<Lesson> {
+        try {
+            const response = await this.axiosInstance.get<any>(`lesson/${lessonId}`);
+            return this.getData<Lesson>(response);
+        } catch (error) {
+            console.error('Error fetching lesson:', error);
+            throw error;
+        }
+    }
+
+    async createLesson(courseId: number, data: any): Promise<Lesson> {
+        try {
+            const response = await this.axiosInstance.post<any>(`${courseId}/lessons`, data);
             return this.getData<Lesson>(response);
         } catch (error) {
             console.error('Error creating lesson:', error);
@@ -94,7 +125,7 @@ class LessonsService {
 
     async updateLesson(lessonId: number, data: Partial<Lesson>): Promise<Lesson> {
         try {
-            const response = await this.axiosInstance.patch<any>(`/lesson/${lessonId}`, data);
+            const response = await this.axiosInstance.patch<any>(`lesson/${lessonId}`, data);
             return this.getData<Lesson>(response);
         } catch (error) {
             console.error('Error updating lesson:', error);
@@ -104,9 +135,44 @@ class LessonsService {
 
     async deleteLesson(lessonId: number): Promise<void> {
         try {
-            await this.axiosInstance.delete(`/lesson/${lessonId}`);
+            await this.axiosInstance.delete(`lesson/${lessonId}`);
         } catch (error) {
             console.error('Error deleting lesson:', error);
+            throw error;
+        }
+    }
+
+    async replaceVideo(lessonId: number, videoFile: File): Promise<Lesson> {
+        try {
+            const formData = new FormData();
+            formData.append('video', videoFile);
+            const response = await this.axiosInstance.patch<any>(`lesson/${lessonId}/video`, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
+            return this.getData<Lesson>(response);
+        } catch (error) {
+            console.error('Error replacing lesson video:', error);
+            throw error;
+        }
+    }
+
+    async deleteBunnyVideo(libraryId: number, videoId: string): Promise<void> {
+        try {
+            const apiKey = import.meta.env.VITE_BUNNY_API_KEY;
+            if (!apiKey) throw new Error('Bunny API Key not found in environment');
+
+            const streamUrl = import.meta.env.VITE_BUNNY_STREAM_URL;
+
+            await axios.delete(`${streamUrl}${libraryId}/videos/${videoId}`, {
+                headers: {
+                    'AccessKey': apiKey,
+                    'accept': 'application/json',
+                },
+            });
+        } catch (error) {
+            console.error('Error deleting video from Bunny Stream:', error);
             throw error;
         }
     }

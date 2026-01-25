@@ -15,6 +15,7 @@ import { DeleteConfirmationDialog } from '@/components/shared/delete-confirmatio
 import { sessionsService } from '@/api/sessions';
 import { lessonsService } from '@/api/lessons';
 import { quizzesService } from '@/api/quizzes';
+import { bunnyUploadService } from '@/api/bunny-upload';
 
 interface CurriculumTabProps {
     courseId: number;
@@ -45,7 +46,6 @@ export function CurriculumTab({ courseId }: CurriculumTabProps) {
                 setIsLoading(true);
                 const { modulesService } = await import('@/api/modules');
                 const fetchedModules = await modulesService.getModulesByCourse(courseId);
-                console.log('Modules loaded in curriculum-tab:', fetchedModules);
                 setModules(fetchedModules as Module[]);
             } catch (error) {
                 console.error('Failed to fetch modules:', error);
@@ -92,13 +92,11 @@ export function CurriculumTab({ courseId }: CurriculumTabProps) {
                 const updatedModules = newModules.map((m, i) => ({ ...m, order_index: i + 1 }));
                 setModules(updatedModules);
 
-                // Save new order to backend
                 const moduleId = modules[source.index].id;
                 await modulesService.updateModuleOrder(moduleId, destination.index + 1);
             }
 
             if (type === 'MODULE_ITEM') {
-                // Keep the local reordering logic for immediate feedback
                 setModules(prevModules => {
                     const newModules = [...prevModules];
                     const sourceModuleId = parseInt(source.droppableId.split('-')[2]);
@@ -150,8 +148,6 @@ export function CurriculumTab({ courseId }: CurriculumTabProps) {
                     }
                     return newModules;
                 });
-
-                // Note: Full item reordering persistence would require batch update API or individual item updates
                 toast.info('Item reordered locally');
             }
         } catch (error) {
@@ -185,10 +181,8 @@ export function CurriculumTab({ courseId }: CurriculumTabProps) {
                         ? {
                             ...m,
                             ...updatedModule,
-                            // Ensure title and description are updated even if API response is partial
                             title: updatedModule?.title || moduleData.title || m.title,
                             description: updatedModule?.description !== undefined ? updatedModule.description : moduleData.description,
-                            // Preserve curriculum sub-items as they are usually not in the PATCH response
                             lessons: m.lessons,
                             sessions: m.sessions,
                             quizzes: m.quizzes
@@ -203,7 +197,6 @@ export function CurriculumTab({ courseId }: CurriculumTabProps) {
                     order_index: modules.length + 1,
                 });
 
-                // Handle potential nesting from common API patterns
                 const newModule = (response as any).module || response;
 
                 setModules([...modules, {
@@ -239,44 +232,129 @@ export function CurriculumTab({ courseId }: CurriculumTabProps) {
         navigate(`/lessons/${lesson.id}`);
     };
 
-    const handleSaveLesson = async (lessonData: Partial<Lesson>) => {
+    const handleSaveLesson = async (lessonData: Partial<Lesson>, file?: File) => {
+        console.log('CurriculumTab handleSaveLesson received:', lessonData, 'file:', file?.name);
         if (!currentModuleId) return;
         try {
             const targetModule = modules.find(m => m.id === currentModuleId);
             if (!targetModule) return;
 
-            const apiResult = await lessonsService.createLesson(currentModuleId, {
-                title: lessonData.title || '',
-                content_type: lessonData.content_type || 'video',
-                duration_min: lessonData.duration_min,
-                description: lessonData.description,
-                content_url: lessonData.content_url,
-                pdf_url: lessonData.pdf_url,
-                order_index: (targetModule.lessons || []).length + 1,
-            });
+            if (selectedLesson) {
+                let finalData = { ...lessonData };
 
-            // Cast API result to UI Lesson type
-            const newLesson: Lesson = {
-                id: apiResult.id,
-                title: apiResult.title,
-                content_type: (apiResult.content_type as 'video' | 'pdf' | 'text') || 'video',
-                order_index: apiResult.order_index,
-                duration_min: apiResult.duration_min,
-                description: apiResult.description,
-                content_url: apiResult.content_url,
-                pdf_url: apiResult.pdf_url,
-                bunny_video_id: (apiResult as any).bunny_video_id,
-                video_status: (apiResult as any).video_status,
-            };
+                if (file && lessonData.content_type === 'pdf') {
+                    toast.loading('Replacing PDF...', { id: 'pdf-upload' });
+                    try {
+                        // 1. Delete old file if exists
+                        if (selectedLesson.pdf_url) {
+                            try {
+                                const url = new URL(selectedLesson.pdf_url);
+                                const oldPath = url.pathname.startsWith('/') ? url.pathname.substring(1) : url.pathname;
+                                await bunnyUploadService.deleteFile(oldPath);
+                            } catch (e) {
+                                console.warn('Could not delete old PDF:', e);
+                            }
+                        }
 
-            setModules(modules.map(module => {
-                if (module.id === currentModuleId) {
-                    return { ...module, lessons: [...(module.lessons || []), newLesson] };
+                        // 2. Upload new file
+                        const uploadRes = await bunnyUploadService.uploadFile(file, 'course-lesson/');
+                        finalData.pdf_url = uploadRes.url;
+                        toast.success('PDF replaced successfully', { id: 'pdf-upload' });
+                    } catch (error) {
+                        toast.error('Failed to replace PDF', { id: 'pdf-upload' });
+                        throw error;
+                    }
                 }
-                return module;
-            }));
-            toast.success('Lesson created successfully');
+
+                let apiResult;
+                if (file && lessonData.content_type === 'video') {
+                    const formData = new FormData();
+                    // Clean up finalData to remove nested objects before appending
+                    const { course, module, ...cleanData } = finalData as any;
+                    Object.entries(cleanData).forEach(([key, value]) => {
+                        if (value !== undefined && value !== null) {
+                            formData.append(key, String(value));
+                        }
+                    });
+                    formData.append('video', file);
+                    apiResult = await lessonsService.updateLesson(selectedLesson.id, formData as any);
+                } else {
+                    // Clean up finalData to remove nested objects
+                    const { course, module, ...cleanData } = finalData as any;
+                    apiResult = await lessonsService.updateLesson(selectedLesson.id, cleanData);
+                }
+
+                setModules(modules.map(module => {
+                    if (module.id === currentModuleId) {
+                        return {
+                            ...module,
+                            lessons: (module.lessons || []).map(l => l.id === selectedLesson.id ? { ...l, ...apiResult as any } : l)
+                        };
+                    }
+                    return module;
+                }));
+                toast.success('Lesson updated successfully');
+            } else {
+                let finalPdfUrl = lessonData.pdf_url || '';
+
+                if (file && lessonData.content_type === 'pdf') {
+                    toast.loading('Uploading PDF...', { id: 'pdf-upload' });
+                    try {
+                        const uploadRes = await bunnyUploadService.uploadFile(file, 'course-lesson/');
+                        finalPdfUrl = uploadRes.url;
+                        toast.success('PDF uploaded successfully', { id: 'pdf-upload' });
+                    } catch (error) {
+                        toast.error('Failed to upload PDF', { id: 'pdf-upload' });
+                        throw error;
+                    }
+                }
+
+                const nextOrderIndex = (targetModule.lessons || []).reduce((max, l) => Math.max(max, l.order_index || 0), 0) + 1;
+
+                let apiResult;
+                if (file && lessonData.content_type === 'video') {
+                    const formData = new FormData();
+                    formData.append('title', lessonData.title || '');
+                    formData.append('content_type', lessonData.content_type || 'video');
+                    formData.append('order_index', String(nextOrderIndex));
+                    formData.append('module_id', String(currentModuleId));
+                    formData.append('description', lessonData.description || '');
+                    formData.append('duration_min', String(lessonData.duration_min || 0));
+                    formData.append('enable_download', String(lessonData.enable_download || false));
+
+                    if (lessonData.content_text) {
+                        formData.append('content_text', lessonData.content_text);
+                    }
+                    formData.append('video', file);
+
+                    apiResult = await lessonsService.createLesson(courseId, formData);
+                } else {
+                    const payload = {
+                        title: lessonData.title || '',
+                        content_type: lessonData.content_type || 'text',
+                        order_index: nextOrderIndex,
+                        module_id: currentModuleId,
+                        description: lessonData.description || '',
+                        duration_min: lessonData.duration_min || 0,
+                        enable_download: lessonData.enable_download || false,
+                        content_text: lessonData.content_text, // Send exactly what's in lessonData
+                        pdf_url: finalPdfUrl,
+                        content_url: lessonData.content_url || '',
+                    };
+                    console.log('Creating lesson with JSON payload:', payload);
+                    apiResult = await lessonsService.createLesson(courseId, payload);
+                }
+
+                setModules(modules.map(module => {
+                    if (module.id === currentModuleId) {
+                        return { ...module, lessons: [...(module.lessons || []), apiResult as any] };
+                    }
+                    return module;
+                }));
+                toast.success('Lesson created successfully');
+            }
             setIsLessonModalOpen(false);
+            setSelectedLesson(undefined);
         } catch (error) {
             console.error('Failed to save lesson:', error);
             toast.error(lessonsService.getErrorMessage(error, 'Failed to save lesson'));
@@ -303,7 +381,6 @@ export function CurriculumTab({ courseId }: CurriculumTabProps) {
     const handleSaveSession = async (sessionData: Partial<Session>) => {
         if (!courseId) return;
         try {
-            // Convert datetime-local format to ISO 8601 UTC
             const startTime = convertToISO8601(sessionData.start_time || '');
             const endTime = convertToISO8601(sessionData.end_time || '');
 
@@ -312,7 +389,6 @@ export function CurriculumTab({ courseId }: CurriculumTabProps) {
                 return;
             }
 
-            // If editing existing session
             if (selectedSession) {
                 const apiResult = await sessionsService.updateSession(selectedSession.id, {
                     title: sessionData.title || '',
@@ -325,9 +401,6 @@ export function CurriculumTab({ courseId }: CurriculumTabProps) {
                     module_id: selectedSession.module_id,
                 });
 
-                console.log('Session updated, new data:', apiResult);
-
-                // Update the session in the modules - find the correct module and update the session
                 setModules(modules.map(module => {
                     if (module.sessions?.some(s => s.id === selectedSession.id)) {
                         return {
@@ -340,7 +413,6 @@ export function CurriculumTab({ courseId }: CurriculumTabProps) {
 
                 toast.success('Session updated successfully');
             } else {
-                // Creating new session
                 if (!currentModuleId) return;
 
                 const apiResult = await sessionsService.createSessionForCourse(courseId, {

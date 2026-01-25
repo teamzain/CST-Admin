@@ -16,6 +16,8 @@ export interface Lesson {
     content_type: 'video' | 'pdf' | 'text';
     content_url?: string;
     pdf_url?: string;
+    content_text?: string;
+    enable_download?: boolean;
     duration_min?: number;
     order_index: number;
     description?: string; // From curl payload

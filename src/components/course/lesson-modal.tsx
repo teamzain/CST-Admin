@@ -10,7 +10,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { Upload, Video, AlignLeft, FileText } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
-// import axios from 'axios';
 import type { Lesson } from './module-item';
 
 interface LessonModalProps {
@@ -19,7 +18,7 @@ interface LessonModalProps {
     onSave: (lesson: Partial<Lesson>, file?: File) => void;
     lesson?: Lesson;
     courseId?: number;
-    moduleId?: number; // Needed for initiate call
+    moduleId?: number;
 }
 
 // Simple Switch Component
@@ -43,7 +42,7 @@ const Switch = ({ checked, onCheckedChange }: { checked: boolean; onCheckedChang
     </button>
 );
 
-export function LessonModal({ isOpen, onClose, onSave, lesson, courseId, moduleId }: LessonModalProps) {
+export function LessonModal({ isOpen, onClose, onSave, lesson }: LessonModalProps) {
     const [formData, setFormData] = useState<Partial<Lesson>>({
         title: '',
         content_type: 'video',
@@ -51,6 +50,7 @@ export function LessonModal({ isOpen, onClose, onSave, lesson, courseId, moduleI
         description: '',
         content_url: '',
         pdf_url: '',
+        content_text: '',
     });
     const [isDownloadEnabled, setIsDownloadEnabled] = useState(false);
 
@@ -69,8 +69,9 @@ export function LessonModal({ isOpen, onClose, onSave, lesson, courseId, moduleI
                 description: lesson.description,
                 content_url: lesson.content_url,
                 pdf_url: lesson.pdf_url,
+                content_text: lesson.content_text,
             });
-            // Reset upload state on edit (unless we want to show existing file)
+            setIsDownloadEnabled(!!lesson.enable_download);
             setUploadStatus('idle');
             setUploadProgress(0);
             setUploadedFileName('');
@@ -83,7 +84,9 @@ export function LessonModal({ isOpen, onClose, onSave, lesson, courseId, moduleI
                 description: '',
                 content_url: '',
                 pdf_url: '',
+                content_text: '',
             });
+            setIsDownloadEnabled(false);
             setUploadStatus('idle');
             setUploadProgress(0);
             setUploadedFileName('');
@@ -130,21 +133,21 @@ export function LessonModal({ isOpen, onClose, onSave, lesson, courseId, moduleI
         onDrop,
         accept: formData.content_type === 'video'
             ? { 'video/*': [] }
-            : { 'application/pdf': [] },
+            : formData.content_type === 'pdf'
+                ? { 'application/pdf': [] }
+                : undefined,
         maxFiles: 1,
         disabled: uploadStatus === 'uploading' || uploadStatus === 'success'
     });
 
-    // Use variables to avoid lint errors
-    useEffect(() => {
-        if (moduleId && courseId) {
-            console.log('Ready to upload for module:', moduleId, 'course:', courseId);
-        }
-    }, [moduleId, courseId]);
-
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        onSave(formData, selectedFile || undefined);
+        const data = {
+            ...formData,
+            enable_download: isDownloadEnabled,
+        };
+        console.log('LessonModal submitting data:', data);
+        onSave(data, selectedFile || undefined);
         onClose();
     };
 
@@ -162,7 +165,7 @@ export function LessonModal({ isOpen, onClose, onSave, lesson, courseId, moduleI
                     <div className="space-y-6 py-4">
                         {/* Title & Duration Row */}
                         <div className="grid grid-cols-3 gap-4">
-                            <div className={formData.content_type === 'video' ? "col-span-3 space-y-2" : "col-span-2 space-y-2"}>
+                            <div className="col-span-2 space-y-2">
                                 <Label htmlFor="lesson-title">Lesson Title *</Label>
                                 <Input
                                     id="lesson-title"
@@ -173,20 +176,18 @@ export function LessonModal({ isOpen, onClose, onSave, lesson, courseId, moduleI
                                     className="bg-background border-border mt-2"
                                 />
                             </div>
-                            {formData.content_type !== 'video' && (
-                                <div className="space-y-2">
-                                    <Label htmlFor="duration">Duration (min)</Label>
-                                    <Input
-                                        id="duration"
-                                        type="number"
-                                        value={formData.duration_min || 0}
-                                        onChange={(e) => setFormData({ ...formData, duration_min: parseInt(e.target.value) })}
-                                        placeholder="30"
-                                        min="0"
-                                        className="bg-background border-border mt-2"
-                                    />
-                                </div>
-                            )}
+                            <div className="space-y-2">
+                                <Label htmlFor="duration">Duration (min)</Label>
+                                <Input
+                                    id="duration"
+                                    type="number"
+                                    value={formData.duration_min || 0}
+                                    onChange={(e) => setFormData({ ...formData, duration_min: parseInt(e.target.value) })}
+                                    placeholder="30"
+                                    min="0"
+                                    className="bg-background border-border mt-2"
+                                />
+                            </div>
                         </div>
 
                         {/* Description */}
@@ -232,19 +233,41 @@ export function LessonModal({ isOpen, onClose, onSave, lesson, courseId, moduleI
                                 <div className={`mt-6 border-2 border-dashed rounded-xl p-8 transition-colors ${isDragActive ? 'border-primary bg-primary/5' : 'border-border hover:bg-slate-50/50'}`}>
                                     <TabsContent value="video" className="mt-0">
                                         {uploadStatus === 'idle' ? (
-                                            <div {...getRootProps()} className="flex flex-col items-center justify-center text-center cursor-pointer">
-                                                <input {...getInputProps()} />
-                                                <div className="w-16 h-16 flex items-center justify-center mb-4">
-                                                    <img src="/course/video_upload.svg" alt="" className="w-full h-full" />
+                                            <div className="space-y-6">
+                                                <div {...getRootProps()} className="flex flex-col items-center justify-center text-center cursor-pointer border-2 border-dashed rounded-xl p-8 hover:bg-slate-50/50 transition-colors">
+                                                    <input {...getInputProps()} />
+                                                    <div className="w-16 h-16 flex items-center justify-center mb-4">
+                                                        <img src="/course/video_upload.svg" alt="" className="w-full h-full" />
+                                                    </div>
+                                                    <h3 className="text-lg font-semibold mb-1">Upload Video</h3>
+                                                    <p className="text-sm text-muted-foreground mb-6">
+                                                        Click on the button to upload or drag and drop your file
+                                                    </p>
+                                                    <Button type="button" className="bg-primary hover:bg-primary/90 text-black font-medium px-8">
+                                                        <Upload className="w-4 h-4 mr-2" />
+                                                        Upload Video
+                                                    </Button>
                                                 </div>
-                                                <h3 className="text-lg font-semibold mb-1">Upload Video</h3>
-                                                <p className="text-sm text-muted-foreground mb-6">
-                                                    Click on the button to upload or drag and drop your file
-                                                </p>
-                                                <Button type="button" className="bg-primary hover:bg-primary/90 text-black font-medium px-8">
-                                                    <Upload className="w-4 h-4 mr-2" />
-                                                    Upload Video
-                                                </Button>
+
+                                                <div className="relative">
+                                                    <div className="absolute inset-0 flex items-center">
+                                                        <span className="w-full border-t" />
+                                                    </div>
+                                                    <div className="relative flex justify-center text-xs uppercase">
+                                                        <span className="bg-background px-2 text-muted-foreground">Or provide a URL</span>
+                                                    </div>
+                                                </div>
+
+                                                <div className="space-y-2">
+                                                    <Label htmlFor="video-url">Video URL (Bunny Stream / YouTube / Vimeo)</Label>
+                                                    <Input
+                                                        id="video-url"
+                                                        value={formData.content_url || ''}
+                                                        onChange={(e) => setFormData({ ...formData, content_url: e.target.value })}
+                                                        placeholder="https://..."
+                                                        className="bg-background border-border"
+                                                    />
+                                                </div>
                                             </div>
                                         ) : (
                                             <div className="flex flex-col items-center justify-center py-4">
@@ -289,20 +312,42 @@ export function LessonModal({ isOpen, onClose, onSave, lesson, courseId, moduleI
 
                                     <TabsContent value="pdf" className="mt-0">
                                         {uploadStatus === 'idle' ? (
-                                            <div {...getRootProps()} className="flex flex-col items-center justify-center text-center cursor-pointer">
-                                                <input {...getInputProps()} />
-                                                <div className="w-16 h-16 flex items-center justify-center mb-4">
-                                                    <img src="/course/pdf_upload.svg" alt="" className="w-full h-full" />
+                                            <div className="space-y-6">
+                                                <div {...getRootProps()} className="flex flex-col items-center justify-center text-center cursor-pointer border-2 border-dashed rounded-xl p-8 hover:bg-slate-50/50 transition-colors">
+                                                    <input {...getInputProps()} />
+                                                    <div className="w-16 h-16 flex items-center justify-center mb-4">
+                                                        <img src="/course/pdf_upload.svg" alt="" className="w-full h-full" />
+                                                    </div>
+                                                    <h3 className="text-lg font-semibold mb-1">PDF</h3>
+                                                    <p className="text-sm text-muted-foreground mb-1">Upload PDF file</p>
+                                                    <p className="text-xs text-muted-foreground mb-6">
+                                                        Click on the button to upload or drag and drop your file
+                                                    </p>
+                                                    <Button type="button" className="bg-primary hover:bg-primary/90 text-black font-medium px-8">
+                                                        <Upload className="w-4 h-4 mr-2" />
+                                                        Upload PDF
+                                                    </Button>
                                                 </div>
-                                                <h3 className="text-lg font-semibold mb-1">PDF</h3>
-                                                <p className="text-sm text-muted-foreground mb-1">Upload PDF file</p>
-                                                <p className="text-xs text-muted-foreground mb-6">
-                                                    Click on the button to upload or drag and drop your file
-                                                </p>
-                                                <Button type="button" className="bg-primary hover:bg-primary/90 text-black font-medium px-8">
-                                                    <Upload className="w-4 h-4 mr-2" />
-                                                    Upload PDF
-                                                </Button>
+
+                                                <div className="relative">
+                                                    <div className="absolute inset-0 flex items-center">
+                                                        <span className="w-full border-t" />
+                                                    </div>
+                                                    <div className="relative flex justify-center text-xs uppercase">
+                                                        <span className="bg-background px-2 text-muted-foreground">Or provide a URL</span>
+                                                    </div>
+                                                </div>
+
+                                                <div className="space-y-2">
+                                                    <Label htmlFor="pdf-url">PDF URL</Label>
+                                                    <Input
+                                                        id="pdf-url"
+                                                        value={formData.pdf_url || ''}
+                                                        onChange={(e) => setFormData({ ...formData, pdf_url: e.target.value })}
+                                                        placeholder="https://..."
+                                                        className="bg-background border-border"
+                                                    />
+                                                </div>
                                             </div>
                                         ) : (
                                             <div className="flex flex-col items-center justify-center py-4">
@@ -354,8 +399,11 @@ export function LessonModal({ isOpen, onClose, onSave, lesson, courseId, moduleI
                                                 <h3 className="text-lg font-semibold">Text Content</h3>
                                             </div>
                                             <Textarea
-                                                value={formData.content_url || ''}
-                                                onChange={(e) => setFormData({ ...formData, content_url: e.target.value })}
+                                                value={formData.content_text || ''}
+                                                onChange={(e) => {
+                                                    console.log('Textarea onChange:', e.target.value);
+                                                    setFormData({ ...formData, content_text: e.target.value });
+                                                }}
                                                 placeholder="Enter lesson text content here..."
                                                 rows={8}
                                                 className="bg-background border-border font-mono text-sm resize-none mt-2"

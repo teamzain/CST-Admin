@@ -21,7 +21,7 @@ class BunnyUploadService {
         this.axiosInstance.interceptors.request.use((config) => {
             // Set base URL dynamically for each request
             config.baseURL = this.getBaseUrl();
-            
+
             const token = localStorage.getItem('token') || import.meta.env.VITE_ADMIN_TOKEN;
             if (token) {
                 config.headers.Authorization = `Bearer ${token}`;
@@ -45,11 +45,11 @@ class BunnyUploadService {
     }
 
     private validateImageFile(file: File): boolean {
-        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-        const maxSize = 5 * 1024 * 1024; // 5MB
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'];
+        const maxSize = 50 * 1024 * 1024; // 50MB
 
         if (!allowedTypes.includes(file.type)) {
-            throw new Error('Invalid file type. Allowed: JPEG, PNG, GIF, WebP');
+            throw new Error('Invalid file type. Allowed: JPEG, PNG, GIF, WebP, PDF');
         }
 
         if (file.size > maxSize) {
@@ -73,7 +73,7 @@ class BunnyUploadService {
             formData.append('file', file);
             formData.append('path', path);
 
-            const response = await this.axiosInstance.post<UploadResponse>('/bunny-upload', formData, {
+            const response = await this.axiosInstance.post<UploadResponse>('bunny-upload', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },
@@ -116,7 +116,7 @@ class BunnyUploadService {
      */
     async deleteFile(path: string): Promise<void> {
         try {
-            await this.axiosInstance.delete('/bunny/delete-file', {
+            await this.axiosInstance.delete('bunny/delete-file', {
                 data: { path },
             });
         } catch (error) {

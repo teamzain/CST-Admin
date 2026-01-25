@@ -1,62 +1,76 @@
-'use client';
-
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/shared/DataTable';
 import { LessonsFilters } from '@/components/lessons/lessons-filters';
 import { getLessonColumns } from '@/components/lessons/lesson-columns';
 import { useCoursesStore } from '@/stores/courses-store';
-import { Plus } from 'lucide-react';
+import { Plus, Loader2 } from 'lucide-react';
 import { DeleteConfirmationDialog } from '@/components/shared/delete-confirmation-dialog';
+import { lessonsService, type Lesson } from '@/api/lessons';
+import { toast } from 'sonner';
 
 export default function AllLessonsPage() {
     const navigate = useNavigate();
     const { courses } = useCoursesStore();
 
+    const [lessons, setLessons] = useState<Lesson[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [contentTypeFilter, setContentTypeFilter] = useState<string>('all');
     const [courseFilter, setCourseFilter] = useState<string>('all');
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-    const [lessonToDelete, setLessonToDelete] = useState<any>(null);
+    const [lessonToDelete, setLessonToDelete] = useState<Lesson | null>(null);
 
-    const allLessons = useMemo(() => {
-        return courses.flatMap(course =>
-            (course.modules || []).flatMap((module: any) =>
-                (module.lessons || []).map((lesson: any) => ({
-                    ...lesson,
-                    course_title: course.title,
-                    course_id: course.id,
-                    module_title: module.title
-                }))
-            )
-        );
-    }, [courses]);
+    useEffect(() => {
+        const fetchLessons = async () => {
+            try {
+                setIsLoading(true);
+                const data = await lessonsService.getAllLessons();
+                setLessons(data);
+            } catch (error) {
+                console.error('Failed to fetch lessons:', error);
+                toast.error('Failed to load lessons');
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchLessons();
+    }, []);
 
     const filteredLessons = useMemo(() => {
-        return allLessons.filter((lesson) => {
+        return lessons.filter((lesson) => {
             const matchesSearch = lesson.title.toLowerCase().includes(searchTerm.toLowerCase());
             const matchesCourse = courseFilter === 'all' || String(lesson.course_id) === courseFilter;
             const matchesContentType = contentTypeFilter === 'all' || lesson.content_type === contentTypeFilter;
 
             return matchesSearch && matchesCourse && matchesContentType;
         });
-    }, [allLessons, searchTerm, courseFilter, contentTypeFilter]);
+    }, [lessons, searchTerm, courseFilter, contentTypeFilter]);
 
-    const handleView = (lesson: any) => {
+    const handleView = (lesson: Lesson) => {
         navigate(`/lessons/${lesson.id}`);
     };
 
-    const handleDeleteClick = (lesson: any) => {
+    const handleDeleteClick = (lesson: Lesson) => {
         setLessonToDelete(lesson);
         setIsDeleteDialogOpen(true);
     };
 
-    const handleConfirmDelete = () => {
+    const handleConfirmDelete = async () => {
         if (lessonToDelete) {
-            // Implement lesson deletion logic here
-            console.log('Delete lesson:', lessonToDelete);
-            setLessonToDelete(null);
+            try {
+                await lessonsService.deleteLesson(lessonToDelete.id);
+                setLessons(prev => prev.filter(l => l.id !== lessonToDelete.id));
+                toast.success('Lesson deleted successfully');
+            } catch (error) {
+                console.error('Failed to delete lesson:', error);
+                toast.error('Failed to delete lesson');
+            } finally {
+                setLessonToDelete(null);
+                setIsDeleteDialogOpen(false);
+            }
         }
     };
 
@@ -101,14 +115,20 @@ export default function AllLessonsPage() {
 
                 {/* Data Table */}
                 <div className="overflow-x-auto">
-                    <DataTable
-                        columns={columns}
-                        data={filteredLessons}
-                        pageSize={10}
-                        enableRowSelection={true}
-                        searchColumn="title"
-                        searchValue={searchTerm}
-                    />
+                    {isLoading ? (
+                        <div className="flex items-center justify-center py-20">
+                            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                        </div>
+                    ) : (
+                        <DataTable
+                            columns={columns}
+                            data={filteredLessons}
+                            pageSize={10}
+                            enableRowSelection={true}
+                            searchColumn="title"
+                            searchValue={searchTerm}
+                        />
+                    )}
                 </div>
             </div>
 

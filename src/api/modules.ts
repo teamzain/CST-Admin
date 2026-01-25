@@ -97,7 +97,7 @@ class ModulesService {
      */
     async getModulesByCourse(courseId: number): Promise<Module[]> {
         try {
-            const response = await this.axiosInstance.get<any>(`/${courseId}/modules`);
+            const response = await this.axiosInstance.get<any>(`${courseId}/modules`);
             const data = this.getData<any[]>(response);
 
             const modulesArray = Array.isArray(data) ? data : [];
@@ -132,7 +132,7 @@ class ModulesService {
      */
     async getModuleById(moduleId: number): Promise<Module> {
         try {
-            const response = await this.axiosInstance.get<any>(`/module/${moduleId}`);
+            const response = await this.axiosInstance.get<any>(`module/${moduleId}`);
             return this.getData<Module>(response);
         } catch (error) {
             const axiosError = error as AxiosError;
@@ -150,7 +150,7 @@ class ModulesService {
      */
     async createModule(courseId: number, data: CreateModuleInput): Promise<Module> {
         try {
-            const response = await this.axiosInstance.post<any>(`/${courseId}/modules`, data);
+            const response = await this.axiosInstance.post<any>(`${courseId}/modules`, data);
             return this.getData<Module>(response);
         } catch (error) {
             const axiosError = error as AxiosError<any>;
@@ -169,7 +169,7 @@ class ModulesService {
      */
     async updateModule(moduleId: number, data: Partial<CreateModuleInput>): Promise<Module> {
         try {
-            const response = await this.axiosInstance.patch<any>(`/module/${moduleId}`, data);
+            const response = await this.axiosInstance.patch<any>(`module/${moduleId}`, data);
             return this.getData<Module>(response);
         } catch (error) {
             const axiosError = error as AxiosError<any>;
@@ -188,7 +188,7 @@ class ModulesService {
      */
     async updateModuleOrder(moduleId: number, newOrderIndex: number): Promise<Module> {
         try {
-            const response = await this.axiosInstance.patch<any>(`/module/${moduleId}`, {
+            const response = await this.axiosInstance.patch<any>(`module/${moduleId}`, {
                 order_index: newOrderIndex,
             });
             return this.getData<Module>(response);
@@ -209,7 +209,7 @@ class ModulesService {
      */
     async deleteModule(moduleId: number): Promise<void> {
         try {
-            await this.axiosInstance.delete(`/module/${moduleId}`);
+            await this.axiosInstance.delete(`module/${moduleId}`);
         } catch (error) {
             const axiosError = error as AxiosError;
             console.error('Error deleting module:', {

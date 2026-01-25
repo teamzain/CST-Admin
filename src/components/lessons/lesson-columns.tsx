@@ -9,14 +9,7 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-interface Lesson {
-    id: number | string;
-    title: string;
-    course_title: string;
-    module_title: string;
-    content_type: string;
-    duration_min: number;
-}
+import { type Lesson } from '@/api/lessons';
 
 export const getLessonColumns = (onView: (lesson: Lesson) => void, onDelete: (lesson: Lesson) => void): ColumnDef<Lesson>[] => [
     {
@@ -27,17 +20,10 @@ export const getLessonColumns = (onView: (lesson: Lesson) => void, onDelete: (le
         ),
     },
     {
-        accessorKey: 'course_title',
+        id: 'course_title',
         header: 'Course',
         cell: ({ row }) => (
-            <span className="text-gray-600">{row.getValue<string>('course_title')}</span>
-        ),
-    },
-    {
-        accessorKey: 'module_title',
-        header: 'Module',
-        cell: ({ row }) => (
-            <span className="text-gray-600">{row.getValue<string>('module_title')}</span>
+            <span className="text-gray-600">{row.original.course?.title || '-'}</span>
         ),
     },
     {
