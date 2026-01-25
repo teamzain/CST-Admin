@@ -458,13 +458,22 @@ export function CurriculumTab({ courseId }: CurriculumTabProps) {
                     </div>
                 </div>
             ) : modules.length === 0 ? (
-                <div className="flex items-center justify-center p-8 border-2 border-dashed rounded-lg">
-                    <div className="text-center">
-                        <p className="text-muted-foreground mb-4">No modules yet</p>
-                        <Button onClick={handleAddModule} variant="outline" className="gap-2">
-                            <Plus className="w-4 h-4" /> Create First Module
-                        </Button>
-                    </div>
+                <div className="flex flex-col items-center justify-center py-16 bg-muted/5 rounded-xl border border-dashed border-border">
+                    <img
+                        src="/course/no_course.svg"
+                        alt="No modules"
+                        className="w-48 h-48 mb-4 opacity-70 grayscale"
+                    />
+                    <h3 className="text-lg font-semibold mb-1">No Modules Yet</h3>
+                    <p className="text-sm text-muted-foreground mb-6 max-w-xs text-center">
+                        This course doesn't have any modules. Start building your curriculum by adding your first module.
+                    </p>
+                    <Button
+                        onClick={handleAddModule}
+                        className="gap-2 bg-primary hover:bg-primary/90 text-black font-medium"
+                    >
+                        <Plus className="w-4 h-4" /> Create First Module
+                    </Button>
                 </div>
             ) : (
                 <DragDropContext onDragEnd={handleDragEnd}>

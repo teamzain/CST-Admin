@@ -106,6 +106,7 @@ interface CoursesStore {
     addCourse: (course: Omit<Course, 'id' | 'created_at' | 'updated_at'>) => Promise<void>;
     updateCourse: (id: number, courseData: Partial<Course>) => Promise<void>;
     deleteCourse: (id: number) => Promise<void>;
+    permanentDeleteCourse: (id: number) => Promise<void>;
     publishCourse: (id: number) => Promise<void>;
     unpublishCourse: (id: number) => Promise<void>;
     getCourseById: (id: number) => Course | undefined;
@@ -294,6 +295,23 @@ export const useCoursesStore = create<CoursesStore>((set, get) => ({
             console.error('Failed to delete course:', error);
             toast.error('Failed to delete course');
             set({ error: 'Failed to delete course' });
+        } finally {
+            set({ isLoading: false });
+        }
+    },
+
+    permanentDeleteCourse: async (id) => {
+        set({ isLoading: true, error: null });
+        try {
+            await CoursesRepository.permanentDelete(id);
+            set((state) => ({
+                courses: state.courses.filter((c) => c.id !== id),
+            }));
+            toast.success('Course permanently deleted');
+        } catch (error) {
+            console.error('Failed to permanently delete course:', error);
+            toast.error('Failed to permanently delete course');
+            set({ error: 'Failed to permanently delete course' });
         } finally {
             set({ isLoading: false });
         }

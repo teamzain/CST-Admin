@@ -42,14 +42,12 @@ export default function AllSessionsPage() {
 
     const allSessions = useMemo(() => {
         return sessions.map((session: any) => {
-            // Find course and module titles if not provided by API
+            // Find course title if not provided by API
             const course = (courses as any[]).find((c: any) => c.id === session.course_id);
-            const module = course?.modules?.find((m: any) => m.id === session.module_id);
 
             return {
                 ...session,
-                course_title: session.course_title || course?.title || 'Unknown Course',
-                module_title: session.module_title || module?.title || 'Unknown Module'
+                course_title: session.course_title || course?.title || 'Unknown Course'
             };
         });
     }, [sessions, courses]);

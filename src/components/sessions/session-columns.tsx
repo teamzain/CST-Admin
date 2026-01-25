@@ -13,7 +13,6 @@ interface Session {
     id: number | string;
     title: string;
     course_title: string;
-    module_title: string;
     session_type: string;
     start_time: string;
     location?: string;
@@ -33,13 +32,6 @@ export const getSessionColumns = (onView: (session: Session) => void, onDelete: 
         header: 'Course',
         cell: ({ row }) => (
             <span className="text-gray-600">{row.getValue<string>('course_title')}</span>
-        ),
-    },
-    {
-        accessorKey: 'module_title',
-        header: 'Module',
-        cell: ({ row }) => (
-            <span className="text-gray-600">{row.getValue<string>('module_title')}</span>
         ),
     },
     {

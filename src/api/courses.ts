@@ -167,26 +167,22 @@ class CoursesService {
         }
     }
 
-    async publishCourse(id: number): Promise<Course> {
+    async permanentDeleteCourse(id: number): Promise<void> {
         try {
-            const response = await this.axiosInstance.patch<Course>(`/course/${id}/publish`);
-            return response.data;
+            await this.axiosInstance.delete(`/course/${id}/permanent`);
         } catch (error) {
             const axiosError = error as AxiosError;
-            console.error('Error publishing course:', axiosError.message);
+            console.error('Error permanently deleting course:', axiosError.message);
             throw error;
         }
     }
 
+    async publishCourse(id: number): Promise<Course> {
+        return this.updateCourse(id, { is_active: true } as any);
+    }
+
     async unpublishCourse(id: number): Promise<Course> {
-        try {
-            const response = await this.axiosInstance.patch<Course>(`/course/${id}/unpublish`);
-            return response.data;
-        } catch (error) {
-            const axiosError = error as AxiosError;
-            console.error('Error unpublishing course:', axiosError.message);
-            throw error;
-        }
+        return this.updateCourse(id, { is_active: false } as any);
     }
 }
 

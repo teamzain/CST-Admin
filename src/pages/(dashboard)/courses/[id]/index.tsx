@@ -14,7 +14,7 @@ import { ComplianceTab } from '@/components/course/compliance-tab';
 export default function CourseDetailsPage() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
-    const { courses, fetchCourseById, updateCourse, deleteCourse, isLoading } = useCoursesStore();
+    const { courses, fetchCourseById, updateCourse, isLoading } = useCoursesStore();
     const course = id ? courses.find(c => c.id === Number(id)) : null;
     const [isEditing, setIsEditing] = useState(false);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -45,8 +45,8 @@ export default function CourseDetailsPage() {
             <div className="flex-1 bg-background p-8">
                 <div className="text-center">
                     <p className="text-muted-foreground">Course not found</p>
-                    <Button 
-                        variant="link" 
+                    <Button
+                        variant="link"
                         onClick={() => navigate('/courses')}
                         className="mt-4"
                     >
@@ -67,8 +67,8 @@ export default function CourseDetailsPage() {
         setIsDeleteDialogOpen(true);
     };
 
-    const handleConfirmDelete = () => {
-        deleteCourse(course.id);
+    const handleConfirmDelete = async () => {
+        await useCoursesStore.getState().permanentDeleteCourse(course.id);
         navigate('/courses');
     };
 
@@ -86,7 +86,7 @@ export default function CourseDetailsPage() {
                 onClose={() => setIsDeleteDialogOpen(false)}
                 onConfirm={handleConfirmDelete}
                 title="Delete Course"
-                description="Are you sure you want to delete this course? This will remove all associated modules, lessons, and student enrollments."
+                description="WARNING: This will PERMANENTLY delete the course from the database. This action is irreversible and will remove all modules, lessons, sessions, quizzes, and student records forever."
                 itemType="Course"
                 itemName={course.title}
             />

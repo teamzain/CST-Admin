@@ -22,6 +22,10 @@ export class CoursesRepository {
         return coursesService.deleteCourse(id);
     }
 
+    static async permanentDelete(id: number): Promise<void> {
+        return coursesService.permanentDeleteCourse(id);
+    }
+
     static async publish(id: number): Promise<Course> {
         return coursesService.publishCourse(id);
     }

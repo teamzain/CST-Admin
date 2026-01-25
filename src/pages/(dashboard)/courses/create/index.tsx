@@ -29,6 +29,7 @@ export default function CreateCoursePage() {
     const [step, setStep] = useState(1);
     const [allStates, setAllStates] = useState<State[]>([]);
     const [thumbnailPreview, setThumbnailPreview] = useState<string | undefined>();
+    const [preRequirementsText, setPreRequirementsText] = useState('');
     const [isUploadingThumbnail, setIsUploadingThumbnail] = useState(false);
     const [formData, setFormData] = useState<{
         title: string;
@@ -122,10 +123,10 @@ export default function CreateCoursePage() {
 
     // Auto-fill requirements based on State and Training Type
     useEffect(() => {
-        const selectedState = allStates.length > 0 
+        const selectedState = allStates.length > 0
             ? allStates.find(s => s.id === formData.state_id)
             : dummyStates.find(s => s.id === formData.state_id);
-            
+
         if (!selectedState) return;
 
         let requiredHours = 0;
@@ -149,9 +150,20 @@ export default function CreateCoursePage() {
         }
     }, [formData.state_id, formData.training_type, allStates]);
 
-    const handleSubmit = () => {
-        const selectedState = dummyStates.find(s => s.id === formData.state_id);
+    const handleSubmit = async () => {
+        const selectedState = allStates.find(s => s.id === formData.state_id);
         const stateName = selectedState?.name || '';
+
+        if (!stateName) {
+            toast.error('Please select a valid state');
+            return;
+        }
+
+        // Convert text to array on submit
+        const preReqs = preRequirementsText
+            .split('\n')
+            .map(r => r.trim())
+            .filter(r => r !== '');
 
         // Send only the fields the backend expects
         const courseData = {
@@ -159,8 +171,8 @@ export default function CreateCoursePage() {
             description: formData.description,
             duration_hours: formData.duration_hours,
             required_hours: formData.required_hours,
-            training_type: formData.training_type,
-            delivery_mode: formData.delivery_mode,
+            training_type: formData.training_type as any,
+            delivery_mode: formData.delivery_mode as any,
             thumbnail: formData.thumbnail,
             price: formData.price,
             state: stateName,
@@ -172,12 +184,17 @@ export default function CreateCoursePage() {
             requires_id_verification: formData.requires_id_verification,
             is_refresher: formData.is_refresher,
             is_price_negotiable: formData.is_price_negotiable,
-            pre_requirements: formData.pre_requirements,
+            pre_requirements: preReqs,
             certificate_template: formData.certificate_template,
-        } as never;
+        };
 
-        addCourse(courseData);
-        navigate('/courses');
+        try {
+            await addCourse(courseData as any);
+            navigate('/courses');
+        } catch (error) {
+            console.error('Failed to create course:', error);
+            // Error toast is already handled in the store
+        }
     };
 
     return (
@@ -211,10 +228,10 @@ export default function CreateCoursePage() {
                             key={s}
                             onClick={() => setStep(s)}
                             className={`flex items-center justify-center w-10 h-10 rounded-full font-semibold cursor-pointer transition-all ${step === s
-                                    ? 'bg-primary text-black scale-110 shadow-md'
-                                    : step > s
-                                        ? 'bg-primary/20 text-primary border-2 border-primary/30'
-                                        : 'bg-muted text-muted-foreground'
+                                ? 'bg-primary text-black scale-110 shadow-md'
+                                : step > s
+                                    ? 'bg-primary/20 text-primary border-2 border-primary/30'
+                                    : 'bg-muted text-muted-foreground'
                                 }`}
                         >
                             {s}
@@ -429,9 +446,9 @@ export default function CreateCoursePage() {
                                     <label htmlFor="thumbnail-input" className="cursor-pointer block">
                                         {thumbnailPreview ? (
                                             <div className="space-y-2">
-                                                <img 
-                                                    src={thumbnailPreview} 
-                                                    alt="Thumbnail preview" 
+                                                <img
+                                                    src={thumbnailPreview}
+                                                    alt="Thumbnail preview"
                                                     className="h-32 w-32 object-cover rounded mx-auto"
                                                 />
                                                 <p className="text-sm text-muted-foreground">Click to change thumbnail</p>
@@ -461,8 +478,8 @@ export default function CreateCoursePage() {
                             <div>
                                 <Label>Pre-Requirements (one per line)</Label>
                                 <Textarea
-                                    value={formData.pre_requirements.join('\n')}
-                                    onChange={(e) => handleInputChange('pre_requirements', e.target.value.split('\n').filter(r => r.trim()))}
+                                    value={preRequirementsText}
+                                    onChange={(e) => setPreRequirementsText(e.target.value)}
                                     placeholder="e.g., High School Diploma&#10;Valid ID&#10;Background Check"
                                     rows={4}
                                     className="bg-input border-border mt-2"
