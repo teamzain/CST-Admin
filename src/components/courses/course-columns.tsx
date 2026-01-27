@@ -1,7 +1,7 @@
 import { type ColumnDef } from '@tanstack/react-table';
 import { Badge } from '@/components/ui/badge';
 import { type Course } from '@/stores/courses-store';
-import { MoreVertical, Clock, Edit2, Trash2 } from 'lucide-react';
+import { MoreVertical, Clock, Eye, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -11,7 +11,7 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-export const getCourseColumns = (onEdit: (course: Course) => void, onDelete: (course: Course) => void): ColumnDef<Course>[] => [
+export const getCourseColumns = (onView: (course: Course) => void, onDelete: (course: Course) => void): ColumnDef<Course>[] => [
     {
         accessorKey: 'title',
         header: 'Course Title',
@@ -67,7 +67,7 @@ export const getCourseColumns = (onEdit: (course: Course) => void, onDelete: (co
                         : "bg-gray-50 text-gray-700 border-gray-100"
                     }
                 >
-                    {isActive ? 'Published' : 'Draft'}
+                    {isActive ? 'Published' : 'Unpublished'}
                 </Badge>
             );
         },
@@ -107,9 +107,9 @@ export const getCourseColumns = (onEdit: (course: Course) => void, onDelete: (co
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-40">
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={() => onEdit(course)} className="gap-2">
-                                <Edit2 className="w-4 h-4" />
-                                Edit Course
+                            <DropdownMenuItem onClick={() => onView(course)} className="gap-2">
+                                <Eye className="w-4 h-4" />
+                                View Course
                             </DropdownMenuItem>
                             <DropdownMenuItem
                                 onClick={() => onDelete(course)}

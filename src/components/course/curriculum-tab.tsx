@@ -548,11 +548,15 @@ export function CurriculumTab({ courseId }: CurriculumTabProps) {
 
             const nextOrderIndex = getNextOrderIndex(targetModule);
 
-            const newQuiz = await quizzesService.createQuiz(currentModuleId, {
+            const newQuiz = await quizzesService.createQuizForCourse(courseId, {
                 title: quizData.title || '',
                 passing_score: quizData.passing_score || 70,
                 is_final: quizData.is_final || false,
+                module_id: currentModuleId,
                 order_index: nextOrderIndex,
+                time_limit_minutes: quizData.time_limit_minutes,
+                randomize_questions: quizData.randomize_questions || false,
+                attempts_allowed: quizData.attempts_allowed,
             });
 
             setModules(modules.map(module => {

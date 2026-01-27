@@ -7,7 +7,9 @@ import { DataTable } from '@/components/shared/DataTable';
 import { QuizzesFilters } from '@/components/quizzes/quizzes-filters';
 import { getQuizColumns } from '@/components/quizzes/quiz-columns';
 import { useCoursesStore } from '@/stores/courses-store';
+import { quizzesService } from '@/api/quizzes';
 import { toast } from 'sonner';
+import { useEffect } from 'react';
 
 import { DeleteConfirmationDialog } from '@/components/shared/delete-confirmation-dialog';
 
@@ -15,25 +17,48 @@ export default function AllQuizzesPage() {
     const navigate = useNavigate();
     const { courses } = useCoursesStore();
 
+    const [quizzes, setQuizzes] = useState<any[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [quizTypeFilter, setQuizTypeFilter] = useState<string>('all');
     const [courseFilter, setCourseFilter] = useState<string>('all');
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [quizToDelete, setQuizToDelete] = useState<any>(null);
 
+    useEffect(() => {
+        const fetchQuizzes = async () => {
+            setIsLoading(true);
+            try {
+                const data = await quizzesService.getAllQuizzes();
+                setQuizzes(data || []);
+            } catch (error) {
+                console.error('Error fetching quizzes:', error);
+                toast.error('Failed to load quizzes');
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchQuizzes();
+    }, []);
+
     // Flatten quizzes from all courses
     const allQuizzes = useMemo(() => {
-        return courses.flatMap(course =>
-            (course.modules || []).flatMap((module: any) =>
-                (module.quizzes || []).map((quiz: any) => ({
-                    ...quiz,
-                    course_title: course.title,
-                    course_id: course.id,
-                    module_title: module.title
-                }))
-            )
-        );
-    }, [courses]);
+        return quizzes.map(quiz => {
+            // Find course title if missing
+            let course_title = quiz.course_title;
+            if (!course_title && quiz.course_id) {
+                const course = courses.find(c => c.id === quiz.course_id);
+                if (course) course_title = course.title;
+            }
+
+            return {
+                ...quiz,
+                course_title: course_title || 'N/A',
+                module_title: quiz.module?.title || 'N/A'
+            };
+        });
+    }, [quizzes, courses]);
 
     const filteredQuizzes = useMemo(() => {
         return allQuizzes.filter((quiz) => {
@@ -49,12 +74,6 @@ export default function AllQuizzesPage() {
         navigate(`/quizzes/${quiz.id}`);
     };
 
-    const handleEdit = (quiz: any) => {
-        // Since there is no dedicated quiz edit page yet, we can either open a modal or navigate
-        console.log('Edit quiz:', quiz);
-        toast.info('Edit functionality for quizzes coming soon');
-    };
-
     const handleDeleteClick = (quiz: any) => {
         setQuizToDelete(quiz);
         setIsDeleteDialogOpen(true);
@@ -68,7 +87,7 @@ export default function AllQuizzesPage() {
         }
     };
 
-    const columns = getQuizColumns(handleView, handleEdit, handleDeleteClick);
+    const columns = getQuizColumns(handleView, handleDeleteClick);
 
     return (
         <div className="min-h-screen bg-gray-50 p-4 md:p-6">
@@ -99,14 +118,23 @@ export default function AllQuizzesPage() {
 
                 {/* Data Table */}
                 <div className="overflow-x-auto">
-                    <DataTable
-                        columns={columns}
-                        data={filteredQuizzes}
-                        pageSize={10}
-                        enableRowSelection={true}
-                        searchColumn="title"
-                        searchValue={searchTerm}
-                    />
+                    {isLoading ? (
+                        <div className="flex items-center justify-center p-12 bg-white rounded-lg border">
+                            <div className="flex flex-col items-center gap-2">
+                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                                <p className="text-sm text-muted-foreground">Loading quizzes...</p>
+                            </div>
+                        </div>
+                    ) : (
+                        <DataTable
+                            columns={columns}
+                            data={filteredQuizzes}
+                            pageSize={10}
+                            enableRowSelection={true}
+                            searchColumn="title"
+                            searchValue={searchTerm}
+                        />
+                    )}
                 </div>
             </div>
 

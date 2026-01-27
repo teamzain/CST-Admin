@@ -62,7 +62,7 @@ export default function CoursesPage() {
         });
     }, [courses, searchTerm, stateFilter, statusFilter, typeFilter, modeFilter, instructorFilter]);
 
-    const handleEdit = (course: Course) => {
+    const handleView = (course: Course) => {
         navigate(`/courses/${course.id}`);
     };
 
@@ -90,7 +90,7 @@ export default function CoursesPage() {
         toast.info('Import CSV - Not implemented yet');
     };
 
-    const columns = getCourseColumns(handleEdit, handleDelete);
+    const columns = getCourseColumns(handleView, handleDelete);
 
     // Get unique instructors for filter
     const instructors = useMemo(() => Array.from(

@@ -4,10 +4,46 @@ const API_BASE_URL = import.meta.env.VITE_API_COURSE_URL || 'http://localhost:30
 
 export interface Quiz {
     id: number;
+    course_id?: number;
+    module_id?: number;
     title: string;
     passing_score: number;
-    is_final: boolean;
     order_index: number;
+    is_final: boolean;
+    time_limit_minutes?: number;
+    randomize_questions?: boolean;
+    attempts_allowed?: number | null;
+    created_at?: string;
+    updated_at?: string;
+    questions?: Question[];
+}
+
+export interface Question {
+    id: number;
+    quiz_id?: number;
+    text: string;
+    options: QuestionOption[];
+    correct_answers: number[];
+    order_index: number;
+    points: number;
+    created_at?: string;
+    updated_at?: string;
+}
+
+export interface QuestionOption {
+    id: number;
+    text: string;
+}
+
+export interface CreateQuizInput {
+    title: string;
+    passing_score: number;
+    is_final?: boolean;
+    module_id?: number;
+    order_index?: number;
+    time_limit_minutes?: number;
+    randomize_questions?: boolean;
+    attempts_allowed?: number | null;
 }
 
 class QuizzesService {
@@ -71,12 +107,32 @@ class QuizzesService {
         return error.message || defaultMessage;
     }
 
-    async createQuiz(moduleId: number, data: Partial<Quiz>): Promise<Quiz> {
+    async createQuizForCourse(courseId: number, data: CreateQuizInput): Promise<Quiz> {
         try {
-            const response = await this.axiosInstance.post<any>(`module/${moduleId}/quizzes`, data);
+            const response = await this.axiosInstance.post<any>(`${courseId}/quizzes`, data);
             return this.getData<Quiz>(response);
         } catch (error) {
             console.error('Error creating quiz:', error);
+            throw error;
+        }
+    }
+
+    async getAllQuizzes(): Promise<Quiz[]> {
+        try {
+            const response = await this.axiosInstance.get<any>('quizzes');
+            return this.getData<Quiz[]>(response);
+        } catch (error) {
+            console.error('Error fetching quizzes:', error);
+            throw error;
+        }
+    }
+
+    async getQuizById(quizId: number): Promise<Quiz> {
+        try {
+            const response = await this.axiosInstance.get<any>(`quiz/${quizId}`);
+            return this.getData<Quiz>(response);
+        } catch (error) {
+            console.error('Error fetching quiz:', error);
             throw error;
         }
     }

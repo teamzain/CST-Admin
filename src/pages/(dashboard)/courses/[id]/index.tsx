@@ -94,15 +94,22 @@ export default function CourseDetailsPage() {
             <div className="p-8">
                 {/* Header */}
                 <div className="flex items-center justify-between mb-8">
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => navigate('/courses')}
-                        className="gap-2"
-                    >
-                        <ArrowLeft className="w-4 h-4" />
-                        Back to Courses
-                    </Button>
+                    <div className="flex items-center gap-4">
+                        <button
+                            onClick={() => navigate('/courses')}
+                            className="p-2 hover:bg-accent rounded-full transition-colors"
+                        >
+                            <ArrowLeft className="w-6 h-6" />
+                        </button>
+                        <div>
+                            <h1 className="text-2xl font-bold">
+                                {isEditing ? (formData.title || course.title) : course.title}
+                            </h1>
+                            <p className="text-sm text-muted-foreground">
+                                Manage and organize modules and lessons for your course.
+                            </p>
+                        </div>
+                    </div>
 
                     <div className="flex gap-2">
                         {isEditing ? (
@@ -144,16 +151,6 @@ export default function CourseDetailsPage() {
                             </>
                         )}
                     </div>
-                </div>
-
-                {/* Course Title & Subtitle outside the card */}
-                <div className="mb-8">
-                    <h1 className="text-3xl font-bold text-foreground mb-2">
-                        {isEditing ? (formData.title || course.title) : course.title}
-                    </h1>
-                    <p className="text-muted-foreground">
-                        Manage and organize modules and lessons for your course.
-                    </p>
                 </div>
 
                 {/* Tabs Container */}

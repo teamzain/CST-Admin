@@ -1,6 +1,6 @@
 import { type ColumnDef } from '@tanstack/react-table';
 import { Badge } from '@/components/ui/badge';
-import { MoreVertical, Eye, Edit2, Trash2 } from 'lucide-react';
+import { MoreVertical, Eye, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -22,7 +22,6 @@ interface Quiz {
 
 export const getQuizColumns = (
     onView: (quiz: Quiz) => void,
-    onEdit: (quiz: Quiz) => void,
     onDelete: (quiz: Quiz) => void
 ): ColumnDef<Quiz>[] => [
     {
@@ -90,10 +89,6 @@ export const getQuizColumns = (
                             <DropdownMenuItem onClick={() => onView(quiz)} className="gap-2">
                                 <Eye className="w-4 h-4" />
                                 View Quiz
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => onEdit(quiz)} className="gap-2">
-                                <Edit2 className="w-4 h-4" />
-                                Edit Quiz
                             </DropdownMenuItem>
                             <DropdownMenuItem
                                 onClick={() => onDelete(quiz)}

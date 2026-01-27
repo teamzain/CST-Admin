@@ -64,11 +64,15 @@ export interface Question {
 
 export interface Quiz {
     id: number;
+    course_id?: number;
+    module_id?: number;
     title: string;
     passing_score: number;
+    order_index: number;
     is_final: boolean;
     time_limit_minutes?: number;
-    order_index: number;
+    randomize_questions?: boolean;
+    attempts_allowed?: number | null;
     questions?: Question[];
 }
 
