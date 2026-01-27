@@ -1,5 +1,5 @@
 import { type ColumnDef } from '@tanstack/react-table';
-import { Calendar, MapPin, MoreHorizontal } from 'lucide-react';
+import { Calendar, MapPin, MoreVertical, Eye, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -71,25 +71,29 @@ export const getSessionColumns = (onView: (session: Session) => void, onDelete: 
         cell: ({ row }) => {
             const session = row.original;
             return (
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                            <MoreHorizontal className="w-4 h-4" />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => onView(session)}>
-                            View Session
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                            onClick={() => onDelete(session)}
-                            className="text-red-600"
-                        >
-                            Delete Session
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
+                <div className="flex justify-end pr-2">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0">
+                                <MoreVertical className="w-4 h-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuItem onClick={() => onView(session)} className="gap-2">
+                                <Eye className="w-4 h-4" />
+                                View Session
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                                onClick={() => onDelete(session)}
+                                className="text-red-600 gap-2"
+                            >
+                                <Trash2 className="w-4 h-4" />
+                                Delete Session
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
             );
         },
     },

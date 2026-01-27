@@ -1,7 +1,7 @@
 // Diagnostic helper - add to bunny-upload.ts for debugging
 export const getBunnyDiagnostics = () => {
     const baseUrl = import.meta.env.VITE_BUNNY_API_BASE_URL || 'http://localhost:3012/api';
-    const token = localStorage.getItem('token') || import.meta.env.VITE_ADMIN_TOKEN;
+    const token = localStorage.getItem('auth-token') || localStorage.getItem('token');
     
     return {
         baseUrl,

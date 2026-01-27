@@ -7,6 +7,7 @@ import { DataTable } from '@/components/shared/DataTable';
 import { QuizzesFilters } from '@/components/quizzes/quizzes-filters';
 import { getQuizColumns } from '@/components/quizzes/quiz-columns';
 import { useCoursesStore } from '@/stores/courses-store';
+import { toast } from 'sonner';
 
 import { DeleteConfirmationDialog } from '@/components/shared/delete-confirmation-dialog';
 
@@ -48,6 +49,12 @@ export default function AllQuizzesPage() {
         navigate(`/quizzes/${quiz.id}`);
     };
 
+    const handleEdit = (quiz: any) => {
+        // Since there is no dedicated quiz edit page yet, we can either open a modal or navigate
+        console.log('Edit quiz:', quiz);
+        toast.info('Edit functionality for quizzes coming soon');
+    };
+
     const handleDeleteClick = (quiz: any) => {
         setQuizToDelete(quiz);
         setIsDeleteDialogOpen(true);
@@ -61,9 +68,7 @@ export default function AllQuizzesPage() {
         }
     };
 
-
-
-    const columns = getQuizColumns(handleView, handleDeleteClick);
+    const columns = getQuizColumns(handleView, handleEdit, handleDeleteClick);
 
     return (
         <div className="min-h-screen bg-gray-50 p-4 md:p-6">

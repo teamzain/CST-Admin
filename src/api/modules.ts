@@ -48,7 +48,7 @@ class ModulesService {
 
     private setupInterceptors() {
         this.axiosInstance.interceptors.request.use((config) => {
-            const token = localStorage.getItem('token') || import.meta.env.VITE_ADMIN_TOKEN;
+            const token = localStorage.getItem('auth-token') || localStorage.getItem('token');
             if (token) {
                 config.headers.Authorization = `Bearer ${token}`;
             }

@@ -124,13 +124,13 @@ export function DataTable<TData, TValue>({
             {/* Table */}
             <div className="rounded-lg border bg-white overflow-hidden">
                 <table className="w-full">
-                    <thead className="bg-gray-50 border-b">
+                    <thead className="bg-white border-b">
                         {table.getHeaderGroups().map((headerGroup) => (
                             <tr key={headerGroup.id}>
                                 {headerGroup.headers.map((header) => (
                                     <th
                                         key={header.id}
-                                        className="px-6 py-3 text-left text-sm font-medium text-gray-700"
+                                        className="px-6 py-4 text-left text-sm font-semibold text-gray-900"
                                     >
                                         {header.isPlaceholder
                                             ? null
@@ -149,13 +149,13 @@ export function DataTable<TData, TValue>({
                             table.getRowModel().rows.map((row) => (
                                 <tr
                                     key={row.id}
-                                    className="hover:bg-gray-50"
+                                    className="hover:bg-gray-50 transition-colors"
                                     data-state={
                                         row.getIsSelected() && 'selected'
                                     }
                                 >
                                     {row.getVisibleCells().map((cell) => (
-                                        <td key={cell.id} className="px-6 py-4">
+                                        <td key={cell.id} className="px-6 py-4 text-sm text-gray-600">
                                             {flexRender(
                                                 cell.column.columnDef.cell,
                                                 cell.getContext()

@@ -1,5 +1,5 @@
 import { type ColumnDef } from '@tanstack/react-table';
-import { Video, FileText, MoreHorizontal } from 'lucide-react';
+import { Video, FileText, MoreVertical, Eye, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -52,25 +52,29 @@ export const getLessonColumns = (onView: (lesson: Lesson) => void, onDelete: (le
         cell: ({ row }) => {
             const lesson = row.original;
             return (
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                            <MoreHorizontal className="w-4 h-4" />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => onView(lesson)}>
-                            View Lesson
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                            onClick={() => onDelete(lesson)}
-                            className="text-red-600"
-                        >
-                            Delete Lesson
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
+                <div className="flex justify-end pr-2">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0">
+                                <MoreVertical className="w-4 h-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuItem onClick={() => onView(lesson)} className="gap-2">
+                                <Eye className="w-4 h-4" />
+                                View Lesson
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                                onClick={() => onDelete(lesson)}
+                                className="text-red-600 gap-2"
+                            >
+                                <Trash2 className="w-4 h-4" />
+                                Delete Lesson
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
             );
         },
     },

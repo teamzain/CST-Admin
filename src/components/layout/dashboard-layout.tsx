@@ -21,7 +21,7 @@ export const DashboardLayout = () => {
             >
                 <TopNavigation />
 
-                <main className="p-6">
+                <main className="p-4 md:p-6 pt-2 md:pt-2">
                     <Outlet />
                 </main>
             </div>

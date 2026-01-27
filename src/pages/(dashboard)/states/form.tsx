@@ -127,21 +127,22 @@ export default function StateFormPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 p-4 md:p-6">
-            <div className="mx-auto max-w-2xl">
+        <div className="min-h-screen bg-gray-50 p-4 md:p-6 pt-2 md:pt-4">
+            <div className="mx-auto max-w-[1600px]">
                 {/* Header */}
-                <div className="flex items-center gap-4 mb-6">
+                <div className="flex items-center gap-3 mb-6">
                     <button
                         onClick={() => navigate('/states')}
-                        className="p-2 hover:bg-gray-200 rounded-lg transition"
+                        className="p-1 hover:bg-gray-100 rounded-lg transition-colors group"
+                        title="Back to States"
                     >
-                        <ArrowLeft className="w-5 h-5" />
+                        <ArrowLeft className="w-6 h-6 text-gray-400 group-hover:text-gray-900" />
                     </button>
                     <div>
-                        <h1 className="text-2xl md:text-3xl font-semibold text-gray-900">
+                        <h1 className="text-2xl md:text-3xl font-bold text-gray-900 leading-tight">
                             {isEditing ? 'Edit State' : 'Create New State'}
                         </h1>
-                        <p className="text-sm text-gray-600 mt-1">
+                        <p className="text-sm text-gray-500">
                             {isEditing ? 'Update state compliance requirements' : 'Configure state training requirements'}
                         </p>
                     </div>

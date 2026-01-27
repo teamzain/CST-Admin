@@ -6,7 +6,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreVertical } from 'lucide-react';
+import { MoreVertical, Eye, Edit2, Mail, Trash2 } from 'lucide-react';
 import type { User } from '@/repositories/users/types';
 import { Link } from 'react-router-dom';
 
@@ -95,26 +95,38 @@ export const getUserColumns = (): ColumnDef<User>[] => [
     {
         id: 'actions',
         header: '',
-        cell: ({ row }: { row: { original: User } }) => (
-            <DropdownMenu key={row.original.id}>
-                <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                        <MoreVertical className="w-4 h-4" />
-                    </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                    <DropdownMenuItem>
-                        <Link to={`/students/${row.original.id}`}>
-                        View Details
-                        </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem>Edit User</DropdownMenuItem>
-                    <DropdownMenuItem>Send Email</DropdownMenuItem>
-                    <DropdownMenuItem className="text-red-600">
-                        Delete User
-                    </DropdownMenuItem>
-                </DropdownMenuContent>
-            </DropdownMenu>
-        ),
+        cell: ({ row }: { row: { original: User } }) => {
+            return (
+                <div className="flex justify-end pr-2">
+                    <DropdownMenu key={row.original.id}>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                <MoreVertical className="w-4 h-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem className="gap-2">
+                                <Eye className="w-4 h-4" />
+                                <Link to={`/students/${row.original.id}`}>
+                                View Details
+                                </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="gap-2">
+                                <Edit2 className="w-4 h-4" />
+                                Edit User
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="gap-2">
+                                <Mail className="w-4 h-4" />
+                                Send Email
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="text-red-600 gap-2">
+                                <Trash2 className="w-4 h-4" />
+                                Delete User
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
+            );
+        },
     },
 ];

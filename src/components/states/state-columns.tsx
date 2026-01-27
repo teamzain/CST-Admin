@@ -1,6 +1,6 @@
 import { type ColumnDef } from '@tanstack/react-table';
 import { Badge } from '@/components/ui/badge';
-import { MoreHorizontal } from 'lucide-react';
+import { MoreVertical, Eye, XCircle, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -88,7 +88,13 @@ export const getStateColumns = (onView: (state: State) => void, onDelete: (state
         cell: ({ row }) => {
             const value = row.getValue<boolean>('is_active');
             return (
-                <Badge variant={value ? 'default' : 'secondary'}>
+                <Badge
+                    variant="secondary"
+                    className={value
+                        ? "bg-green-50 text-green-700 border-green-200"
+                        : "bg-gray-100 text-gray-700 border-gray-200"
+                    }
+                >
                     {value ? 'Published' : 'Unpublished'}
                 </Badge>
             );
@@ -99,30 +105,35 @@ export const getStateColumns = (onView: (state: State) => void, onDelete: (state
         cell: ({ row }) => {
             const state = row.original;
             return (
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                            <MoreHorizontal className="w-4 h-4" />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => onView(state)}>
-                            View State
-                        </DropdownMenuItem>
-                        {state.is_active && (
-                            <DropdownMenuItem onClick={() => onUnpublish(state)}>
-                                Unpublish State
+                <div className="flex justify-end pr-2">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0">
+                                <MoreVertical className="w-4 h-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuItem onClick={() => onView(state)} className="gap-2">
+                                <Eye className="w-4 h-4" />
+                                View State
                             </DropdownMenuItem>
-                        )}
-                        <DropdownMenuItem
-                            onClick={() => onDelete(state)}
-                            className="text-red-600"
-                        >
-                            Delete State
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
+                            {state.is_active && (
+                                <DropdownMenuItem onClick={() => onUnpublish(state)} className="gap-2">
+                                    <XCircle className="w-4 h-4" />
+                                    Unpublish State
+                                </DropdownMenuItem>
+                            )}
+                            <DropdownMenuItem
+                                onClick={() => onDelete(state)}
+                                className="text-red-600 gap-2"
+                            >
+                                <Trash2 className="w-4 h-4" />
+                                Delete State
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
             );
         },
     },

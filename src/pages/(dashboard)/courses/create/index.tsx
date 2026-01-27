@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useState, useEffect } from 'react';
-import { useCoursesStore, TRAINING_TYPE, DELIVERY_MODE, dummyStates, dummyInstructors } from '@/stores/courses-store';
+import { useCoursesStore, TRAINING_TYPE, DELIVERY_MODE, dummyStates, dummyInstructors, type Course } from '@/stores/courses-store';
 import { statesApiService } from '@/api/states-api';
 import type { State } from '@/api/states-api';
 import { bunnyUploadService } from '@/api/bunny-upload';
@@ -34,8 +34,8 @@ export default function CreateCoursePage() {
     const [formData, setFormData] = useState<{
         title: string;
         description: string;
-        training_type: string;
-        delivery_mode: string;
+        training_type: TRAINING_TYPE;
+        delivery_mode: DELIVERY_MODE;
         duration_hours: number;
         price: number;
         location: string;
@@ -166,16 +166,16 @@ export default function CreateCoursePage() {
             .filter(r => r !== '');
 
         // Send only the fields the backend expects
-        const courseData = {
+        const courseData: Omit<Course, 'id' | 'created_at' | 'updated_at'> = {
             title: formData.title,
             description: formData.description,
             duration_hours: formData.duration_hours,
             required_hours: formData.required_hours,
-            training_type: formData.training_type as any,
-            delivery_mode: formData.delivery_mode as any,
+            training_type: formData.training_type,
+            delivery_mode: formData.delivery_mode,
             thumbnail: formData.thumbnail,
             price: formData.price,
-            state: stateName,
+            state: { id: formData.state_id, name: stateName },
             location: formData.location,
             requires_exam: formData.requires_exam,
             requires_range: formData.requires_range,
@@ -186,10 +186,12 @@ export default function CreateCoursePage() {
             is_price_negotiable: formData.is_price_negotiable,
             pre_requirements: preReqs,
             certificate_template: formData.certificate_template,
+            is_active: formData.is_active,
+            instructor_id: formData.instructor_id,
         };
 
         try {
-            await addCourse(courseData as any);
+            await addCourse(courseData);
             navigate('/courses');
         } catch (error) {
             console.error('Failed to create course:', error);
@@ -198,31 +200,29 @@ export default function CreateCoursePage() {
     };
 
     return (
-        <div className="flex-1 bg-background w-full min-h-screen pt-6 pb-12">
-            <div className="p-8">
+        <div className="min-h-screen bg-gray-50 p-4 md:p-6 pt-2 md:pt-4">
+            <div className="mx-auto max-w-[1600px]">
                 {/* Header */}
-                <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center gap-3 mb-6">
+                    <button
+                        onClick={() => navigate('/courses')}
+                        className="p-1 hover:bg-gray-100 rounded-lg transition-colors group"
+                        title="Back to Courses"
+                    >
+                        <ArrowLeft className="w-6 h-6 text-gray-400 group-hover:text-gray-900" />
+                    </button>
                     <div>
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => navigate('/courses')}
-                            className="gap-2 mb-4"
-                        >
-                            <ArrowLeft className="w-4 h-4" />
-                            Back to Courses
-                        </Button>
-                        <h1 className="text-3xl font-bold text-foreground mt-4">
+                        <h1 className="text-2xl md:text-3xl font-bold text-gray-900 leading-tight">
                             Create New Course
                         </h1>
-                        <p className="text-muted-foreground mt-2">
+                        <p className="text-sm text-gray-500">
                             Follow the steps below to create a new training course
                         </p>
                     </div>
                 </div>
 
                 {/* Progress Indicator */}
-                <div className="mb-8 flex gap-4 justify-center">
+                <div className="mb-6 flex gap-4 justify-center">
                     {[1, 2, 3].map((s) => (
                         <button
                             key={s}

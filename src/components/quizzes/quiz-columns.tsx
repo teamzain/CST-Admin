@@ -1,6 +1,6 @@
 import { type ColumnDef } from '@tanstack/react-table';
 import { Badge } from '@/components/ui/badge';
-import { MoreHorizontal } from 'lucide-react';
+import { MoreVertical, Eye, Edit2, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -20,7 +20,11 @@ interface Quiz {
     questions: unknown[];
 }
 
-export const getQuizColumns = (onView: (quiz: Quiz) => void, onDelete: (quiz: Quiz) => void): ColumnDef<Quiz>[] => [
+export const getQuizColumns = (
+    onView: (quiz: Quiz) => void,
+    onEdit: (quiz: Quiz) => void,
+    onDelete: (quiz: Quiz) => void
+): ColumnDef<Quiz>[] => [
     {
         accessorKey: 'title',
         header: 'Quiz Title',
@@ -44,7 +48,7 @@ export const getQuizColumns = (onView: (quiz: Quiz) => void, onDelete: (quiz: Qu
     },
     {
         accessorKey: 'passing_score',
-        header: 'Passing Score',
+        header: () => <span className="whitespace-nowrap">Passing Score</span>,
         cell: ({ row }) => (
             <span className="text-gray-600">{row.getValue<number>('passing_score')}%</span>
         ),
@@ -74,25 +78,33 @@ export const getQuizColumns = (onView: (quiz: Quiz) => void, onDelete: (quiz: Qu
         cell: ({ row }) => {
             const quiz = row.original;
             return (
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                            <MoreHorizontal className="w-4 h-4" />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => onView(quiz)}>
-                            View Quiz
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                            onClick={() => onDelete(quiz)}
-                            className="text-red-600"
-                        >
-                            Delete Quiz
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
+                <div className="flex justify-end pr-2">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0">
+                                <MoreVertical className="w-4 h-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuItem onClick={() => onView(quiz)} className="gap-2">
+                                <Eye className="w-4 h-4" />
+                                View Quiz
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => onEdit(quiz)} className="gap-2">
+                                <Edit2 className="w-4 h-4" />
+                                Edit Quiz
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                                onClick={() => onDelete(quiz)}
+                                className="text-red-600 gap-2"
+                            >
+                                <Trash2 className="w-4 h-4" />
+                                Delete Quiz
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
             );
         },
     },

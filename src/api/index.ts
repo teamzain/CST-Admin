@@ -11,13 +11,8 @@ const api = axios.create({
 
 api.interceptors.request.use(
     (config) => {
-        // First try to get token from localStorage (logged in user)
-        let token = localStorage.getItem('auth-token');
-        
-        // Fallback to env token for development/admin access
-        if (!token) {
-            token = import.meta.env.VITE_ADMIN_TOKEN;
-        }
+        // Get token from localStorage (logged in user)
+        const token = localStorage.getItem('auth-token') || localStorage.getItem('token');
         
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
