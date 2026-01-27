@@ -1,7 +1,7 @@
 'use client';
 
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Upload as UploadIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -16,18 +16,26 @@ import {
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useState, useEffect } from 'react';
-import { useCoursesStore, TRAINING_TYPE, DELIVERY_MODE, type Course, dummyStates, dummyInstructors } from '@/stores/courses-store';
+import { useCoursesStore, TRAINING_TYPE, DELIVERY_MODE, dummyStates, dummyInstructors, type Course } from '@/stores/courses-store';
+import { statesApiService } from '@/api/states-api';
+import type { State } from '@/api/states-api';
+import { bunnyUploadService } from '@/api/bunny-upload';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { toast } from 'sonner';
 
 export default function CreateCoursePage() {
     const navigate = useNavigate();
-    const { addCourse, courses } = useCoursesStore();
+    const { addCourse } = useCoursesStore();
     const [step, setStep] = useState(1);
+    const [allStates, setAllStates] = useState<State[]>([]);
+    const [thumbnailPreview, setThumbnailPreview] = useState<string | undefined>();
+    const [preRequirementsText, setPreRequirementsText] = useState('');
+    const [isUploadingThumbnail, setIsUploadingThumbnail] = useState(false);
     const [formData, setFormData] = useState<{
         title: string;
         description: string;
-        training_type: string;
-        delivery_mode: string;
+        training_type: TRAINING_TYPE;
+        delivery_mode: DELIVERY_MODE;
         duration_hours: number;
         price: number;
         location: string;
@@ -69,6 +77,25 @@ export default function CreateCoursePage() {
         instructor_id: undefined,
     });
 
+    // Fetch states on mount
+    useEffect(() => {
+        const loadStates = async () => {
+            try {
+                const states = await statesApiService.getAllStates();
+                setAllStates(states);
+                // Set first state as default
+                if (states.length > 0) {
+                    setFormData(prev => ({ ...prev, state_id: states[0].id }));
+                }
+            } catch (error) {
+                console.error('Error loading states:', error);
+                // Fallback to dummy states
+                setAllStates(dummyStates as State[]);
+            }
+        };
+        loadStates();
+    }, []);
+
     const handleInputChange = (field: string, value: string | number | boolean | string[] | undefined) => {
         setFormData(prev => ({
             ...prev,
@@ -76,9 +103,30 @@ export default function CreateCoursePage() {
         }));
     };
 
+    const handleThumbnailUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setIsUploadingThumbnail(true);
+        try {
+            const response = await bunnyUploadService.uploadFile(file, 'course/');
+            setFormData(prev => ({ ...prev, thumbnail: response.url }));
+            setThumbnailPreview(response.url);
+            toast.success('Thumbnail uploaded successfully');
+        } catch (error) {
+            console.error('Error uploading thumbnail:', error);
+            toast.error('Failed to upload thumbnail');
+        } finally {
+            setIsUploadingThumbnail(false);
+        }
+    };
+
     // Auto-fill requirements based on State and Training Type
     useEffect(() => {
-        const selectedState = dummyStates.find(s => s.id === formData.state_id);
+        const selectedState = allStates.length > 0
+            ? allStates.find(s => s.id === formData.state_id)
+            : dummyStates.find(s => s.id === formData.state_id);
+
         if (!selectedState) return;
 
         let requiredHours = 0;
@@ -96,87 +144,94 @@ export default function CreateCoursePage() {
             setFormData(prev => ({
                 ...prev,
                 required_hours: requiredHours,
-                // Only update duration if it's 0 or same as previous required
                 duration_hours: prev.duration_hours === 0 ? requiredHours : prev.duration_hours,
                 requires_range: requiresRange,
             }));
         }
-    }, [formData.state_id, formData.training_type]);
+    }, [formData.state_id, formData.training_type, allStates]);
 
-    const handleSubmit = () => {
-        const newId = Math.max(...courses.map(c => c.id), 0) + 1;
-        const selectedState = dummyStates.find(s => s.id === formData.state_id);
-        const selectedInstructor = formData.instructor_id ? dummyInstructors.find(i => i.id === formData.instructor_id) : undefined;
+    const handleSubmit = async () => {
+        const selectedState = allStates.find(s => s.id === formData.state_id);
+        const stateName = selectedState?.name || '';
 
-        const newCourse: Course = {
-            id: newId,
+        if (!stateName) {
+            toast.error('Please select a valid state');
+            return;
+        }
+
+        // Convert text to array on submit
+        const preReqs = preRequirementsText
+            .split('\n')
+            .map(r => r.trim())
+            .filter(r => r !== '');
+
+        // Send only the fields the backend expects
+        const courseData: Omit<Course, 'id' | 'created_at' | 'updated_at'> = {
             title: formData.title,
             description: formData.description,
-            thumbnail: formData.thumbnail,
             duration_hours: formData.duration_hours,
-            training_type: formData.training_type as TRAINING_TYPE,
-            delivery_mode: formData.delivery_mode as DELIVERY_MODE,
             required_hours: formData.required_hours,
-            is_refresher: formData.is_refresher,
-            certificate_template: formData.certificate_template,
+            training_type: formData.training_type,
+            delivery_mode: formData.delivery_mode,
+            thumbnail: formData.thumbnail,
+            price: formData.price,
+            state: { id: formData.state_id, name: stateName },
             location: formData.location,
-            pre_requirements: formData.pre_requirements,
             requires_exam: formData.requires_exam,
             requires_range: formData.requires_range,
             attendance_required: formData.attendance_required,
             attendance_enabled: formData.attendance_enabled,
             requires_id_verification: formData.requires_id_verification,
-            price: formData.price,
+            is_refresher: formData.is_refresher,
             is_price_negotiable: formData.is_price_negotiable,
-            state_id: formData.state_id,
-            instructor_id: formData.instructor_id,
+            pre_requirements: preReqs,
+            certificate_template: formData.certificate_template,
             is_active: formData.is_active,
-            created_at: new Date(),
-            updated_at: new Date(),
-            state: selectedState,
-            instructor: selectedInstructor,
-            enrolled_students: 0,
+            instructor_id: formData.instructor_id,
         };
 
-        addCourse(newCourse);
-        navigate('/courses');
+        try {
+            await addCourse(courseData);
+            navigate('/courses');
+        } catch (error) {
+            console.error('Failed to create course:', error);
+            // Error toast is already handled in the store
+        }
     };
 
     return (
-        <div className="flex-1 bg-background w-full min-h-screen pt-6 pb-12">
-            <div className="p-8">
+        <div className="min-h-screen bg-gray-50 p-4 md:p-6 pt-2 md:pt-4">
+            <div className="mx-auto max-w-[1600px]">
                 {/* Header */}
-                <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center gap-3 mb-6">
+                    <button
+                        onClick={() => navigate('/courses')}
+                        className="p-1 hover:bg-gray-100 rounded-lg transition-colors group"
+                        title="Back to Courses"
+                    >
+                        <ArrowLeft className="w-6 h-6 text-gray-400 group-hover:text-gray-900" />
+                    </button>
                     <div>
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => navigate('/courses')}
-                            className="gap-2 mb-4"
-                        >
-                            <ArrowLeft className="w-4 h-4" />
-                            Back to Courses
-                        </Button>
-                        <h1 className="text-3xl font-bold text-foreground mt-4">
+                        <h1 className="text-2xl md:text-3xl font-bold text-gray-900 leading-tight">
                             Create New Course
                         </h1>
-                        <p className="text-muted-foreground mt-2">
+                        <p className="text-sm text-gray-500">
                             Follow the steps below to create a new training course
                         </p>
                     </div>
                 </div>
 
                 {/* Progress Indicator */}
-                <div className="mb-8 flex gap-4 justify-center">
+                <div className="mb-6 flex gap-4 justify-center">
                     {[1, 2, 3].map((s) => (
                         <button
                             key={s}
                             onClick={() => setStep(s)}
                             className={`flex items-center justify-center w-10 h-10 rounded-full font-semibold cursor-pointer transition-all ${step === s
-                                    ? 'bg-primary text-black scale-110 shadow-md'
-                                    : step > s
-                                        ? 'bg-primary/20 text-primary border-2 border-primary/30'
-                                        : 'bg-muted text-muted-foreground'
+                                ? 'bg-primary text-black scale-110 shadow-md'
+                                : step > s
+                                    ? 'bg-primary/20 text-primary border-2 border-primary/30'
+                                    : 'bg-muted text-muted-foreground'
                                 }`}
                         >
                             {s}
@@ -226,7 +281,7 @@ export default function CreateCoursePage() {
                                             <SelectValue placeholder="Select State" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            {dummyStates.map((state) => (
+                                            {(allStates.length > 0 ? allStates : dummyStates).map((state) => (
                                                 <SelectItem key={state.id} value={String(state.id)}>
                                                     {state.name} ({state.code})
                                                 </SelectItem>
@@ -377,6 +432,40 @@ export default function CreateCoursePage() {
                                 </div>
                             </div>
 
+                            <div>
+                                <Label>Course Thumbnail Image</Label>
+                                <div className="mt-2 border-2 border-dashed border-border rounded-lg p-6 text-center cursor-pointer hover:border-primary hover:bg-primary/5 transition-all">
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleThumbnailUpload}
+                                        disabled={isUploadingThumbnail}
+                                        className="hidden"
+                                        id="thumbnail-input"
+                                    />
+                                    <label htmlFor="thumbnail-input" className="cursor-pointer block">
+                                        {thumbnailPreview ? (
+                                            <div className="space-y-2">
+                                                <img
+                                                    src={thumbnailPreview}
+                                                    alt="Thumbnail preview"
+                                                    className="h-32 w-32 object-cover rounded mx-auto"
+                                                />
+                                                <p className="text-sm text-muted-foreground">Click to change thumbnail</p>
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-2">
+                                                <UploadIcon className="w-8 h-8 mx-auto text-muted-foreground" />
+                                                <p className="text-sm font-medium">
+                                                    {isUploadingThumbnail ? 'Uploading...' : 'Click to upload thumbnail'}
+                                                </p>
+                                                <p className="text-xs text-muted-foreground">PNG, JPG, GIF up to 5MB</p>
+                                            </div>
+                                        )}
+                                    </label>
+                                </div>
+                            </div>
+
                             <div className="flex items-center gap-2">
                                 <Checkbox
                                     id="price-negotiable"
@@ -389,8 +478,8 @@ export default function CreateCoursePage() {
                             <div>
                                 <Label>Pre-Requirements (one per line)</Label>
                                 <Textarea
-                                    value={formData.pre_requirements.join('\n')}
-                                    onChange={(e) => handleInputChange('pre_requirements', e.target.value.split('\n').filter(r => r.trim()))}
+                                    value={preRequirementsText}
+                                    onChange={(e) => setPreRequirementsText(e.target.value)}
                                     placeholder="e.g., High School Diploma&#10;Valid ID&#10;Background Check"
                                     rows={4}
                                     className="bg-input border-border mt-2"

@@ -16,6 +16,8 @@ export interface Lesson {
     content_type: 'video' | 'pdf' | 'text';
     content_url?: string;
     pdf_url?: string;
+    content_text?: string;
+    enable_download?: boolean;
     duration_min?: number;
     order_index: number;
     description?: string; // From curl payload
@@ -35,11 +37,15 @@ export interface Session {
     start_time: string;
     end_time: string;
     session_type: 'LIVE' | 'PHYSICAL';
-    capacity?: number;
+    capacity: number;
     location?: string;
     meeting_url?: string;
-    order_index: number;
-    description?: string;
+    order_index?: number;
+    google_event_id?: string;
+    reminder_sent?: boolean;
+    created_at?: string;
+    course_id?: number;
+    module_id?: number;
 }
 
 export interface Option {
@@ -58,11 +64,15 @@ export interface Question {
 
 export interface Quiz {
     id: number;
+    course_id?: number;
+    module_id?: number;
     title: string;
     passing_score: number;
+    order_index: number;
     is_final: boolean;
     time_limit_minutes?: number;
-    order_index: number;
+    randomize_questions?: boolean;
+    attempts_allowed?: number | null;
     questions?: Question[];
 }
 
@@ -111,7 +121,11 @@ export function ModuleItem({
 }: ModuleItemProps) {
     const [isExpanded, setIsExpanded] = useState(true);
 
-    const totalItems = module.lessons.length + module.sessions.length + module.quizzes.length;
+    const lessons = module.lessons || [];
+    const sessions = module.sessions || [];
+    const quizzes = module.quizzes || [];
+
+    const totalItems = lessons.length + sessions.length + quizzes.length;
 
     const getContentIcon = (type: string) => {
         switch (type) {
@@ -186,13 +200,13 @@ export function ModuleItem({
                                 className={`space-y-2 ${snapshot.isDraggingOver ? 'bg-accent/10 rounded-lg p-2' : ''}`}
                             >
                                 {[
-                                    ...module.lessons.map(l => ({ ...l, itemType: 'lesson' as const })),
-                                    ...module.sessions.map(s => ({ ...s, itemType: 'session' as const })),
-                                    ...module.quizzes.map(q => ({ ...q, itemType: 'quiz' as const })),
-                                ].sort((a, b) => a.order_index - b.order_index).map((item, index) => (
+                                    ...lessons.map(l => ({ ...l, itemType: 'lesson' as const })),
+                                    ...sessions.map(s => ({ ...s, itemType: 'session' as const })),
+                                    ...quizzes.map(q => ({ ...q, itemType: 'quiz' as const })),
+                                ].sort((a, b) => (a.order_index || 0) - (b.order_index || 0)).map((item, index) => (
                                     <Draggable
-                                        key={`${item.itemType}-${item.id}`}
-                                        draggableId={`${item.itemType}-${item.id}`}
+                                        key={`${item.itemType}-${item.id || index}`}
+                                        draggableId={`${item.itemType}-${item.id || index}`}
                                         index={index}
                                     >
                                         {(provided, snapshot) => (

@@ -1,7 +1,7 @@
 import { type ColumnDef } from '@tanstack/react-table';
 import { Badge } from '@/components/ui/badge';
 import { type Course } from '@/stores/courses-store';
-import { MoreHorizontal, Clock } from 'lucide-react';
+import { MoreVertical, Clock, Eye, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -11,7 +11,7 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-export const getCourseColumns = (onEdit: (course: Course) => void, onDelete: (course: Course) => void): ColumnDef<Course>[] => [
+export const getCourseColumns = (onView: (course: Course) => void, onDelete: (course: Course) => void): ColumnDef<Course>[] => [
     {
         accessorKey: 'title',
         header: 'Course Title',
@@ -47,8 +47,8 @@ export const getCourseColumns = (onEdit: (course: Course) => void, onDelete: (co
         header: 'Hours',
         cell: ({ row }) => (
             <div className="flex items-center gap-2 text-gray-600">
-                <div className="w-8 h-8 rounded-full bg-purple-50 flex items-center justify-center">
-                    <Clock className="w-4 h-4 text-purple-600" />
+                <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center">
+                    <Clock className="w-4 h-4 text-[#535862]" />
                 </div>
                 <span>{row.getValue<number>('duration_hours')} Hours</span>
             </div>
@@ -67,7 +67,7 @@ export const getCourseColumns = (onEdit: (course: Course) => void, onDelete: (co
                         : "bg-gray-50 text-gray-700 border-gray-100"
                     }
                 >
-                    {isActive ? 'Published' : 'Draft'}
+                    {isActive ? 'Published' : 'Unpublished'}
                 </Badge>
             );
         },
@@ -98,25 +98,29 @@ export const getCourseColumns = (onEdit: (course: Course) => void, onDelete: (co
         cell: ({ row }) => {
             const course = row.original;
             return (
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                            <MoreHorizontal className="w-4 h-4" />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => onEdit(course)}>
-                            Edit Course
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                            onClick={() => onDelete(course)}
-                            className="text-red-600"
-                        >
-                            Delete Course
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
+                <div className="flex justify-end pr-2">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-gray-100">
+                                <MoreVertical className="w-4 h-4 text-gray-500" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-40">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuItem onClick={() => onView(course)} className="gap-2">
+                                <Eye className="w-4 h-4" />
+                                View Course
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                                onClick={() => onDelete(course)}
+                                className="text-red-600 gap-2"
+                            >
+                                <Trash2 className="w-4 h-4" />
+                                Delete Course
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
             );
         },
     },

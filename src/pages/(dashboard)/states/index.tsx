@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import {
@@ -16,21 +16,50 @@ import { getStateColumns } from '@/components/states/state-columns';
 import { useStatesStore } from '@/stores/states-store';
 import { Plus } from 'lucide-react';
 import { DeleteConfirmationDialog } from '@/components/shared/delete-confirmation-dialog';
+import { StatesRepository } from '@/repositories/states';
+import { toast } from 'sonner';
+import type { StateFilters } from '@/api/states';
 
 export default function StatesPage() {
     const navigate = useNavigate();
-    const { states, deleteState } = useStatesStore();
+    const { states, fetchStates, deleteState, unpublishState, setFilters } = useStatesStore();
 
     const [searchTerm, setSearchTerm] = useState('');
-    const [statusFilter, setStatusFilter] = useState('all');
+    const [statusFilter, setStatusFilter] = useState<string>('all');
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [stateToDelete, setStateToDelete] = useState<any>(null);
 
+    // Fetch states on mount and when filters change
+    useEffect(() => {
+        const loadStates = async () => {
+            try {
+                const filters: StateFilters = {};
+                
+                if (searchTerm) {
+                    filters.search = searchTerm;
+                }
+                
+                if (statusFilter !== 'all') {
+                    filters.is_active = statusFilter === 'true';
+                }
+
+                await fetchStates(filters);
+                setFilters(filters);
+            } catch (error) {
+                console.error('Error loading states:', error);
+            }
+        };
+        
+        loadStates();
+    }, [searchTerm, statusFilter, fetchStates, setFilters]);
+
     const filteredStates = useMemo(() => {
+        // If we have search or status filter, backend already filtered
+        // But we still apply local search/filter for immediate UI feedback
         return states.filter((state) => {
-            const matchesSearch = state.name.toLowerCase().includes(searchTerm.toLowerCase());
-            if (statusFilter !== 'all' && String(state.is_active) !== statusFilter) return false;
-            return matchesSearch;
+            const matchesSearch = !searchTerm || state.name.toLowerCase().includes(searchTerm.toLowerCase());
+            const matchesStatus = statusFilter === 'all' || String(state.is_active) === statusFilter;
+            return matchesSearch && matchesStatus;
         });
     }, [states, searchTerm, statusFilter]);
 
@@ -43,10 +72,26 @@ export default function StatesPage() {
         setIsDeleteDialogOpen(true);
     };
 
-    const handleConfirmDelete = () => {
+    const handleConfirmDelete = async () => {
         if (stateToDelete) {
-            deleteState(stateToDelete.id);
-            setStateToDelete(null);
+            try {
+                await StatesRepository.delete(stateToDelete.id);
+                deleteState(stateToDelete.id);
+                setStateToDelete(null);
+                setIsDeleteDialogOpen(false);
+            } catch (error) {
+                console.error('Error deleting state:', error);
+            }
+        }
+    };
+
+    const handleUnpublish = async (state: any) => {
+        try {
+            await StatesRepository.unpublish(state.id);
+            unpublishState(state.id);
+            toast.success(`${state.name} unpublished successfully`);
+        } catch (error) {
+            console.error('Error unpublishing state:', error);
         }
     };
 
@@ -54,10 +99,10 @@ export default function StatesPage() {
         navigate('/states/create');
     };
 
-    const columns = getStateColumns(handleView, handleDeleteClick);
+    const columns = getStateColumns(handleView, handleDeleteClick, handleUnpublish);
 
     return (
-        <div className="min-h-screen bg-gray-50 p-4 md:p-6">
+        <div className="min-h-screen bg-gray-50 p-4 md:p-6 pt-2 md:pt-4">
             <div className="mx-auto max-w-[1600px]">
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">

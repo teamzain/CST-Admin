@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MapPin } from 'lucide-react';
+import { toast } from 'sonner';
+import { convertFromISO8601 } from '@/lib/utils';
 import type { Session } from './module-item';
 
 interface SessionModalProps {
@@ -31,8 +33,8 @@ export function SessionModal({ isOpen, onClose, onSave, session }: SessionModalP
         if (session) {
             setFormData({
                 title: session.title,
-                start_time: session.start_time,
-                end_time: session.end_time,
+                start_time: convertFromISO8601(session.start_time),
+                end_time: convertFromISO8601(session.end_time),
                 session_type: session.session_type,
                 capacity: session.capacity || 20,
                 location: session.location || '',
@@ -51,19 +53,33 @@ export function SessionModal({ isOpen, onClose, onSave, session }: SessionModalP
         }
     }, [session, isOpen]);
 
+    // Force re-render when session_type changes to show/hide location or meeting_url
+    useEffect(() => {
+        // This effect ensures the conditional rendering updates when session_type changes
+    }, [formData.session_type]);
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        // Ensure dates are in ISO format if needed, but datetime-local values are usually fine for now
-        // The backend expects ISO strings like "2025-11-03T09:00:00Z"
-        // We might need to convert them before saving if the parent component expects that.
-        // For now, we pass the raw values.
+        
+        // Validate required fields
+        if (!formData.title || !formData.start_time || !formData.end_time || !formData.capacity) {
+            toast.error('Please fill in all required fields');
+            return;
+        }
+
+        // Validate location for PHYSICAL sessions
+        if (formData.session_type === 'PHYSICAL' && !formData.location?.trim()) {
+            toast.error('Location is required for physical sessions');
+            return;
+        }
+
         onSave(formData);
         onClose();
     };
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-[500px]" showCloseButton={false}>
+            <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto" showCloseButton={false}>
                 <form onSubmit={handleSubmit}>
                     <DialogHeader>
                         <DialogTitle>{session ? 'Edit Session' : 'Add Session'}</DialogTitle>
@@ -88,10 +104,7 @@ export function SessionModal({ isOpen, onClose, onSave, session }: SessionModalP
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <Label htmlFor="session-type">Session Type *</Label>
-                                <Select
-                                    value={formData.session_type}
-                                    onValueChange={(value) => setFormData({ ...formData, session_type: value as 'LIVE' | 'PHYSICAL' })}
-                                >
+                                <Select value={formData.session_type || 'LIVE'} onValueChange={(value) => setFormData({ ...formData, session_type: value as 'LIVE' | 'PHYSICAL' })}>
                                     <SelectTrigger id="session-type" className="bg-background border-border mt-2">
                                         <SelectValue />
                                     </SelectTrigger>
@@ -115,7 +128,7 @@ export function SessionModal({ isOpen, onClose, onSave, session }: SessionModalP
                             </div>
                         </div>
 
-                        {formData.session_type === 'PHYSICAL' ? (
+                        {formData.session_type === 'PHYSICAL' && (
                             <div className="space-y-2">
                                 <Label htmlFor="location">Location *</Label>
                                 <div className="relative mt-2">
@@ -129,20 +142,6 @@ export function SessionModal({ isOpen, onClose, onSave, session }: SessionModalP
                                         className="bg-background border-border pl-9"
                                     />
                                 </div>
-                            </div>
-                        ) : (
-                            <div className="space-y-2">
-                                <Label htmlFor="meeting-url">Meeting URL</Label>
-                                <Input
-                                    id="meeting-url"
-                                    value={formData.meeting_url || ''}
-                                    onChange={(e) => setFormData({ ...formData, meeting_url: e.target.value })}
-                                    className="bg-background border-border mt-2"
-                                    placeholder="https://meet.google.com/..."
-                                />
-                                <p className="text-xs text-muted-foreground mt-1">
-                                    System automatically generates Google Meet link upon creation if left empty.
-                                </p>
                             </div>
                         )}
 
