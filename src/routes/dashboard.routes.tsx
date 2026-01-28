@@ -20,6 +20,7 @@ import AllLessonsPage from '@/pages/(dashboard)/lessons';
 import LessonDetailsPage from '@/pages/(dashboard)/lessons/lesson-details';
 import AllSessionsPage from '@/pages/(dashboard)/sessions';
 import SessionDetailsPage from '@/pages/(dashboard)/sessions/session-details';
+import SettingsPage from '@/pages/(dashboard)/settings';
 
 export const dashboardRoutes: RouteObject[] = [
     {
@@ -103,6 +104,10 @@ export const dashboardRoutes: RouteObject[] = [
                     {
                         path: '/sessions/:id',
                         element: <SessionDetailsPage />,
+                    },
+                    {
+                        path: '/settings',
+                        element: <SettingsPage />,
                     },
                 ],
             },
