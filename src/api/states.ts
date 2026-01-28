@@ -32,7 +32,7 @@ export interface StateFilters {
     is_active?: boolean;
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3009/api/admin';
+const API_BASE_URL = import.meta.env.VITE_API_COURSE_URL;
 
 /**
  * Extract error message from unknown error

@@ -56,7 +56,7 @@ export default function UsersPage() {
                             {filteredUsers.length} Users Found
                         </p>
                     </div>
-                    <Button className="bg-yellow-500 hover:bg-yellow-600 text-black font-medium w-full sm:w-auto">
+                    <Button className="bg-primary hover:bg-primary/90 text-secondary font-medium w-full sm:w-auto">
                         + Add User
                     </Button>
                 </div>

@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Plus } from 'lucide-react';
-import { DataTable } from '@/components/shared/data-table';
+import { DataTable } from '@/components/shared/DataTable';
 import { EmployerModal } from './employer-modal';
+import { EmployersFilters } from '@/components/employers/employers-filters';
+import { getEmployerColumns } from '@/components/employers/employer-columns';
 
 interface Employer {
     id: number;
@@ -77,6 +78,38 @@ export default function EmployersPage() {
     const [selectedEmployer, setSelectedEmployer] = useState<
         Employer | undefined
     >();
+    
+    // Filter states
+    const [searchTerm, setSearchTerm] = useState('');
+    const [industryFilter, setIndustryFilter] = useState('all');
+    const [statusFilter, setStatusFilter] = useState('all');
+    const [seatUtilizationFilter, setSeatUtilizationFilter] = useState('all');
+
+    // Filter employers
+    const filteredEmployers = useMemo(() => {
+        return employers.filter((employer) => {
+            // Search filter
+            const matchesSearch = searchTerm === '' || 
+                employer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                employer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                employer.contact.toLowerCase().includes(searchTerm.toLowerCase());
+
+            // Industry filter
+            const matchesIndustry = industryFilter === 'all' || employer.industry === industryFilter;
+
+            // Status filter
+            const matchesStatus = statusFilter === 'all' || employer.status === statusFilter;
+
+            // Seat utilization filter
+            const utilization = employer.usedSeats / employer.seats;
+            const matchesUtilization = seatUtilizationFilter === 'all' ||
+                (seatUtilizationFilter === 'high' && utilization >= 0.8) ||
+                (seatUtilizationFilter === 'medium' && utilization >= 0.5 && utilization < 0.8) ||
+                (seatUtilizationFilter === 'low' && utilization < 0.5);
+
+            return matchesSearch && matchesIndustry && matchesStatus && matchesUtilization;
+        });
+    }, [employers, searchTerm, industryFilter, statusFilter, seatUtilizationFilter]);
 
     const handleCreateClick = () => {
         setSelectedEmployer(undefined);
@@ -86,12 +119,6 @@ export default function EmployersPage() {
     const handleEditClick = (employer: Employer) => {
         setSelectedEmployer(employer);
         setModalOpen(true);
-    };
-
-    const handleDeleteClick = (employer: Employer) => {
-        if (window.confirm(`Delete employer "${employer.name}"?`)) {
-            setEmployers(employers.filter((e) => e.id !== employer.id));
-        }
     };
 
     const handleSaveEmployer = (
@@ -111,98 +138,59 @@ export default function EmployersPage() {
         }
     };
 
-    const columns = [
-        {
-            key: 'name' as const,
-            label: 'Company',
-            sortable: true,
-            filterable: true,
-        },
-        {
-            key: 'contact' as const,
-            label: 'Contact',
-            sortable: true,
-        },
-        {
-            key: 'industry' as const,
-            label: 'Industry',
-            sortable: true,
-            filterable: true,
-        },
-        {
-            key: 'seats' as const,
-            label: 'Seats Used',
-            sortable: true,
-            render: (value: number, row: Employer) => (
-                <div className="flex items-center gap-2">
-                    <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
-                        <div
-                            className="h-full bg-primary"
-                            style={{
-                                width: `${
-                                    row.usedSeats > 0
-                                        ? (row.usedSeats / value) * 100
-                                        : 0
-                                }%`,
-                            }}
-                        />
-                    </div>
-                    <span className="text-sm font-medium w-16">
-                        {row.usedSeats}/{value}
-                    </span>
-                </div>
-            ),
-        },
-        {
-            key: 'status' as const,
-            label: 'Status',
-            sortable: true,
-            render: (value: 'active' | 'inactive' | 'pending') => (
-                <Badge
-                    variant={
-                        value === 'active'
-                            ? 'default'
-                            : value === 'inactive'
-                            ? 'secondary'
-                            : 'outline'
-                    }
-                >
-                    {value.charAt(0).toUpperCase() + value.slice(1)}
-                </Badge>
-            ),
-        },
-    ];
+    // Column definition with proper typing
+    const columns = useMemo(() => getEmployerColumns(
+        handleEditClick,
+        (employer) => {
+            if (window.confirm(`Delete employer "${employer.name}"?`)) {
+                setEmployers(employers.filter((e) => e.id !== employer.id));
+            }
+        }
+    ), [employers]);
 
     return (
-        <div className="flex">
-            <div className="flex-1 bg-background">
-                <div className="p-8">
-                    <div className="flex justify-between items-center mb-8">
-                        <div>
-                            <h1 className="text-3xl font-bold text-foreground">
-                                Employers
-                            </h1>
-                            <p className="text-muted-foreground mt-2">
-                                Manage B2B accounts and seat allocation
-                            </p>
-                        </div>
-                        <Button
-                            onClick={handleCreateClick}
-                            className="bg-primary hover:bg-primary/90 gap-2"
-                        >
-                            <Plus className="w-4 h-4" />
-                            New Account
-                        </Button>
+        <div className="min-h-screen bg-gray-50 p-4 md:p-6 pt-2 md:pt-4">
+            <div className="mx-auto max-w-[1600px]">
+                {/* Header */}
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                    <div>
+                        <h1 className="text-2xl md:text-3xl font-semibold text-gray-900">
+                            Employers
+                        </h1>
+                        <p className="text-sm text-gray-600 mt-1">
+                            {filteredEmployers.length} Employers Found
+                        </p>
                     </div>
+                    <Button
+                        onClick={handleCreateClick}
+                        className="bg-primary hover:bg-primary/90 text-black font-medium gap-2 w-full sm:w-auto"
+                    >
+                        <Plus className="w-4 h-4" />
+                        New Account
+                    </Button>
+                </div>
 
-                    {/* Employers Table */}
+                {/* Filters */}
+                <EmployersFilters
+                    searchTerm={searchTerm}
+                    onSearchChange={setSearchTerm}
+                    industryFilter={industryFilter}
+                    onIndustryChange={setIndustryFilter}
+                    statusFilter={statusFilter}
+                    onStatusChange={setStatusFilter}
+                    seatUtilizationFilter={seatUtilizationFilter}
+                    onSeatUtilizationChange={setSeatUtilizationFilter}
+                />
+
+                {/* Data Table */}
+                <div className="overflow-x-auto">
                     <DataTable
-                        data={employers}
                         columns={columns}
-                        onEdit={handleEditClick}
-                        onDelete={handleDeleteClick}
-                        searchPlaceholder="Search employers..."
+                        data={filteredEmployers}
                         pageSize={10}
+                        enableRowSelection={true}
+                        searchColumn="name"
+                        searchValue={searchTerm}
                     />
                 </div>
             </div>

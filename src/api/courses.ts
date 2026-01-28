@@ -1,6 +1,13 @@
 import axios, { AxiosError } from 'axios';
+import type { AxiosResponse } from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_ADMIN_URL || 'http://localhost:3009/api/admin';
+const API_BASE_URL = import.meta.env.VITE_API_COURSE_URL || 'http://localhost:3009/api/admin';
+
+interface ApiResponseData {
+    data?: unknown;
+    courses?: Course[];
+    course?: Course;
+}
 
 export enum TRAINING_TYPE {
     UNARMED = 'UNARMED',
@@ -74,26 +81,29 @@ class CoursesService {
         });
     }
 
-    private getData<T>(response: any): T {
+    private getData<T>(response: AxiosResponse<ApiResponseData | T[] | T>): T {
         // Handle nested data structures from API
-        const data = response?.data;
+        const data = response?.data as ApiResponseData | T[] | T | undefined;
         if (!data) return [] as unknown as T;
 
         // If data is the array itself
         if (Array.isArray(data)) return data as unknown as T;
 
         // Check for common wrappers
-        if (data.data !== undefined) {
+        const responseData = data as ApiResponseData;
+        if (responseData.data !== undefined) {
+            const nestedData = responseData.data as ApiResponseData | T[] | T;
             // If data.data is the array
-            if (Array.isArray(data.data)) return data.data as unknown as T;
+            if (Array.isArray(nestedData)) return nestedData as unknown as T;
             // If data.data contains the array
-            if (data.data.courses !== undefined) return data.data.courses as unknown as T;
-            if (data.data.course !== undefined) return data.data.course as unknown as T;
-            return data.data as T;
+            const nestedObj = nestedData as ApiResponseData;
+            if (nestedObj.courses !== undefined) return nestedObj.courses as unknown as T;
+            if (nestedObj.course !== undefined) return nestedObj.course as unknown as T;
+            return nestedData as T;
         }
 
-        if (data.courses !== undefined) return data.courses as unknown as T;
-        if (data.course !== undefined) return data.course as unknown as T;
+        if (responseData.courses !== undefined) return responseData.courses as unknown as T;
+        if (responseData.course !== undefined) return responseData.course as unknown as T;
 
         return data as T;
     }
@@ -178,11 +188,11 @@ class CoursesService {
     }
 
     async publishCourse(id: number): Promise<Course> {
-        return this.updateCourse(id, { is_active: true } as any);
+        return this.updateCourse(id, { is_active: true } as Partial<CreateCourseInput> & { is_active: boolean });
     }
 
     async unpublishCourse(id: number): Promise<Course> {
-        return this.updateCourse(id, { is_active: false } as any);
+        return this.updateCourse(id, { is_active: false } as Partial<CreateCourseInput> & { is_active: boolean });
     }
 }
 
