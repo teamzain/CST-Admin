@@ -12,7 +12,7 @@ import {
     ChevronDown,
     Menu,
     MapPin,
-    UserCog
+    UserCog,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import clsx from 'clsx';
@@ -96,10 +96,15 @@ export function Sidebar({ open, toggleSidebar }: SidebarProps) {
             {/* Header */}
             {/* Header */}
             <div className="p-5 border-b border-sidebar-border h-17 flex items-center">
-                <div className={clsx("flex items-center w-full", open ? "justify-between" : "justify-center")}>
+                <div
+                    className={clsx(
+                        'flex items-center w-full',
+                        open ? 'justify-between' : 'justify-center'
+                    )}
+                >
                     {open && (
                         <div className="flex items-center gap-2">
-                            <div className="w-12 h-8 rounded-lg flex items-center justify-center">
+                            <div className="w-20 h-14 rounded-lg flex items-center justify-center">
                                 <img
                                     src="/logo.png"
                                     alt="Logo"
@@ -109,16 +114,26 @@ export function Sidebar({ open, toggleSidebar }: SidebarProps) {
                             </div>
                         </div>
                     )}
-                    <button onClick={toggleSidebar} className={clsx("text-sidebar-foreground hover:text-primary transition-colors", open && "mr-1")}>
+                    <Button
+                        onClick={toggleSidebar}
+                        className={clsx(
+                            'text-sidebar-foreground hover:text-primary transition-colors hover:bg-transparent',
+                            open && 'mr-1'
+                        )}
+                        variant={'ghost'}
+                    >
                         <Menu className="w-6 h-6" />
-                    </button>
+                    </Button>
                 </div>
             </div>
 
             {/* Menu */}
-            <nav className="flex-1 p-4 space-y-2 overflow-y-auto scrollbar-thin scrollbar-thumb-sidebar-border">
+            <nav className="flex-1 p-4 space-y-3 overflow-y-auto scrollbar-thin scrollbar-thumb-sidebar-border">
                 {menuItems.map((item) => {
-                    const isActive = pathname === item.href || (item.subItems && item.subItems.some(sub => pathname === sub.href));
+                    const isActive =
+                        pathname === item.href ||
+                        (item.subItems &&
+                            item.subItems.some((sub) => pathname === sub.href));
                     const isOpen = openMenus[item.label];
 
                     if (item.subItems) {
@@ -149,12 +164,18 @@ export function Sidebar({ open, toggleSidebar }: SidebarProps) {
                                 {open && isOpen && (
                                     <div className="ml-4 pl-4 border-l border-sidebar-border space-y-1 mt-1">
                                         {item.subItems.map((subItem) => (
-                                            <Link key={subItem.href} to={subItem.href}>
+                                            <Link
+                                                key={subItem.href}
+                                                to={subItem.href}
+                                            >
                                                 <Button
                                                     variant="ghost"
                                                     className={clsx(
                                                         'w-full justify-start h-8 text-sm gap-2 my-1',
-                                                        pathname === subItem.href ? 'text-primary' : 'text-sidebar-foreground/70'
+                                                        pathname ===
+                                                            subItem.href
+                                                            ? 'text-primary'
+                                                            : 'text-sidebar-foreground/70'
                                                     )}
                                                 >
                                                     <span>{subItem.label}</span>

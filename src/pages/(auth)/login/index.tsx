@@ -1,7 +1,6 @@
 'use client';
 
 import type React from 'react';
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -13,49 +12,105 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
-import { Shield } from 'lucide-react';
+import { Mail, Lock, AlertCircle, Loader2 } from 'lucide-react';
+import { authRepository } from '@/repositories/auth';
+import { useAuthStore } from '@/stores/auth-store';
+import AuthLayout from '@/components/layout/AuthLayout';
 
 export default function LoginPage() {
-    const router = useNavigate();
+    const navigate = useNavigate();
+    const setAuth = useAuthStore((state) => state.setAuth);
+
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
-    const handleLogin = (e: React.FormEvent) => {
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
+        setError(null);
 
-        router('/');
+        if (!email || !password) {
+            setError('Please enter both email and password');
+            return;
+        }
+
+        setIsLoading(true);
+
+        try {
+            const response = await authRepository.login({ email, password });
+
+            setAuth(response.user, response.token);
+
+            navigate('/');
+        } catch (err: any) {
+            console.error('Login error:', err);
+            setError(
+                err.response?.data?.message ||
+                    'Invalid credentials. Please try again.'
+            );
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
-        <div className="min-h-screen bg-background flex items-center justify-center p-4">
-            <Card className="w-full max-w-md bg-card border-border">
-                <CardHeader className="space-y-2">
-                    <div className="flex items-center justify-center mb-4">
-                        <div className="w-12 h-12 bg-primary rounded-lg flex items-center justify-center">
-                            <Shield className="w-8 h-8 text-primary-foreground" />
+        <AuthLayout>
+            <Card className="w-full sm:max-w-md bg-white/95 backdrop-blur-xl border-white/20 shadow-2xl mx-auto overflow-hidden">
+                <CardHeader className="space-y-3 sm:space-y-4 pb-4 sm:pb-6">
+                    <div className="flex flex-col items-center gap-3 sm:gap-4">
+                        <div className="relative">
+                            <div className="relative w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center">
+                                <img
+                                    src="/logo.png"
+                                    alt="logo"
+                                    className="w-full h-full object-contain"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="text-center space-y-1 sm:space-y-2">
+                            <CardTitle className="text-2xl sm:text-3xl font-bold bg-secondary bg-clip-text text-transparent">
+                                TrainHub Admin
+                            </CardTitle>
+                            <CardDescription className="text-secondary font-medium text-sm sm:text-base">
+                                Security Training Platform
+                            </CardDescription>
                         </div>
                     </div>
-                    <CardTitle className="text-center text-2xl">
-                        TrainHub Admin
-                    </CardTitle>
-                    <CardDescription className="text-center">
-                        Security Training Platform
-                    </CardDescription>
                 </CardHeader>
-                <CardContent>
-                    <form onSubmit={handleLogin} className="space-y-4">
+
+                <CardContent className="px-5 sm:px-6 pb-6 mt-4">
+                    <form
+                        onSubmit={handleLogin}
+                        className="space-y-4 sm:space-y-5"
+                    >
+                        {error && (
+                            <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm animate-in fade-in slide-in-from-top-2 duration-300">
+                                <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                                <span className="leading-tight">{error}</span>
+                            </div>
+                        )}
+
                         <div className="space-y-2">
-                            <label className="text-sm font-medium">Email</label>
+                            <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                                <Mail className="w-4 h-4" />
+                                Email Address
+                            </label>
                             <Input
                                 type="email"
-                                placeholder="admin@example.com"
+                                placeholder="admin@trainhub.com"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                className="bg-input border-border"
+                                disabled={isLoading}
+                                className="h-10 sm:h-11 bg-slate-50 border-slate-200 focus:border-purple-500 focus:ring-purple-500/20 transition-all text-sm sm:text-base"
+                                required
                             />
                         </div>
+
                         <div className="space-y-2">
-                            <label className="text-sm font-medium">
+                            <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                                <Lock className="w-4 h-4" />
                                 Password
                             </label>
                             <Input
@@ -63,18 +118,33 @@ export default function LoginPage() {
                                 placeholder="••••••••"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="bg-input border-border"
+                                disabled={isLoading}
+                                className="h-10 sm:h-11 bg-slate-50 border-slate-200 focus:border-purple-500 focus:ring-purple-500/20 transition-all text-sm sm:text-base"
+                                required
                             />
                         </div>
+
                         <Button
                             type="submit"
-                            className="w-full bg-primary hover:bg-primary/90"
+                            disabled={isLoading}
+                            className="w-full h-10 sm:h-11 bg-primary font-semibold shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed mt-2"
                         >
-                            Sign In
+                            {isLoading ? (
+                                <>
+                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                    Signing in...
+                                </>
+                            ) : (
+                                'Sign In'
+                            )}
                         </Button>
+
+                        <p className="text-center text-[10px] sm:text-xs text-slate-500 pt-2 px-2">
+                            Secure access to your training dashboard
+                        </p>
                     </form>
                 </CardContent>
             </Card>
-        </div>
+        </AuthLayout>
     );
 }
