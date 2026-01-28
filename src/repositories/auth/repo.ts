@@ -1,31 +1,36 @@
-import api from '@/api';
+import { authApi as api } from '@/api';
+import { AUTH_ROUTES } from '@/config/routes';
 
-import type { LoginCredentials, LoginResponse, User } from './types';
+import type {
+    LoginCredentials,
+    LoginResponse,
+    User,
+    ForgotPasswordRequest,
+    ResetPasswordRequest,
+    ChangePasswordRequest,
+} from './types';
 
 export class AuthRepository {
-
-    private readonly basePath = '/auth';
-
     async login(credentials: LoginCredentials): Promise<LoginResponse> {
         const { data } = await api.post<LoginResponse>(
-            `${this.basePath}/login`,
+            AUTH_ROUTES.LOGIN.url,
             credentials
         );
         return data;
     }
 
     async logout(): Promise<void> {
-        await api.post(`${this.basePath}/logout`);
+        await api.post(AUTH_ROUTES.LOGOUT.url);
     }
 
     async getCurrentUser(): Promise<User> {
-        const { data } = await api.get<User>(`${this.basePath}/me`);
+        const { data } = await api.get<User>(AUTH_ROUTES.GET_CURRENT_USER.url);
         return data;
     }
 
     async refreshToken(refreshToken: string): Promise<LoginResponse> {
         const { data } = await api.post<LoginResponse>(
-            `${this.basePath}/refresh`,
+            AUTH_ROUTES.REFRESH_TOKEN.url,
             { refreshToken }
         );
         return data;
@@ -37,12 +42,27 @@ export class AuthRepository {
         password: string;
     }): Promise<LoginResponse> {
         const { data } = await api.post<LoginResponse>(
-            `${this.basePath}/register`,
+            AUTH_ROUTES.REGISTER.url,
             userData
         );
         return data;
     }
-}
 
+    async forgotPassword(request: ForgotPasswordRequest): Promise<void> {
+        await api.post(AUTH_ROUTES.FORGOT_PASSWORD.url, request);
+    }
+
+    async resetPassword(request: ResetPasswordRequest): Promise<void> {
+        await api.post(AUTH_ROUTES.RESET_PASSWORD.url, request);
+    }
+
+    async verifyEmail(token: string): Promise<void> {
+        await api.post(AUTH_ROUTES.VERIFY_EMAIL.url, { token });
+    }
+
+    async changePassword(request: ChangePasswordRequest): Promise<void> {
+        await api.post(AUTH_ROUTES.CHANGE_PASSWORD.url, request);
+    }
+}
 
 export const authRepository = new AuthRepository();
