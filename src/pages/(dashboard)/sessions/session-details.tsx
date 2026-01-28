@@ -3,19 +3,19 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Save, ChevronLeft, MapPin, Link as LinkIcon } from 'lucide-react';
-import { useCoursesStore } from '@/stores/courses-store';
+import { Save, ChevronLeft, MapPin, Link as LinkIcon, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import type { Session } from '@/components/course/module-item';
+import { sessionsService, type Session } from '@/api/sessions';
+import { convertFromISO8601, convertToISO8601 } from '@/lib/utils';
 
 export default function SessionDetailsPage() {
-    const { id } = useParams();
+    const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
-    const { courses, updateCourse } = useCoursesStore();
 
+    const [isLoading, setIsLoading] = useState(true);
+    const [isSaving, setIsSaving] = useState(false);
     const [sessionData, setSessionData] = useState<Partial<Session>>({
         title: '',
         session_type: 'LIVE',
@@ -23,48 +23,67 @@ export default function SessionDetailsPage() {
         end_time: '',
         location: '',
         meeting_url: '',
-        description: '',
     });
 
     useEffect(() => {
-        let foundSession: any = null;
-        courses.forEach(course => {
-            course.modules?.forEach(module => {
-                const s = module.sessions?.find((s: any) => String(s.id) === id);
-                if (s) foundSession = { ...s, courseId: course.id, moduleId: module.id };
-            });
-        });
+        const fetchSession = async () => {
+            if (!id) return;
+            try {
+                setIsLoading(true);
+                const data = await sessionsService.getSessionById(Number(id));
 
-        if (foundSession) {
-            setSessionData(foundSession);
-        }
-    }, [id, courses]);
-
-    const handleSave = () => {
-        const { courseId, moduleId, ...data } = sessionData as any;
-
-        if (!courseId || !moduleId) {
-            toast.error('Could not find course or module context');
-            return;
-        }
-
-        const course = courses.find(c => c.id === courseId);
-        if (!course) return;
-
-        const updatedModules = course.modules?.map(m => {
-            if (m.id === moduleId) {
-                return {
-                    ...m,
-                    sessions: m.sessions?.map((s: any) => String(s.id) === id ? { ...s, ...data } : s)
-                };
+                // Convert ISO dates to datetime-local format for inputs
+                setSessionData({
+                    ...data,
+                    start_time: data.start_time ? convertFromISO8601(data.start_time) : '',
+                    end_time: data.end_time ? convertFromISO8601(data.end_time) : '',
+                });
+            } catch (error) {
+                console.error('Failed to fetch session:', error);
+                toast.error('Failed to load session details');
+                navigate('/sessions');
+            } finally {
+                setIsLoading(false);
             }
-            return m;
-        });
+        };
 
-        updateCourse(courseId, { modules: updatedModules });
-        toast.success('Session saved successfully');
-        navigate(-1);
+        fetchSession();
+    }, [id, navigate]);
+
+    const handleSave = async () => {
+        if (!id) return;
+
+        try {
+            setIsSaving(true);
+
+            // Convert datetime-local back to ISO 8601
+            const payload = {
+                ...sessionData,
+                start_time: convertToISO8601(sessionData.start_time || ''),
+                end_time: convertToISO8601(sessionData.end_time || ''),
+            };
+
+            await sessionsService.updateSession(Number(id), payload);
+            toast.success('Session updated successfully');
+            navigate(-1);
+        } catch (error) {
+            console.error('Failed to update session:', error);
+            toast.error(sessionsService.getErrorMessage(error, 'Failed to update session'));
+        } finally {
+            setIsSaving(false);
+        }
     };
+
+    if (isLoading) {
+        return (
+            <div className="flex h-screen items-center justify-center bg-background">
+                <div className="flex flex-col items-center gap-2">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <p className="text-muted-foreground">Loading session details...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="flex flex-col h-screen bg-background">
@@ -80,9 +99,10 @@ export default function SessionDetailsPage() {
                     </div>
                 </div>
                 <div className="flex items-center gap-3">
-                    <Button variant="outline" onClick={() => navigate(-1)}>Cancel</Button>
-                    <Button onClick={handleSave} className="gap-2">
-                        <Save className="w-4 h-4" /> Save Session
+                    <Button variant="outline" onClick={() => navigate(-1)} disabled={isSaving}>Cancel</Button>
+                    <Button onClick={handleSave} className="gap-2" disabled={isSaving}>
+                        {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                        Save Session
                     </Button>
                 </div>
             </div>
@@ -119,16 +139,14 @@ export default function SessionDetailsPage() {
                                         </SelectContent>
                                     </Select>
                                 </div>
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label>Description</Label>
-                                <Textarea
-                                    value={sessionData.description}
-                                    onChange={(e) => setSessionData({ ...sessionData, description: e.target.value })}
-                                    placeholder="Briefly describe what this session covers..."
-                                    className="min-h-[100px]"
-                                />
+                                <div className="space-y-2">
+                                    <Label>Capacity</Label>
+                                    <Input
+                                        type="number"
+                                        value={sessionData.capacity}
+                                        onChange={(e) => setSessionData({ ...sessionData, capacity: Number(e.target.value) })}
+                                    />
+                                </div>
                             </div>
                         </CardContent>
                     </Card>
@@ -143,16 +161,16 @@ export default function SessionDetailsPage() {
                                     <Label>Start Time</Label>
                                     <Input
                                         type="datetime-local"
-                                        value={sessionData.start_time ? new Date(sessionData.start_time).toISOString().slice(0, 16) : ''}
-                                        onChange={(e) => setSessionData({ ...sessionData, start_time: new Date(e.target.value).toISOString() })}
+                                        value={sessionData.start_time}
+                                        onChange={(e) => setSessionData({ ...sessionData, start_time: e.target.value })}
                                     />
                                 </div>
                                 <div className="space-y-2">
                                     <Label>End Time</Label>
                                     <Input
                                         type="datetime-local"
-                                        value={sessionData.end_time ? new Date(sessionData.end_time).toISOString().slice(0, 16) : ''}
-                                        onChange={(e) => setSessionData({ ...sessionData, end_time: new Date(e.target.value).toISOString() })}
+                                        value={sessionData.end_time}
+                                        onChange={(e) => setSessionData({ ...sessionData, end_time: e.target.value })}
                                     />
                                 </div>
                             </div>
@@ -163,7 +181,7 @@ export default function SessionDetailsPage() {
                                         <LinkIcon className="w-4 h-4" /> Meeting URL
                                     </Label>
                                     <Input
-                                        value={sessionData.meeting_url}
+                                        value={sessionData.meeting_url || ''}
                                         onChange={(e) => setSessionData({ ...sessionData, meeting_url: e.target.value })}
                                         placeholder="https://zoom.us/j/..."
                                     />
@@ -174,7 +192,7 @@ export default function SessionDetailsPage() {
                                         <MapPin className="w-4 h-4" /> Location Address
                                     </Label>
                                     <Input
-                                        value={sessionData.location}
+                                        value={sessionData.location || ''}
                                         onChange={(e) => setSessionData({ ...sessionData, location: e.target.value })}
                                         placeholder="123 Security St, Chicago, IL"
                                     />

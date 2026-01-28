@@ -5,7 +5,7 @@ import { ArrowLeft, Save, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useCoursesStore, type Course } from '@/stores/courses-store';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { DeleteConfirmationDialog } from '@/components/shared/delete-confirmation-dialog';
 import { GeneralInformationTab } from '@/components/course/general-information-tab';
 import { CurriculumTab } from '@/components/course/curriculum-tab';
@@ -14,30 +14,52 @@ import { ComplianceTab } from '@/components/course/compliance-tab';
 export default function CourseDetailsPage() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
-    const { getCourseById, updateCourse, deleteCourse } = useCoursesStore();
-    const [course, setCourse] = useState<Course | null>(() => {
-        return getCourseById(Number(id)) || null;
-    });
+    const { courses, fetchCourseById, updateCourse, isLoading } = useCoursesStore();
+    const course = id ? courses.find(c => c.id === Number(id)) : null;
     const [isEditing, setIsEditing] = useState(false);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-    const [formData, setFormData] = useState<Partial<Course>>(() => {
-        const foundCourse = getCourseById(Number(id));
-        return foundCourse || {};
-    });
+    const [formData, setFormData] = useState<Partial<Course>>({});
+
+    useEffect(() => {
+        if (id && !course) {
+            fetchCourseById(Number(id));
+        }
+    }, [id, course, fetchCourseById]);
+
+    useEffect(() => {
+        if (course && !isEditing) {
+            setFormData(course);
+        }
+    }, [course, isEditing]);
+
+    if (isLoading && !course) {
+        return (
+            <div className="flex-1 bg-background p-8 flex items-center justify-center">
+                <p className="text-muted-foreground">Loading course...</p>
+            </div>
+        );
+    }
 
     if (!course) {
         return (
             <div className="flex-1 bg-background p-8">
                 <div className="text-center">
                     <p className="text-muted-foreground">Course not found</p>
+                    <Button
+                        variant="link"
+                        onClick={() => navigate('/courses')}
+                        className="mt-4"
+                    >
+                        Back to Courses
+                    </Button>
                 </div>
             </div>
         );
     }
 
-    const handleSave = () => {
-        updateCourse(course.id, formData);
-        setCourse({ ...course, ...formData });
+    const handleSave = async () => {
+        if (!course) return;
+        await updateCourse(course.id, formData);
         setIsEditing(false);
     };
 
@@ -45,8 +67,8 @@ export default function CourseDetailsPage() {
         setIsDeleteDialogOpen(true);
     };
 
-    const handleConfirmDelete = () => {
-        deleteCourse(course.id);
+    const handleConfirmDelete = async () => {
+        await useCoursesStore.getState().permanentDeleteCourse(course.id);
         navigate('/courses');
     };
 
@@ -64,7 +86,7 @@ export default function CourseDetailsPage() {
                 onClose={() => setIsDeleteDialogOpen(false)}
                 onConfirm={handleConfirmDelete}
                 title="Delete Course"
-                description="Are you sure you want to delete this course? This will remove all associated modules, lessons, and student enrollments."
+                description="WARNING: This will PERMANENTLY delete the course from the database. This action is irreversible and will remove all modules, lessons, sessions, quizzes, and student records forever."
                 itemType="Course"
                 itemName={course.title}
             />
@@ -72,15 +94,22 @@ export default function CourseDetailsPage() {
             <div className="p-8">
                 {/* Header */}
                 <div className="flex items-center justify-between mb-8">
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => navigate('/courses')}
-                        className="gap-2"
-                    >
-                        <ArrowLeft className="w-4 h-4" />
-                        Back to Courses
-                    </Button>
+                    <div className="flex items-center gap-4">
+                        <button
+                            onClick={() => navigate('/courses')}
+                            className="p-2 hover:bg-accent rounded-full transition-colors"
+                        >
+                            <ArrowLeft className="w-6 h-6" />
+                        </button>
+                        <div>
+                            <h1 className="text-2xl font-bold">
+                                {isEditing ? (formData.title || course.title) : course.title}
+                            </h1>
+                            <p className="text-sm text-muted-foreground">
+                                Manage and organize modules and lessons for your course.
+                            </p>
+                        </div>
+                    </div>
 
                     <div className="flex gap-2">
                         {isEditing ? (
@@ -122,16 +151,6 @@ export default function CourseDetailsPage() {
                             </>
                         )}
                     </div>
-                </div>
-
-                {/* Course Title & Subtitle outside the card */}
-                <div className="mb-8">
-                    <h1 className="text-3xl font-bold text-foreground mb-2">
-                        {course.title}
-                    </h1>
-                    <p className="text-muted-foreground">
-                        Manage and organize modules and lessons for your course.
-                    </p>
                 </div>
 
                 {/* Tabs Container */}

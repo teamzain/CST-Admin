@@ -23,7 +23,13 @@ const createApiClient = (appName: APP_NAMES): AxiosInstance => {
     );
 
     api.interceptors.response.use(
-        (response) => response,
+        (response) => {
+            const token = localStorage.getItem('auth-token');
+            if (token) {
+                response.headers.Authorization = `Bearer ${token}`;
+            }
+            return response;
+        },
         (error) => {
             if (error.response?.status === 401) {
                 localStorage.removeItem('auth-token');

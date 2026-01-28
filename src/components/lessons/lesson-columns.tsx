@@ -1,5 +1,5 @@
 import { type ColumnDef } from '@tanstack/react-table';
-import { Video, FileText, MoreHorizontal } from 'lucide-react';
+import { Video, FileText, MoreVertical, Eye, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -9,14 +9,7 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-interface Lesson {
-    id: number | string;
-    title: string;
-    course_title: string;
-    module_title: string;
-    content_type: string;
-    duration_min: number;
-}
+import { type Lesson } from '@/api/lessons';
 
 export const getLessonColumns = (onView: (lesson: Lesson) => void, onDelete: (lesson: Lesson) => void): ColumnDef<Lesson>[] => [
     {
@@ -27,17 +20,10 @@ export const getLessonColumns = (onView: (lesson: Lesson) => void, onDelete: (le
         ),
     },
     {
-        accessorKey: 'course_title',
+        id: 'course_title',
         header: 'Course',
         cell: ({ row }) => (
-            <span className="text-gray-600">{row.getValue<string>('course_title')}</span>
-        ),
-    },
-    {
-        accessorKey: 'module_title',
-        header: 'Module',
-        cell: ({ row }) => (
-            <span className="text-gray-600">{row.getValue<string>('module_title')}</span>
+            <span className="text-gray-600">{row.original.course?.title || '-'}</span>
         ),
     },
     {
@@ -66,25 +52,29 @@ export const getLessonColumns = (onView: (lesson: Lesson) => void, onDelete: (le
         cell: ({ row }) => {
             const lesson = row.original;
             return (
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                            <MoreHorizontal className="w-4 h-4" />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => onView(lesson)}>
-                            View Lesson
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                            onClick={() => onDelete(lesson)}
-                            className="text-red-600"
-                        >
-                            Delete Lesson
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
+                <div className="flex justify-end pr-2">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0">
+                                <MoreVertical className="w-4 h-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuItem onClick={() => onView(lesson)} className="gap-2">
+                                <Eye className="w-4 h-4" />
+                                View Lesson
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                                onClick={() => onDelete(lesson)}
+                                className="text-red-600 gap-2"
+                            >
+                                <Trash2 className="w-4 h-4" />
+                                Delete Lesson
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
             );
         },
     },

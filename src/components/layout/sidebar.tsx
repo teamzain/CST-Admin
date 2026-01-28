@@ -24,13 +24,10 @@ interface SidebarProps {
 
 export function Sidebar({ open, toggleSidebar }: SidebarProps) {
     const { pathname } = useLocation();
-    const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({});
+    const [openMenu, setOpenMenu] = useState<string | null>(null);
 
     const toggleMenu = (label: string) => {
-        setOpenMenus((prev) => ({
-            ...prev,
-            [label]: !prev[label],
-        }));
+        setOpenMenu(openMenu === label ? null : label);
     };
 
     const menuItems = [
@@ -134,7 +131,7 @@ export function Sidebar({ open, toggleSidebar }: SidebarProps) {
                         pathname === item.href ||
                         (item.subItems &&
                             item.subItems.some((sub) => pathname === sub.href));
-                    const isOpen = openMenus[item.label];
+                    const isOpen = openMenu === item.label;
 
                     if (item.subItems) {
                         return (
@@ -143,6 +140,8 @@ export function Sidebar({ open, toggleSidebar }: SidebarProps) {
                                     variant={isActive ? 'default' : 'ghost'}
                                     className={clsx(
                                         'w-full gap-3 my-1 justify-between border-b border-transparent hover:border-sidebar-border',
+                                        !isActive &&
+                                            'hover:bg-[#1F1E1E] hover:text-sidebar-foreground',
                                         !open && 'justify-center px-2'
                                     )}
                                     onClick={() => toggleMenu(item.label)}
@@ -171,7 +170,7 @@ export function Sidebar({ open, toggleSidebar }: SidebarProps) {
                                                 <Button
                                                     variant="ghost"
                                                     className={clsx(
-                                                        'w-full justify-start h-8 text-sm gap-2 my-1',
+                                                        'w-full justify-start h-8 text-sm gap-2 my-1 hover:bg-[#1F1E1E] hover:text-sidebar-foreground',
                                                         pathname ===
                                                             subItem.href
                                                             ? 'text-primary'
@@ -194,6 +193,8 @@ export function Sidebar({ open, toggleSidebar }: SidebarProps) {
                                 variant={isActive ? 'default' : 'ghost'}
                                 className={clsx(
                                     'w-full gap-3 my-1/2 border-b border-transparent hover:border-sidebar-border',
+                                    !isActive &&
+                                        'hover:bg-[#1F1E1E] hover:text-sidebar-foreground',
                                     open ? 'justify-start' : 'justify-center'
                                 )}
                             >
@@ -211,7 +212,7 @@ export function Sidebar({ open, toggleSidebar }: SidebarProps) {
                     <Button
                         variant="ghost"
                         className={clsx(
-                            'w-full gap-3',
+                            'w-full gap-3 hover:bg-[#1F1E1E] hover:text-sidebar-foreground',
                             open ? 'justify-start' : 'justify-center'
                         )}
                     >
@@ -223,7 +224,7 @@ export function Sidebar({ open, toggleSidebar }: SidebarProps) {
                 <Button
                     variant="ghost"
                     className={clsx(
-                        'w-full gap-3 text-destructive hover:text-destructive',
+                        'w-full gap-3 text-destructive hover:bg-[#1F1E1E] hover:text-destructive',
                         open ? 'justify-start' : 'justify-center'
                     )}
                 >

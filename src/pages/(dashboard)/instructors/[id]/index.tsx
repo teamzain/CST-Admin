@@ -284,34 +284,31 @@ export default function InstructorDetailsPage() {
         <div className="min-h-screen bg-gray-50">
             <div className="mx-auto px-4 py-6">
                 {/* Header */}
-                <div className="mb-6">
+                <div className="mb-8">
                     <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                            <Button
-                                variant="ghost"
-                                size="sm"
+                        <div className="flex items-center gap-4">
+                            <button
                                 onClick={() => router('/instructors')}
-                                className="gap-2"
+                                className="p-2 hover:bg-accent rounded-full transition-colors"
                             >
-                                <ArrowLeft className="h-4 w-4" />
-                                Back
-                            </Button>
+                                <ArrowLeft className="w-6 h-6" />
+                            </button>
                             <div className="flex items-center gap-3">
                                 <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-lg font-semibold text-primary">
                                     {instructor.user?.avatar ||
                                         instructor.name.charAt(0)}
                                 </div>
                                 <div>
-                                    <h1 className="text-2xl font-semibold text-gray-900">
+                                    <h1 className="text-2xl font-bold">
                                         {instructor.name}
                                     </h1>
-                                    <div className="flex items-center gap-4 mt-1">
-                                        <span className="text-sm text-gray-600 flex items-center gap-1">
+                                    <div className="flex items-center gap-4 mt-0.5">
+                                        <span className="text-sm text-muted-foreground flex items-center gap-1">
                                             <Mail className="w-4 h-4" />
                                             {instructor.email}
                                         </span>
                                         {instructor.user?.phone && (
-                                            <span className="text-sm text-gray-600 flex items-center gap-1">
+                                            <span className="text-sm text-muted-foreground flex items-center gap-1">
                                                 <Phone className="w-4 h-4" />
                                                 {instructor.user.phone}
                                             </span>

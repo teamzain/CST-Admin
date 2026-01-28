@@ -29,6 +29,8 @@ export function QuizModal({ isOpen, onClose, onSave, quiz, moduleId: _moduleId }
         passing_score: 70,
         time_limit_minutes: 30,
         is_final: false,
+        randomize_questions: false,
+        attempts_allowed: 1,
         questions: [],
     });
 
@@ -55,6 +57,8 @@ export function QuizModal({ isOpen, onClose, onSave, quiz, moduleId: _moduleId }
                 passing_score: 70,
                 time_limit_minutes: 30,
                 is_final: false,
+                randomize_questions: false,
+                attempts_allowed: 1,
                 questions: [],
             });
         }
@@ -313,12 +317,15 @@ export function QuizModal({ isOpen, onClose, onSave, quiz, moduleId: _moduleId }
                                                     </div>
                                                 </div>
                                                 <div className="grid grid-cols-2 gap-2 text-sm text-muted-foreground">
-                                                    {q.options.map((opt) => (
-                                                        <div key={opt.id} className={`flex items-center gap-2 ${q.correct_answers.includes(opt.id) ? 'text-green-600 font-medium' : ''}`}>
-                                                            {q.correct_answers.includes(opt.id) ? <CheckCircle2 className="w-3 h-3" /> : <div className="w-3 h-3 rounded-full border border-muted-foreground/30" />}
-                                                            {opt.text}
-                                                        </div>
-                                                    ))}
+                                                    {Array.isArray(q.options) && q.options.map((opt) => {
+                                                        const isCorrect = Array.isArray(q.correct_answers) && q.correct_answers.includes(opt.id);
+                                                        return (
+                                                            <div key={opt.id} className={`flex items-center gap-2 ${isCorrect ? 'text-green-600 font-medium' : ''}`}>
+                                                                {isCorrect ? <CheckCircle2 className="w-3 h-3" /> : <div className="w-3 h-3 rounded-full border border-muted-foreground/30" />}
+                                                                {opt.text}
+                                                            </div>
+                                                        );
+                                                    })}
                                                 </div>
                                             </div>
                                         </CardContent>
@@ -365,6 +372,17 @@ export function QuizModal({ isOpen, onClose, onSave, quiz, moduleId: _moduleId }
                                             onCheckedChange={(c) => setQuizSettings({ ...quizSettings, is_final: c as boolean })}
                                         />
                                     </div>
+
+                                    <div className="flex items-center justify-between">
+                                        <div className="space-y-0.5">
+                                            <Label className="text-base">Randomize Questions</Label>
+                                            <p className="text-xs text-muted-foreground">Questions are picked randomly for each attempt</p>
+                                        </div>
+                                        <Checkbox
+                                            checked={quizSettings.randomize_questions}
+                                            onCheckedChange={(c) => setQuizSettings({ ...quizSettings, randomize_questions: c as boolean })}
+                                        />
+                                    </div>
                                 </div>
 
                                 <div className="space-y-4 pt-4 border-t">
@@ -395,7 +413,10 @@ export function QuizModal({ isOpen, onClose, onSave, quiz, moduleId: _moduleId }
 
                                     <div className="space-y-2">
                                         <Label>Attempts Allowed</Label>
-                                        <Select defaultValue="unlimited">
+                                        <Select 
+                                            value={quizSettings.attempts_allowed === null || quizSettings.attempts_allowed === 0 ? "unlimited" : String(quizSettings.attempts_allowed || 1)}
+                                            onValueChange={(val) => setQuizSettings({ ...quizSettings, attempts_allowed: val === "unlimited" ? null : parseInt(val) })}
+                                        >
                                             <SelectTrigger className="bg-background border-border mt-2">
                                                 <SelectValue placeholder="Select attempts" />
                                             </SelectTrigger>

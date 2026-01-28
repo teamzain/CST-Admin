@@ -52,7 +52,7 @@ export default function InstructorsPage() {
     const columns: ColumnDef<Instructor>[] = getInstructorColumns();
 
     return (
-        <div className="min-h-screen bg-gray-50 p-4 md:p-6">
+        <div className="min-h-screen bg-gray-50 p-4 md:p-6 pt-2 md:pt-4">
             <div className="mx-auto max-w-400">
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">

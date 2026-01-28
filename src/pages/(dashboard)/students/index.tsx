@@ -44,7 +44,7 @@ export default function UsersPage() {
     const columns: ColumnDef<User>[] = getUserColumns();
 
     return (
-        <div className="min-h-screen bg-gray-50 p-4 md:p-6">
+        <div className="min-h-screen bg-gray-50 p-4 md:p-6 pt-2 md:pt-4">
             <div className="mx-auto max-w-[1600px]">
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
@@ -56,7 +56,7 @@ export default function UsersPage() {
                             {filteredUsers.length} Users Found
                         </p>
                     </div>
-                    <Button className="bg-yellow-500 hover:bg-yellow-600 text-black font-medium w-full sm:w-auto">
+                    <Button className="bg-primary hover:bg-primary/90 text-secondary font-medium w-full sm:w-auto">
                         + Add User
                     </Button>
                 </div>

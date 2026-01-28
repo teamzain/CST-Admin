@@ -11,33 +11,35 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { useCoursesStore, type Course } from '@/stores/courses-store';
+import { useCoursesStore } from '@/stores/courses-store';
+import { quizzesService, type Quiz, type Question } from '@/api/quizzes';
+import { questionsService } from '@/api/questions';
 import { toast } from 'sonner';
-import type { Quiz, Question, Option, Module } from '@/components/course/module-item';
-
-interface QuizWithContext extends Partial<Quiz> {
-    courseId?: number;
-    moduleId?: number;
-}
 
 export default function QuizDetailsPage() {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { courses, updateCourse } = useCoursesStore();
+    const { courses } = useCoursesStore();
 
-    const [quizSettings, setQuizSettings] = useState<QuizWithContext>({
+    const [isLoading, setIsLoading] = useState(true);
+    const [quizSettings, setQuizSettings] = useState<Quiz>({
+        id: 0,
         title: '',
         passing_score: 70,
         time_limit_minutes: 30,
         is_final: false,
+        randomize_questions: false,
+        attempts_allowed: null,
+        order_index: 0,
         questions: [],
     });
 
     // Current Question State
     const [currentQuestion, setCurrentQuestion] = useState<Partial<Question>>({
         text: '',
-        points: 1,
+        points: 5,
         options: [
+            { id: 0, text: '' },
             { id: 1, text: '' },
             { id: 2, text: '' },
         ],
@@ -45,47 +47,77 @@ export default function QuizDetailsPage() {
     });
 
     useEffect(() => {
-        if (id) {
-            let foundQuiz: Quiz | undefined;
-            let foundCourseId: number | undefined;
-            let foundModuleId: number | undefined;
+        const fetchQuizData = async () => {
+            if (!id) return;
+            
+            setIsLoading(true);
+            try {
+                // Fetch quiz and questions in parallel
+                const [quiz, questions] = await Promise.all([
+                    quizzesService.getQuizById(Number(id)),
+                    questionsService.getQuestionsByQuiz(Number(id))
+                ]);
 
-            for (const course of courses) {
-                for (const module of course.modules || []) {
-                    const quiz = module.quizzes?.find((q: Quiz) => String(q.id) === id);
-                    if (quiz) {
-                        foundQuiz = quiz;
-                        foundCourseId = course.id;
-                        foundModuleId = module.id;
-                        break;
-                    }
+                if (quiz) {
+                    setQuizSettings({
+                        ...quiz,
+                        questions: questions || [],
+                    });
                 }
-                if (foundQuiz) break;
-            }
+            } catch (error) {
+                console.error('Error fetching quiz data:', error);
+                
+                // Fallback to local store
+                let foundQuiz: Quiz | undefined;
+                for (const course of courses) {
+                    const modules = (course.modules || []) as { quizzes?: Quiz[] }[];
+                    for (const module of modules) {
+                        const quiz = (module.quizzes || []).find((q) => String(q.id) === id);
+                        if (quiz) {
+                            foundQuiz = quiz;
+                            break;
+                        }
+                    }
+                    if (foundQuiz) break;
+                }
 
-            if (foundQuiz) {
-                setQuizSettings({
-                    ...foundQuiz,
-                    courseId: foundCourseId,
-                    moduleId: foundModuleId
-                });
+                if (foundQuiz) {
+                    setQuizSettings({
+                        ...foundQuiz,
+                        questions: foundQuiz.questions || [],
+                    });
+                }
+            } finally {
+                setIsLoading(false);
             }
-        }
+        };
+
+        fetchQuizData();
     }, [id, courses]);
 
     const handleAddOption = () => {
-        setCurrentQuestion(prev => ({
-            ...prev,
-            options: [...(prev.options || []), { id: (prev.options?.length || 0) + 1, text: '' }]
-        }));
+        setCurrentQuestion((prev) => {
+            const nextId = prev.options?.length || 0;
+            return {
+                ...prev,
+                options: [...(prev.options || []), { id: nextId, text: '' }]
+            };
+        });
     };
 
     const handleRemoveOption = (index: number) => {
-        setCurrentQuestion(prev => ({
-            ...prev,
-            options: prev.options?.filter((_, i) => i !== index),
-            correct_answers: prev.correct_answers?.filter(id => id !== index + 1)
-        }));
+        setCurrentQuestion((prev) => {
+            const newOptions = (prev.options || []).filter((_, i: number) => i !== index)
+                .map((opt, i: number) => ({ ...opt, id: i })); // Re-index to keep 0, 1, 2...
+            
+            // Also need to update correct_answers if they shifted
+            // Simplified: clear correct answers if you remove options to avoid mismatch, or map them
+            return {
+                ...prev,
+                options: newOptions,
+                correct_answers: [], // Simplest to reset correct answers when options structure changes
+            };
+        });
     };
 
     const handleOptionChange = (index: number, value: string) => {
@@ -95,118 +127,115 @@ export default function QuizDetailsPage() {
     };
 
     const toggleCorrectAnswer = (optionId: number) => {
-        const currentCorrect = currentQuestion.correct_answers || [];
+        const currentCorrect = (currentQuestion.correct_answers || []);
         let newCorrect;
         if (currentCorrect.includes(optionId)) {
-            newCorrect = currentCorrect.filter(id => id !== optionId);
+            newCorrect = currentCorrect.filter((id) => id !== optionId);
         } else {
             newCorrect = [...currentCorrect, optionId];
         }
         setCurrentQuestion({ ...currentQuestion, correct_answers: newCorrect });
     };
 
-    const handleAddQuestion = () => {
-        if (!currentQuestion.text || !currentQuestion.options?.length) return;
+    const handleAddQuestion = async () => {
+        if (!currentQuestion.text || !currentQuestion.options?.length || !id) return;
 
-        const newQuestion: Question = {
-            id: Date.now(),
-            text: currentQuestion.text,
-            points: currentQuestion.points || 1,
-            options: currentQuestion.options as Option[],
-            correct_answers: currentQuestion.correct_answers || [],
-            order_index: quizSettings.questions?.length || 0,
-        };
+        try {
+            const newQuestionData = {
+                text: currentQuestion.text,
+                points: currentQuestion.points || 5,
+                options: currentQuestion.options.map((opt, idx: number) => ({
+                    id: idx,
+                    text: opt.text
+                })),
+                correct_answers: currentQuestion.correct_answers || [],
+                order_index: quizSettings.questions?.length || 0,
+            };
 
-        setQuizSettings(prev => ({
-            ...prev,
-            questions: [...(prev.questions || []), newQuestion]
-        }));
+            const createdQuestion = await questionsService.createQuestion(Number(id), newQuestionData);
 
-        setCurrentQuestion({
-            text: '',
-            points: 1,
-            options: [
-                { id: 1, text: '' },
-                { id: 2, text: '' },
-            ],
-            correct_answers: [],
-        });
-    };
+            setQuizSettings((prev) => ({
+                ...prev,
+                questions: [...(prev.questions || []), createdQuestion]
+            }));
 
-    const handleDeleteQuestion = (id: number) => {
-        setQuizSettings(prev => ({
-            ...prev,
-            questions: prev.questions?.filter(q => q.id !== id)
-        }));
-    };
-
-    const handleSave = () => {
-        const { courseId, moduleId, ...quizData } = quizSettings;
-
-        if (!courseId || !moduleId) {
-            toast.error('Could not find course or module context');
-            return;
-        }
-
-        const course = courses.find((c: Course) => c.id === courseId);
-        if (!course) return;
-
-        const updatedModules = course.modules?.map((m: Module) => {
-            if (m.id === moduleId) {
-                return {
-                    ...m,
-                    quizzes: m.quizzes?.map((q: Quiz) => String(q.id) === id ? { ...q, ...quizData } : q)
-                };
-            }
-            return m;
-        });
-
-        updateCourse(courseId, { modules: updatedModules });
-        toast.success('Quiz saved successfully');
-        navigate(-1);
-    };
-
-    const handleCSVImport = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            const text = event.target?.result as string;
-            const lines = text.split('\n');
-            const newQuestions: Question[] = [];
-
-            lines.forEach((line, index) => {
-                if (!line.trim() || (index === 0 && line.toLowerCase().includes('question'))) return;
-                const parts = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(p => p.replace(/^"|"$/g, '').trim());
-                if (parts.length < 4) return;
-                const [qText, pointsStr, correctStr, ...opts] = parts;
-                const validOpts = opts.filter(o => o);
-                const options = validOpts.map((opt, i) => ({ id: i + 1, text: opt }));
-                const correctIndices = correctStr.split('|').map(s => parseInt(s.trim())).filter(n => !isNaN(n));
-
-                if (options.length >= 2 && correctIndices.length > 0) {
-                    newQuestions.push({
-                        id: Date.now() + index,
-                        text: qText,
-                        points: parseInt(pointsStr) || 1,
-                        correct_answers: correctIndices,
-                        options: options,
-                        order_index: (quizSettings.questions?.length || 0) + index
-                    });
-                }
+            setCurrentQuestion({
+                text: '',
+                points: 5,
+                options: [
+                    { id: 0, text: '' },
+                    { id: 1, text: '' },
+                    { id: 2, text: '' },
+                ],
+                correct_answers: [],
             });
-
-            if (newQuestions.length > 0) {
-                setQuizSettings(prev => ({
-                    ...prev,
-                    questions: [...(prev.questions || []), ...newQuestions]
-                }));
-            }
-            e.target.value = '';
-        };
-        reader.readAsText(file);
+            toast.success('Question added successfully');
+        } catch (error) {
+            console.error('Error adding question:', error);
+            toast.error('Failed to add question');
+        }
     };
+
+    const handleDeleteQuestion = async (questionId: number) => {
+        try {
+            await questionsService.deleteQuestion(questionId);
+            setQuizSettings((prev) => ({
+                ...prev,
+                questions: prev.questions?.filter((q) => q.id !== questionId)
+            }));
+            toast.success('Question deleted');
+        } catch (error) {
+            console.error('Error deleting question:', error);
+            toast.error('Failed to delete question');
+        }
+    };
+
+    const handleSave = async () => {
+        try {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const { questions, ...quizData } = quizSettings;
+
+            // Use API to update quiz
+            await quizzesService.updateQuiz(Number(id), quizData);
+
+            toast.success('Quiz saved successfully');
+            navigate(-1);
+        } catch (error) {
+            console.error('Error saving quiz:', error);
+            toast.error(quizzesService.getErrorMessage(error, 'Failed to save quiz'));
+        }
+    };
+
+    const handleCSVImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file || !id) return;
+
+        try {
+            toast.loading('Importing questions...', { id: 'import-questions' });
+            await questionsService.bulkImportQuestions(Number(id), file);
+            
+            // Re-fetch quiz data to ensure everything is in sync and decoded correctly
+            const quizData = await quizzesService.getQuizById(Number(id));
+            setQuizSettings(quizData);
+            
+            toast.success('Questions imported successfully', { id: 'import-questions' });
+        } catch (error) {
+            console.error('Error importing questions:', error);
+            toast.error(questionsService.getErrorMessage(error, 'Failed to import questions'), { id: 'import-questions' });
+        }
+        e.target.value = '';
+    };
+
+    if (isLoading) {
+        return (
+            <div className="flex-1 bg-background flex items-center justify-center">
+                <div className="flex flex-col items-center gap-2">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                    <p className="text-sm text-muted-foreground">Loading quiz details...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="flex flex-col h-screen bg-background">
@@ -261,7 +290,7 @@ export default function QuizDetailsPage() {
 
                                 <div className="space-y-2">
                                     {/* MCQ Options (Dynamic) */}
-                                    {currentQuestion.options?.map((opt, idx) => (
+                                    {currentQuestion.options?.map((opt, idx: number) => (
                                         <div key={idx} className="flex items-center gap-3">
                                             <div className="flex items-center justify-center pt-2">
                                                 <Checkbox
@@ -314,22 +343,30 @@ export default function QuizDetailsPage() {
                     <div className="space-y-4">
                         <div className="flex justify-between items-center">
                             <h3 className="text-lg font-semibold">Questions ({quizSettings.questions?.length || 0})</h3>
-                            <div className="relative">
-                                <input
-                                    type="file"
-                                    accept=".csv"
-                                    onChange={handleCSVImport}
-                                    className="absolute inset-0 opacity-0 cursor-pointer w-full"
-                                    title="Import CSV"
-                                />
-                                <Button variant="outline" size="sm" className="gap-2">
-                                    <Upload className="w-4 h-4" /> Import CSV
-                                </Button>
+                            <div className="flex items-center gap-2">
+                                <div className="relative">
+                                    <input
+                                        type="file"
+                                        accept=".csv"
+                                        onChange={handleCSVImport}
+                                        className="absolute inset-0 opacity-0 cursor-pointer w-full"
+                                        title="Import CSV"
+                                    />
+                                    <Button variant="outline" size="sm" className="gap-2">
+                                        <Upload className="w-4 h-4" /> Import CSV
+                                    </Button>
+                                </div>
+                                <div 
+                                    className="cursor-help text-muted-foreground hover:text-foreground transition-colors"
+                                    title="CSV Format Required:&#10;- question (Text)&#10;- options (Choice 1|Choice 2|Choice 3)&#10;- answer (Index 0, 1... or 0|1 for multiple)&#10;- points (Optional, default 5)&#10;&#10;Example: 'What color is sky?', 'Blue|Red|Green', '0', 5"
+                                >
+                                    <HelpCircle className="w-4 h-4" />
+                                </div>
                             </div>
                         </div>
 
                         <div className="space-y-3">
-                            {quizSettings.questions?.map((q, i) => (
+                            {quizSettings.questions?.map((q, i: number) => (
                                 <Card key={q.id} className="bg-card border-border hover:border-primary/50 transition-colors">
                                     <CardContent className="p-4 flex gap-4">
                                         <div className="flex flex-col items-center gap-2 text-muted-foreground">
@@ -347,12 +384,15 @@ export default function QuizDetailsPage() {
                                                 </div>
                                             </div>
                                             <div className="grid grid-cols-2 gap-2 text-sm text-muted-foreground">
-                                                {q.options.map((opt) => (
-                                                    <div key={opt.id} className={`flex items-center gap-2 ${q.correct_answers.includes(opt.id) ? 'text-green-600 font-medium' : ''}`}>
-                                                        {q.correct_answers.includes(opt.id) ? <CheckCircle2 className="w-3 h-3" /> : <div className="w-3 h-3 rounded-full border border-muted-foreground/30" />}
-                                                        {opt.text}
-                                                    </div>
-                                                ))}
+                                                {Array.isArray(q.options) && q.options.map((opt) => {
+                                                    const isCorrect = Array.isArray(q.correct_answers) && q.correct_answers.includes(opt.id);
+                                                    return (
+                                                        <div key={opt.id} className={`flex items-center gap-2 ${isCorrect ? 'text-green-600 font-medium' : ''}`}>
+                                                            {isCorrect ? <CheckCircle2 className="w-3 h-3" /> : <div className="w-3 h-3 rounded-full border border-muted-foreground/30" />}
+                                                            {opt.text}
+                                                        </div>
+                                                    );
+                                                })}
                                             </div>
                                         </div>
                                     </CardContent>
@@ -398,6 +438,17 @@ export default function QuizDetailsPage() {
                                         onCheckedChange={(c) => setQuizSettings({ ...quizSettings, is_final: c as boolean })}
                                     />
                                 </div>
+
+                                <div className="flex items-center justify-between">
+                                    <div className="space-y-0.5">
+                                        <Label className="text-base">Randomize Questions</Label>
+                                        <p className="text-xs text-muted-foreground">Shuffle questions for each student</p>
+                                    </div>
+                                    <Checkbox
+                                        checked={quizSettings.randomize_questions}
+                                        onCheckedChange={(c) => setQuizSettings({ ...quizSettings, randomize_questions: c as boolean })}
+                                    />
+                                </div>
                             </div>
 
                             <div className="space-y-4 pt-4 border-t">
@@ -426,7 +477,10 @@ export default function QuizDetailsPage() {
 
                                 <div className="space-y-2">
                                     <Label>Attempts Allowed</Label>
-                                    <Select defaultValue="unlimited">
+                                    <Select 
+                                        value={quizSettings.attempts_allowed === null ? 'unlimited' : String(quizSettings.attempts_allowed)} 
+                                        onValueChange={(v) => setQuizSettings({ ...quizSettings, attempts_allowed: v === 'unlimited' ? null : parseInt(v) })}
+                                    >
                                         <SelectTrigger>
                                             <SelectValue placeholder="Select attempts" />
                                         </SelectTrigger>

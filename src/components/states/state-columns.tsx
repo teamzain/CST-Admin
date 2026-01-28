@@ -1,6 +1,6 @@
 import { type ColumnDef } from '@tanstack/react-table';
 import { Badge } from '@/components/ui/badge';
-import { MoreHorizontal } from 'lucide-react';
+import { MoreVertical, Eye, XCircle, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -18,9 +18,11 @@ interface State {
     armed_hours: number;
     requires_range_training: boolean;
     is_active: boolean;
+    is_seat_time_enabled: boolean;
+    id_check_frequency: number;
 }
 
-export const getStateColumns = (onView: (state: State) => void, onDelete: (state: State) => void): ColumnDef<State>[] => [
+export const getStateColumns = (onView: (state: State) => void, onDelete: (state: State) => void, onUnpublish: (state: State) => void): ColumnDef<State>[] => [
     {
         accessorKey: 'name',
         header: 'State Name',
@@ -62,12 +64,37 @@ export const getStateColumns = (onView: (state: State) => void, onDelete: (state
         },
     },
     {
+        accessorKey: 'is_seat_time_enabled',
+        header: 'Seat Time',
+        cell: ({ row }) => {
+            const value = row.getValue<boolean>('is_seat_time_enabled');
+            return (
+                <Badge variant={value ? 'default' : 'secondary'}>
+                    {value ? 'Enabled' : 'Disabled'}
+                </Badge>
+            );
+        },
+    },
+    {
+        accessorKey: 'id_check_frequency',
+        header: 'ID Check',
+        cell: ({ row }) => (
+            <span className="text-gray-600">{row.getValue<number>('id_check_frequency')}</span>
+        ),
+    },
+    {
         accessorKey: 'is_active',
         header: 'Status',
         cell: ({ row }) => {
             const value = row.getValue<boolean>('is_active');
             return (
-                <Badge variant={value ? 'default' : 'secondary'}>
+                <Badge
+                    variant="secondary"
+                    className={value
+                        ? "bg-green-50 text-green-700 border-green-200"
+                        : "bg-gray-100 text-gray-700 border-gray-200"
+                    }
+                >
                     {value ? 'Published' : 'Unpublished'}
                 </Badge>
             );
@@ -78,25 +105,35 @@ export const getStateColumns = (onView: (state: State) => void, onDelete: (state
         cell: ({ row }) => {
             const state = row.original;
             return (
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                            <MoreHorizontal className="w-4 h-4" />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => onView(state)}>
-                            View State
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                            onClick={() => onDelete(state)}
-                            className="text-red-600"
-                        >
-                            Delete State
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
+                <div className="flex justify-end pr-2">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0">
+                                <MoreVertical className="w-4 h-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuItem onClick={() => onView(state)} className="gap-2">
+                                <Eye className="w-4 h-4" />
+                                View State
+                            </DropdownMenuItem>
+                            {state.is_active && (
+                                <DropdownMenuItem onClick={() => onUnpublish(state)} className="gap-2">
+                                    <XCircle className="w-4 h-4" />
+                                    Unpublish State
+                                </DropdownMenuItem>
+                            )}
+                            <DropdownMenuItem
+                                onClick={() => onDelete(state)}
+                                className="text-red-600 gap-2"
+                            >
+                                <Trash2 className="w-4 h-4" />
+                                Delete State
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
             );
         },
     },
