@@ -131,6 +131,6 @@ export const getBaseApiUrl = (app: APP_NAMES): string => {
     const config = getAppConfigs(app);
     const baseUrl = IS_DEV
         ? `http://localhost:${config.PORT}`
-        : 'http://72.61.143.234';
+        : `http://72.61.143.234:${config.PORT}`;
     return `${baseUrl}${config.PREFIX}`;
 };

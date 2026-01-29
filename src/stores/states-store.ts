@@ -26,7 +26,7 @@ interface StatesStore {
     isLoading: boolean;
     error: string | null;
     currentFilters: StateFilters;
-    
+
     // Actions
     fetchStates: (filters?: StateFilters) => Promise<void>;
     addState: (state: State) => void;
@@ -50,7 +50,10 @@ export const useStatesStore = create<StatesStore>((set, get) => ({
             const states = await StatesRepository.fetchAll(filtersToUse);
             set({ states, isLoading: false, currentFilters: filtersToUse });
         } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : 'Failed to fetch states';
+            const errorMessage =
+                error instanceof Error
+                    ? error.message
+                    : 'Failed to fetch states';
             set({ error: errorMessage, isLoading: false });
         }
     },
