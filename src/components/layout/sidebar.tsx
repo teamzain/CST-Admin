@@ -1,7 +1,7 @@
 'use client';
 
 import { Link, useLocation } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
     BarChart3,
     BookOpen,
@@ -83,6 +83,41 @@ export function Sidebar({ open, toggleSidebar }: SidebarProps) {
         { href: '/reports', icon: FileText, label: 'Reports' },
     ];
 
+    // Helper function to check if a path is active (including nested routes)
+    const isPathActive = (itemHref: string, currentPath: string) => {
+        // Exact match for root dashboard
+        if (itemHref === '/' && currentPath === '/') return true;
+        // For other routes, check if current path starts with the item href
+        if (itemHref !== '/' && currentPath.startsWith(itemHref)) return true;
+        return false;
+    };
+
+    // Helper function to check if any subitem is active
+    const isSubItemActive = (
+        subItems: { href: string }[] | undefined,
+        currentPath: string
+    ) => {
+        if (!subItems) return false;
+        return subItems.some((sub) => isPathActive(sub.href, currentPath));
+    };
+
+    // Auto-open menu if a nested route is active
+    useEffect(() => {
+        const activeMenu = menuItems.find((item) => {
+            if (item.subItems) {
+                // Check if any subitem path matches current pathname
+                return item.subItems.some((sub) =>
+                    isPathActive(sub.href, pathname)
+                );
+            }
+            return false;
+        });
+
+        if (activeMenu && open) {
+            setOpenMenu(activeMenu.label);
+        }
+    }, [pathname, open]);
+
     return (
         <aside
             className={clsx(
@@ -90,7 +125,6 @@ export function Sidebar({ open, toggleSidebar }: SidebarProps) {
                 open ? 'w-64' : 'w-20'
             )}
         >
-            {/* Header */}
             {/* Header */}
             <div className="p-5 border-b border-sidebar-border h-17 flex items-center">
                 <div
@@ -128,9 +162,8 @@ export function Sidebar({ open, toggleSidebar }: SidebarProps) {
             <nav className="flex-1 p-4 space-y-3 overflow-y-auto scrollbar-thin scrollbar-thumb-sidebar-border">
                 {menuItems.map((item) => {
                     const isActive =
-                        pathname === item.href ||
-                        (item.subItems &&
-                            item.subItems.some((sub) => pathname === sub.href));
+                        isPathActive(item.href, pathname) ||
+                        isSubItemActive(item.subItems, pathname);
                     const isOpen = openMenu === item.label;
 
                     if (item.subItems) {
@@ -162,25 +195,33 @@ export function Sidebar({ open, toggleSidebar }: SidebarProps) {
 
                                 {open && isOpen && (
                                     <div className="ml-4 pl-4 border-l border-sidebar-border space-y-1 mt-1">
-                                        {item.subItems.map((subItem) => (
-                                            <Link
-                                                key={subItem.href}
-                                                to={subItem.href}
-                                            >
-                                                <Button
-                                                    variant="ghost"
-                                                    className={clsx(
-                                                        'w-full justify-start h-8 text-sm gap-2 my-1 hover:bg-[#1F1E1E] hover:text-sidebar-foreground',
-                                                        pathname ===
-                                                            subItem.href
-                                                            ? 'text-primary'
-                                                            : 'text-sidebar-foreground/70'
-                                                    )}
+                                        {item.subItems.map((subItem) => {
+                                            const isSubActive = isPathActive(
+                                                subItem.href,
+                                                pathname
+                                            );
+
+                                            return (
+                                                <Link
+                                                    key={subItem.href}
+                                                    to={subItem.href}
                                                 >
-                                                    <span>{subItem.label}</span>
-                                                </Button>
-                                            </Link>
-                                        ))}
+                                                    <Button
+                                                        variant="ghost"
+                                                        className={clsx(
+                                                            'w-full justify-start h-8 text-sm gap-2 my-1 hover:bg-[#1F1E1E] hover:text-sidebar-foreground',
+                                                            isSubActive
+                                                                ? 'text-primary font-medium'
+                                                                : 'text-sidebar-foreground/70'
+                                                        )}
+                                                    >
+                                                        <span>
+                                                            {subItem.label}
+                                                        </span>
+                                                    </Button>
+                                                </Link>
+                                            );
+                                        })}
                                     </div>
                                 )}
                             </div>

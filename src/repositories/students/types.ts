@@ -1,8 +1,23 @@
+// ============================================================================
+// ENUMS
+// ============================================================================
+
 export enum StudentStatus {
     ACTIVE = 'ACTIVE',
     INACTIVE = 'INACTIVE',
     SUSPENDED = 'SUSPENDED',
 }
+
+export enum EnrollmentStatus {
+    IN_PROGRESS = 'IN_PROGRESS',
+    COMPLETED = 'COMPLETED',
+    DROPPED = 'DROPPED',
+    PENDING = 'PENDING',
+}
+
+// ============================================================================
+// MAIN ENTITY TYPES
+// ============================================================================
 
 export interface Student {
     id: number;
@@ -12,9 +27,13 @@ export interface Student {
     phone?: string;
     avatar?: string;
     bio?: string;
+    state_id: number;
+    user_id: number;
     status: StudentStatus;
-    created_at: Date;
-    updated_at: Date;
+    enrollment_date: string;
+    progress: number;
+    created_at: Date | string;
+    updated_at: Date | string;
 }
 
 export interface Course {
@@ -34,7 +53,7 @@ export interface CourseEnrollment {
     id: number;
     user_id: number;
     course_id: number;
-    status: 'IN_PROGRESS' | 'COMPLETED' | 'DROPPED' | 'PENDING';
+    status: EnrollmentStatus;
     progress: number;
     seat_time_min: number;
     last_activity?: Date;
@@ -42,6 +61,41 @@ export interface CourseEnrollment {
     completed_at?: Date;
     course: Course;
 }
+
+// ============================================================================
+// INPUT TYPES (for create/update operations)
+// ============================================================================
+
+export interface CreateStudentInput {
+    first_name: string;
+    last_name: string;
+    email: string;
+    phone?: string;
+    state_id: number;
+    enrollment_date: string;
+    avatar?: string;
+    bio?: string;
+}
+
+export interface UpdateStudentInput extends Partial<CreateStudentInput> {
+    status?: StudentStatus;
+}
+
+// ============================================================================
+// FILTER TYPES (for queries)
+// ============================================================================
+
+export interface StudentFilters {
+    search?: string;
+    state_id?: number;
+    status?: StudentStatus;
+    enrollment_date_from?: string;
+    enrollment_date_to?: string;
+}
+
+// ============================================================================
+// EXTENDED TYPES (with relations)
+// ============================================================================
 
 export interface StudentWithEnrollments extends Student {
     enrollments: CourseEnrollment[];
