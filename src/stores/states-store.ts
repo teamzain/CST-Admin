@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { StatesRepository } from '@/repositories/states';
-import type { StateFilters } from '@/api/states';
+import type { StateFilters } from '@/repositories/states';
 
 export interface State {
     id: number;

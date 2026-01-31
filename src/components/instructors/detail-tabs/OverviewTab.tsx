@@ -4,7 +4,9 @@ interface OverviewTabProps {
     instructorId: string;
 }
 
-const OverviewTab: React.FC<OverviewTabProps> = ({ instructorId }) => {
+const OverviewTab: React.FC<OverviewTabProps> = ({
+    instructorId: _instructorId,
+}) => {
     return (
         <div className="space-y-4">
             {/* Stats Cards Row */}

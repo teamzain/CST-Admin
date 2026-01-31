@@ -6,7 +6,9 @@ interface ReviewsTabProps {
     instructorId: string;
 }
 
-const ReviewsTab: React.FC<ReviewsTabProps> = ({ instructorId }) => {
+const ReviewsTab: React.FC<ReviewsTabProps> = ({
+    instructorId: _instructorId,
+}) => {
     const reviews = [
         {
             id: 1,

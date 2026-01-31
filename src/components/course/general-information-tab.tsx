@@ -3,14 +3,33 @@
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Users, DollarSign, MapPin, Award, Upload, X } from 'lucide-react';
-import { TRAINING_TYPE, DELIVERY_MODE, type Course, dummyInstructors, dummyStates } from '@/stores/courses-store';
+import {
+    Calendar,
+    Users,
+    DollarSign,
+    MapPin,
+    Award,
+    Upload,
+    X,
+} from 'lucide-react';
+import {
+    TRAINING_TYPE,
+    DELIVERY_MODE,
+    type Course,
+    dummyInstructors,
+    dummyStates,
+} from '@/stores/courses-store';
 import { bunnyUploadService } from '@/api/bunny-upload';
-import { statesApiService } from '@/api/states-api';
-import type { State } from '@/api/states-api';
+import { StatesRepository, type State } from '@/repositories/states';
 import { useEffect } from 'react';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -23,7 +42,12 @@ interface GeneralInformationTabProps {
     onInputChange: (field: keyof Course, value: any) => void;
 }
 
-export function GeneralInformationTab({ course, formData, isEditing, onInputChange }: GeneralInformationTabProps) {
+export function GeneralInformationTab({
+    course,
+    formData,
+    isEditing,
+    onInputChange,
+}: GeneralInformationTabProps) {
     const [thumbnailPreview, setThumbnailPreview] = useState<string>('');
     const [isUploadingThumbnail, setIsUploadingThumbnail] = useState(false);
     const [allStates, setAllStates] = useState<State[]>([]);
@@ -37,7 +61,7 @@ export function GeneralInformationTab({ course, formData, isEditing, onInputChan
     useEffect(() => {
         const loadStates = async () => {
             try {
-                const states = await statesApiService.getAllStates();
+                const states = await StatesRepository.fetchAll();
                 setAllStates(states);
             } catch (error) {
                 console.error('Error loading states:', error);
@@ -47,14 +71,23 @@ export function GeneralInformationTab({ course, formData, isEditing, onInputChan
         loadStates();
     }, []);
 
-    const handleThumbnailUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleThumbnailUpload = async (
+        e: React.ChangeEvent<HTMLInputElement>
+    ) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
         // Validate file type
-        const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        const validTypes = [
+            'image/jpeg',
+            'image/png',
+            'image/gif',
+            'image/webp',
+        ];
         if (!validTypes.includes(file.type)) {
-            toast.error('Invalid file type. Please upload JPEG, PNG, GIF, or WebP image.');
+            toast.error(
+                'Invalid file type. Please upload JPEG, PNG, GIF, or WebP image.'
+            );
             return;
         }
 
@@ -86,10 +119,10 @@ export function GeneralInformationTab({ course, formData, isEditing, onInputChan
         setIsUploadingThumbnail(true);
         try {
             // Extract path from URL or use it directly if it's already a path
-            const path = currentThumbnail.includes('/') 
-                ? currentThumbnail.split('/').slice(-2).join('/')  // Get last 2 parts (course/filename)
+            const path = currentThumbnail.includes('/')
+                ? currentThumbnail.split('/').slice(-2).join('/') // Get last 2 parts (course/filename)
                 : currentThumbnail;
-            
+
             await bunnyUploadService.deleteFile(path);
             onInputChange('thumbnail', '');
             setThumbnailPreview('');
@@ -111,8 +144,12 @@ export function GeneralInformationTab({ course, formData, isEditing, onInputChan
                 <div className="bg-muted/30 p-6 rounded-xl border border-border/50">
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-sm text-muted-foreground mb-1">Duration</p>
-                            <p className="text-2xl font-bold">{displayCourse.duration_hours}h</p>
+                            <p className="text-sm text-muted-foreground mb-1">
+                                Duration
+                            </p>
+                            <p className="text-2xl font-bold">
+                                {displayCourse.duration_hours}h
+                            </p>
                         </div>
                         <Calendar className="w-8 h-8 text-muted-foreground/50" />
                     </div>
@@ -121,8 +158,12 @@ export function GeneralInformationTab({ course, formData, isEditing, onInputChan
                 <div className="bg-muted/30 p-6 rounded-xl border border-border/50">
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-sm text-muted-foreground mb-1">Enrolled</p>
-                            <p className="text-2xl font-bold">{displayCourse.enrolled_students || 0}</p>
+                            <p className="text-sm text-muted-foreground mb-1">
+                                Enrolled
+                            </p>
+                            <p className="text-2xl font-bold">
+                                {displayCourse.enrolled_students || 0}
+                            </p>
                         </div>
                         <Users className="w-8 h-8 text-muted-foreground/50" />
                     </div>
@@ -131,8 +172,12 @@ export function GeneralInformationTab({ course, formData, isEditing, onInputChan
                 <div className="bg-muted/30 p-6 rounded-xl border border-border/50">
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-sm text-muted-foreground mb-1">Price</p>
-                            <p className="text-2xl font-bold">${displayCourse.price.toFixed(2)}</p>
+                            <p className="text-sm text-muted-foreground mb-1">
+                                Price
+                            </p>
+                            <p className="text-2xl font-bold">
+                                ${displayCourse.price.toFixed(2)}
+                            </p>
                         </div>
                         <DollarSign className="w-8 h-8 text-muted-foreground/50" />
                     </div>
@@ -141,8 +186,12 @@ export function GeneralInformationTab({ course, formData, isEditing, onInputChan
                 <div className="bg-muted/30 p-6 rounded-xl border border-border/50">
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-sm text-muted-foreground mb-1">Instructor</p>
-                            <p className="text-lg font-bold truncate">{displayCourse.instructor?.name || 'N/A'}</p>
+                            <p className="text-sm text-muted-foreground mb-1">
+                                Instructor
+                            </p>
+                            <p className="text-lg font-bold truncate">
+                                {displayCourse.instructor?.name || 'N/A'}
+                            </p>
                         </div>
                         <Award className="w-8 h-8 text-muted-foreground/50" />
                     </div>
@@ -152,8 +201,12 @@ export function GeneralInformationTab({ course, formData, isEditing, onInputChan
             {/* Course Description */}
             <div className="space-y-4">
                 <div>
-                    <h3 className="text-lg font-semibold">Course Title & Description</h3>
-                    <p className="text-sm text-muted-foreground">Basic information about the course</p>
+                    <h3 className="text-lg font-semibold">
+                        Course Title & Description
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                        Basic information about the course
+                    </p>
                 </div>
                 <div className="bg-muted/10 p-6 rounded-xl border border-border/50 space-y-4">
                     {isEditing ? (
@@ -162,7 +215,9 @@ export function GeneralInformationTab({ course, formData, isEditing, onInputChan
                                 <Label>Course Title</Label>
                                 <Input
                                     value={formData.title || ''}
-                                    onChange={(e) => onInputChange('title', e.target.value)}
+                                    onChange={(e) =>
+                                        onInputChange('title', e.target.value)
+                                    }
                                     placeholder="Enter course title"
                                     className="bg-background border-border"
                                 />
@@ -171,7 +226,12 @@ export function GeneralInformationTab({ course, formData, isEditing, onInputChan
                                 <Label>Description</Label>
                                 <Textarea
                                     value={formData.description || ''}
-                                    onChange={(e) => onInputChange('description', e.target.value)}
+                                    onChange={(e) =>
+                                        onInputChange(
+                                            'description',
+                                            e.target.value
+                                        )
+                                    }
                                     placeholder="Enter course description"
                                     rows={5}
                                     className="bg-background border-border"
@@ -180,8 +240,12 @@ export function GeneralInformationTab({ course, formData, isEditing, onInputChan
                         </>
                     ) : (
                         <>
-                            <h4 className="text-xl font-bold">{course.title}</h4>
-                            <p className="text-foreground leading-relaxed">{course.description}</p>
+                            <h4 className="text-xl font-bold">
+                                {course.title}
+                            </h4>
+                            <p className="text-foreground leading-relaxed">
+                                {course.description}
+                            </p>
                         </>
                     )}
                 </div>
@@ -198,21 +262,40 @@ export function GeneralInformationTab({ course, formData, isEditing, onInputChan
                                     <div>
                                         <Label>State</Label>
                                         <Select
-                                            value={formData.state_id ? String(formData.state_id) : String(course.state_id || '')}
+                                            value={
+                                                formData.state_id
+                                                    ? String(formData.state_id)
+                                                    : String(
+                                                          course.state_id || ''
+                                                      )
+                                            }
                                             onValueChange={(val) => {
                                                 const id = parseInt(val);
                                                 onInputChange('state_id', id);
-                                                const stateObj = allStates.find(s => s.id === id);
-                                                if (stateObj) onInputChange('state', stateObj);
+                                                const stateObj = allStates.find(
+                                                    (s) => s.id === id
+                                                );
+                                                if (stateObj)
+                                                    onInputChange(
+                                                        'state',
+                                                        stateObj
+                                                    );
                                             }}
                                         >
                                             <SelectTrigger className="bg-background border-border">
                                                 <SelectValue placeholder="Select State" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                {(allStates.length > 0 ? allStates : dummyStates).map((state) => (
-                                                    <SelectItem key={state.id} value={String(state.id)}>
-                                                        {state.name} ({state.code})
+                                                {(allStates.length > 0
+                                                    ? allStates
+                                                    : dummyStates
+                                                ).map((state) => (
+                                                    <SelectItem
+                                                        key={state.id}
+                                                        value={String(state.id)}
+                                                    >
+                                                        {state.name} (
+                                                        {state.code})
                                                     </SelectItem>
                                                 ))}
                                             </SelectContent>
@@ -221,30 +304,73 @@ export function GeneralInformationTab({ course, formData, isEditing, onInputChan
                                     <div>
                                         <Label>Instructor</Label>
                                         <Select
-                                            value={formData.instructor_id ? String(formData.instructor_id) : (course.instructor_id ? String(course.instructor_id) : "unassigned")}
+                                            value={
+                                                formData.instructor_id
+                                                    ? String(
+                                                          formData.instructor_id
+                                                      )
+                                                    : course.instructor_id
+                                                      ? String(
+                                                            course.instructor_id
+                                                        )
+                                                      : 'unassigned'
+                                            }
                                             onValueChange={(val) => {
-                                                const id = val === "unassigned" ? undefined : parseInt(val);
-                                                onInputChange('instructor_id', id);
-                                                const instructor = dummyInstructors.find(i => i.id === id);
-                                                onInputChange('instructor', instructor);
+                                                const id =
+                                                    val === 'unassigned'
+                                                        ? undefined
+                                                        : parseInt(val);
+                                                onInputChange(
+                                                    'instructor_id',
+                                                    id
+                                                );
+                                                const instructor =
+                                                    dummyInstructors.find(
+                                                        (i) => i.id === id
+                                                    );
+                                                onInputChange(
+                                                    'instructor',
+                                                    instructor
+                                                );
                                             }}
                                         >
                                             <SelectTrigger className="bg-background border-border">
                                                 <SelectValue placeholder="Select Instructor" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                <SelectItem value="unassigned">Unassigned</SelectItem>
-                                                {dummyInstructors.map((instructor) => (
-                                                    <SelectItem key={instructor.id} value={String(instructor.id)}>
-                                                        <div className="flex items-center gap-2">
-                                                            <Avatar className="h-6 w-6">
-                                                                <AvatarImage src={instructor.avatar} />
-                                                                <AvatarFallback>{instructor.name.charAt(0)}</AvatarFallback>
-                                                            </Avatar>
-                                                            <span>{instructor.name}</span>
-                                                        </div>
-                                                    </SelectItem>
-                                                ))}
+                                                <SelectItem value="unassigned">
+                                                    Unassigned
+                                                </SelectItem>
+                                                {dummyInstructors.map(
+                                                    (instructor) => (
+                                                        <SelectItem
+                                                            key={instructor.id}
+                                                            value={String(
+                                                                instructor.id
+                                                            )}
+                                                        >
+                                                            <div className="flex items-center gap-2">
+                                                                <Avatar className="h-6 w-6">
+                                                                    <AvatarImage
+                                                                        src={
+                                                                            instructor.avatar
+                                                                        }
+                                                                    />
+                                                                    <AvatarFallback>
+                                                                        {instructor.name.charAt(
+                                                                            0
+                                                                        )}
+                                                                    </AvatarFallback>
+                                                                </Avatar>
+                                                                <span>
+                                                                    {
+                                                                        instructor.name
+                                                                    }
+                                                                </span>
+                                                            </div>
+                                                        </SelectItem>
+                                                    )
+                                                )}
                                             </SelectContent>
                                         </Select>
                                     </div>
@@ -254,32 +380,78 @@ export function GeneralInformationTab({ course, formData, isEditing, onInputChan
                                     <div>
                                         <Label>Training Type</Label>
                                         <Select
-                                            value={formData.training_type || TRAINING_TYPE.UNARMED}
-                                            onValueChange={(val) => onInputChange('training_type', val)}
+                                            value={
+                                                formData.training_type ||
+                                                TRAINING_TYPE.UNARMED
+                                            }
+                                            onValueChange={(val) =>
+                                                onInputChange(
+                                                    'training_type',
+                                                    val
+                                                )
+                                            }
                                         >
                                             <SelectTrigger className="bg-background border-border">
                                                 <SelectValue />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                <SelectItem value={TRAINING_TYPE.UNARMED}>Unarmed</SelectItem>
-                                                <SelectItem value={TRAINING_TYPE.ARMED}>Armed</SelectItem>
-                                                <SelectItem value={TRAINING_TYPE.REFRESHER}>Refresher</SelectItem>
+                                                <SelectItem
+                                                    value={
+                                                        TRAINING_TYPE.UNARMED
+                                                    }
+                                                >
+                                                    Unarmed
+                                                </SelectItem>
+                                                <SelectItem
+                                                    value={TRAINING_TYPE.ARMED}
+                                                >
+                                                    Armed
+                                                </SelectItem>
+                                                <SelectItem
+                                                    value={
+                                                        TRAINING_TYPE.REFRESHER
+                                                    }
+                                                >
+                                                    Refresher
+                                                </SelectItem>
                                             </SelectContent>
                                         </Select>
                                     </div>
                                     <div>
                                         <Label>Delivery Mode</Label>
                                         <Select
-                                            value={formData.delivery_mode || DELIVERY_MODE.ONLINE}
-                                            onValueChange={(val) => onInputChange('delivery_mode', val)}
+                                            value={
+                                                formData.delivery_mode ||
+                                                DELIVERY_MODE.ONLINE
+                                            }
+                                            onValueChange={(val) =>
+                                                onInputChange(
+                                                    'delivery_mode',
+                                                    val
+                                                )
+                                            }
                                         >
                                             <SelectTrigger className="bg-background border-border">
                                                 <SelectValue />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                <SelectItem value={DELIVERY_MODE.ONLINE}>Online</SelectItem>
-                                                <SelectItem value={DELIVERY_MODE.IN_PERSON}>In Person</SelectItem>
-                                                <SelectItem value={DELIVERY_MODE.HYBRID}>Hybrid</SelectItem>
+                                                <SelectItem
+                                                    value={DELIVERY_MODE.ONLINE}
+                                                >
+                                                    Online
+                                                </SelectItem>
+                                                <SelectItem
+                                                    value={
+                                                        DELIVERY_MODE.IN_PERSON
+                                                    }
+                                                >
+                                                    In Person
+                                                </SelectItem>
+                                                <SelectItem
+                                                    value={DELIVERY_MODE.HYBRID}
+                                                >
+                                                    Hybrid
+                                                </SelectItem>
                                             </SelectContent>
                                         </Select>
                                     </div>
@@ -290,7 +462,12 @@ export function GeneralInformationTab({ course, formData, isEditing, onInputChan
                                         <Input
                                             type="number"
                                             value={formData.duration_hours || 0}
-                                            onChange={(e) => onInputChange('duration_hours', parseFloat(e.target.value))}
+                                            onChange={(e) =>
+                                                onInputChange(
+                                                    'duration_hours',
+                                                    parseFloat(e.target.value)
+                                                )
+                                            }
                                             className="bg-background border-border"
                                         />
                                     </div>
@@ -302,8 +479,12 @@ export function GeneralInformationTab({ course, formData, isEditing, onInputChan
                                                 <input
                                                     type="file"
                                                     accept="image/*"
-                                                    onChange={handleThumbnailUpload}
-                                                    disabled={isUploadingThumbnail}
+                                                    onChange={
+                                                        handleThumbnailUpload
+                                                    }
+                                                    disabled={
+                                                        isUploadingThumbnail
+                                                    }
                                                     className="hidden"
                                                     id="thumbnail-upload"
                                                 />
@@ -313,7 +494,9 @@ export function GeneralInformationTab({ course, formData, isEditing, onInputChan
                                                 >
                                                     <Upload className="w-4 h-4" />
                                                     <span className="text-sm text-muted-foreground">
-                                                        {isUploadingThumbnail ? 'Uploading...' : 'Click to upload or drag and drop'}
+                                                        {isUploadingThumbnail
+                                                            ? 'Uploading...'
+                                                            : 'Click to upload or drag and drop'}
                                                     </span>
                                                 </label>
                                             </div>
@@ -328,8 +511,12 @@ export function GeneralInformationTab({ course, formData, isEditing, onInputChan
                                                     />
                                                     {isEditing && (
                                                         <button
-                                                            onClick={handleThumbnailDelete}
-                                                            disabled={isUploadingThumbnail}
+                                                            onClick={
+                                                                handleThumbnailDelete
+                                                            }
+                                                            disabled={
+                                                                isUploadingThumbnail
+                                                            }
                                                             className="absolute top-1 right-1 bg-destructive/90 hover:bg-destructive text-white p-1 rounded-md disabled:opacity-50"
                                                         >
                                                             <X className="w-4 h-4" />
@@ -339,7 +526,10 @@ export function GeneralInformationTab({ course, formData, isEditing, onInputChan
                                             )}
 
                                             {/* File Info */}
-                                            <p className="text-xs text-muted-foreground">Supported formats: JPEG, PNG, GIF, WebP (Max 5MB)</p>
+                                            <p className="text-xs text-muted-foreground">
+                                                Supported formats: JPEG, PNG,
+                                                GIF, WebP (Max 5MB)
+                                            </p>
                                         </div>
                                     </div>
                                 </div>
@@ -347,24 +537,47 @@ export function GeneralInformationTab({ course, formData, isEditing, onInputChan
                         ) : (
                             <div className="grid grid-cols-2 gap-y-4">
                                 <div>
-                                    <p className="text-sm text-muted-foreground">State</p>
-                                    <p className="font-semibold">{course.state?.name || 'N/A'}</p>
+                                    <p className="text-sm text-muted-foreground">
+                                        State
+                                    </p>
+                                    <p className="font-semibold">
+                                        {course.state?.name || 'N/A'}
+                                    </p>
                                 </div>
                                 <div>
-                                    <p className="text-sm text-muted-foreground">Instructor</p>
-                                    <p className="font-semibold">{course.instructor?.name || 'Unassigned'}</p>
+                                    <p className="text-sm text-muted-foreground">
+                                        Instructor
+                                    </p>
+                                    <p className="font-semibold">
+                                        {course.instructor?.name ||
+                                            'Unassigned'}
+                                    </p>
                                 </div>
                                 <div>
-                                    <p className="text-sm text-muted-foreground">Training Type</p>
-                                    <p className="font-semibold capitalize">{course.training_type.toLowerCase()}</p>
+                                    <p className="text-sm text-muted-foreground">
+                                        Training Type
+                                    </p>
+                                    <p className="font-semibold capitalize">
+                                        {course.training_type.toLowerCase()}
+                                    </p>
                                 </div>
                                 <div>
-                                    <p className="text-sm text-muted-foreground">Delivery Mode</p>
-                                    <p className="font-semibold capitalize">{course.delivery_mode.replace('_', ' ').toLowerCase()}</p>
+                                    <p className="text-sm text-muted-foreground">
+                                        Delivery Mode
+                                    </p>
+                                    <p className="font-semibold capitalize">
+                                        {course.delivery_mode
+                                            .replace('_', ' ')
+                                            .toLowerCase()}
+                                    </p>
                                 </div>
                                 <div>
-                                    <p className="text-sm text-muted-foreground">Duration</p>
-                                    <p className="font-semibold">{course.duration_hours} hours</p>
+                                    <p className="text-sm text-muted-foreground">
+                                        Duration
+                                    </p>
+                                    <p className="font-semibold">
+                                        {course.duration_hours} hours
+                                    </p>
                                 </div>
                             </div>
                         )}
@@ -372,7 +585,9 @@ export function GeneralInformationTab({ course, formData, isEditing, onInputChan
                 </div>
 
                 <div className="space-y-4">
-                    <h3 className="text-lg font-semibold">Pricing & Location</h3>
+                    <h3 className="text-lg font-semibold">
+                        Pricing & Location
+                    </h3>
                     <div className="bg-muted/10 p-6 rounded-xl border border-border/50 space-y-4">
                         {isEditing ? (
                             <>
@@ -382,7 +597,12 @@ export function GeneralInformationTab({ course, formData, isEditing, onInputChan
                                         type="number"
                                         step="0.01"
                                         value={formData.price || 0}
-                                        onChange={(e) => onInputChange('price', parseFloat(e.target.value))}
+                                        onChange={(e) =>
+                                            onInputChange(
+                                                'price',
+                                                parseFloat(e.target.value)
+                                            )
+                                        }
                                         className="bg-background border-border"
                                     />
                                 </div>
@@ -390,7 +610,12 @@ export function GeneralInformationTab({ course, formData, isEditing, onInputChan
                                     <Label>Location (if In-Person)</Label>
                                     <Input
                                         value={formData.location || ''}
-                                        onChange={(e) => onInputChange('location', e.target.value)}
+                                        onChange={(e) =>
+                                            onInputChange(
+                                                'location',
+                                                e.target.value
+                                            )
+                                        }
                                         placeholder="e.g., Chicago, IL"
                                         className="bg-background border-border"
                                     />
@@ -398,29 +623,52 @@ export function GeneralInformationTab({ course, formData, isEditing, onInputChan
                                 <div className="flex items-center gap-2">
                                     <Checkbox
                                         id="price-negotiable"
-                                        checked={formData.is_price_negotiable || false}
-                                        onCheckedChange={(checked) => onInputChange('is_price_negotiable', checked)}
+                                        checked={
+                                            formData.is_price_negotiable ||
+                                            false
+                                        }
+                                        onCheckedChange={(checked) =>
+                                            onInputChange(
+                                                'is_price_negotiable',
+                                                checked
+                                            )
+                                        }
                                     />
-                                    <Label htmlFor="price-negotiable">Price Negotiable</Label>
+                                    <Label htmlFor="price-negotiable">
+                                        Price Negotiable
+                                    </Label>
                                 </div>
                             </>
                         ) : (
                             <div className="space-y-4">
                                 <div>
-                                    <p className="text-sm text-muted-foreground">Price</p>
-                                    <p className="text-2xl font-bold text-primary-foreground bg-primary px-3 py-1 rounded-lg inline-block">${course.price.toFixed(2)}</p>
+                                    <p className="text-sm text-muted-foreground">
+                                        Price
+                                    </p>
+                                    <p className="text-2xl font-bold text-primary-foreground bg-primary px-3 py-1 rounded-lg inline-block">
+                                        ${course.price.toFixed(2)}
+                                    </p>
                                 </div>
                                 {course.location && (
                                     <div>
-                                        <p className="text-sm text-muted-foreground">Location</p>
+                                        <p className="text-sm text-muted-foreground">
+                                            Location
+                                        </p>
                                         <div className="flex items-center gap-2">
                                             <MapPin className="w-4 h-4 text-muted-foreground" />
-                                            <p className="font-semibold">{course.location}</p>
+                                            <p className="font-semibold">
+                                                {course.location}
+                                            </p>
                                         </div>
                                     </div>
                                 )}
                                 {course.is_price_negotiable && (
-                                    <Badge variant="outline" className="border-primary text-primary">Price Negotiable</Badge>
+                                    <Badge
+                                        variant="outline"
+                                        className="border-primary text-primary"
+                                    >
+                                        Price Negotiable
+                                    </Badge>
                                 )}
                             </div>
                         )}
@@ -437,14 +685,23 @@ export function GeneralInformationTab({ course, formData, isEditing, onInputChan
                             <Checkbox
                                 id="is-active"
                                 checked={formData.is_active || false}
-                                onCheckedChange={(checked) => onInputChange('is_active', checked)}
+                                onCheckedChange={(checked) =>
+                                    onInputChange('is_active', checked)
+                                }
                             />
                             <Label htmlFor="is-active">Publish Course</Label>
                         </div>
                     ) : (
                         <div>
-                            <Badge variant={course.is_active ? 'default' : 'secondary'} className="text-base px-4 py-1">
-                                {course.is_active ? '✓ Published' : '○ Unpublished'}
+                            <Badge
+                                variant={
+                                    course.is_active ? 'default' : 'secondary'
+                                }
+                                className="text-base px-4 py-1"
+                            >
+                                {course.is_active
+                                    ? '✓ Published'
+                                    : '○ Unpublished'}
                             </Badge>
                         </div>
                     )}

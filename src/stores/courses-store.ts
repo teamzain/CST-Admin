@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { CoursesRepository } from '@/repositories/courses';
 import { toast } from 'sonner';
 import { AxiosError } from 'axios';
-import type { State } from '@/api/states-api';
+import type { State } from '@/repositories/states';
 import type { Module } from '@/api/modules';
 
 // Helper function to extract error messages from backend response
@@ -103,7 +103,9 @@ interface CoursesStore {
     };
     fetchCourses: (filters?: Record<string, unknown>) => Promise<void>;
     fetchCourseById: (id: number) => Promise<Course | undefined>;
-    addCourse: (course: Omit<Course, 'id' | 'created_at' | 'updated_at'>) => Promise<void>;
+    addCourse: (
+        course: Omit<Course, 'id' | 'created_at' | 'updated_at'>
+    ) => Promise<void>;
     updateCourse: (id: number, courseData: Partial<Course>) => Promise<void>;
     deleteCourse: (id: number) => Promise<void>;
     permanentDeleteCourse: (id: number) => Promise<void>;
@@ -126,9 +128,16 @@ export const useCoursesStore = create<CoursesStore>((set, get) => ({
         try {
             const queryFilters = {
                 search: filters?.search as string | undefined,
-                is_active: filters?.is_active !== undefined ? Boolean(filters.is_active) : undefined,
-                training_type: filters?.training_type as TRAINING_TYPE | undefined,
-                delivery_mode: filters?.delivery_mode as DELIVERY_MODE | undefined,
+                is_active:
+                    filters?.is_active !== undefined
+                        ? Boolean(filters.is_active)
+                        : undefined,
+                training_type: filters?.training_type as
+                    | TRAINING_TYPE
+                    | undefined,
+                delivery_mode: filters?.delivery_mode as
+                    | DELIVERY_MODE
+                    | undefined,
                 instructorId: filters?.instructor_id as number | undefined,
                 state_id: filters?.state_id as number | undefined,
             };
@@ -138,15 +147,19 @@ export const useCoursesStore = create<CoursesStore>((set, get) => ({
             // Fetch states to populate state objects in courses
             let allStates = dummyStates as State[];
             try {
-                const statesApiService = (await import('@/api/states-api')).statesApiService;
-                allStates = await statesApiService.getAllStates();
+                const { StatesRepository } =
+                    await import('@/repositories/states');
+                allStates = await StatesRepository.fetchAll();
             } catch (error) {
-                console.warn('Failed to fetch states from API, using dummy states:', error);
+                console.warn(
+                    'Failed to fetch states from API, using dummy states:',
+                    error
+                );
             }
 
             // Convert API courses to store courses and populate state object
             const courses = apiCourses.map((c) => {
-                const stateObj = allStates.find(s => s.id === c.state_id);
+                const stateObj = allStates.find((s) => s.id === c.state_id);
                 return {
                     ...c,
                     state: stateObj,
@@ -154,7 +167,11 @@ export const useCoursesStore = create<CoursesStore>((set, get) => ({
                     updated_at: new Date(c.updated_at),
                 } as Course;
             });
-            set((state) => ({ ...state, courses, currentFilters: queryFilters }));
+            set((state) => ({
+                ...state,
+                courses,
+                currentFilters: queryFilters,
+            }));
         } catch (error) {
             console.error('Failed to fetch courses:', error);
             set({ isLoading: false });
@@ -171,13 +188,14 @@ export const useCoursesStore = create<CoursesStore>((set, get) => ({
             // Fetch states to populate state object
             let allStates = dummyStates as State[];
             try {
-                const statesApiService = (await import('@/api/states-api')).statesApiService;
-                allStates = await statesApiService.getAllStates();
+                const { StatesRepository } =
+                    await import('@/repositories/states');
+                allStates = await StatesRepository.fetchAll();
             } catch (error) {
                 console.warn('Failed to fetch states:', error);
             }
 
-            const stateObj = allStates.find(s => s.id === apiCourse.state_id);
+            const stateObj = allStates.find((s) => s.id === apiCourse.state_id);
             const convertedCourse = {
                 ...apiCourse,
                 state: stateObj,
@@ -186,11 +204,13 @@ export const useCoursesStore = create<CoursesStore>((set, get) => ({
             } as Course;
 
             set((state) => {
-                const courseExists = state.courses.some(c => c.id === id);
+                const courseExists = state.courses.some((c) => c.id === id);
                 return {
                     courses: courseExists
-                        ? state.courses.map(c => c.id === id ? convertedCourse : c)
-                        : [...state.courses, convertedCourse]
+                        ? state.courses.map((c) =>
+                              c.id === id ? convertedCourse : c
+                          )
+                        : [...state.courses, convertedCourse],
                 };
             });
             return convertedCourse;
@@ -205,18 +225,21 @@ export const useCoursesStore = create<CoursesStore>((set, get) => ({
     addCourse: async (courseData) => {
         set({ isLoading: true, error: null });
         try {
-            const newCourse = await CoursesRepository.create(courseData as never);
+            const newCourse = await CoursesRepository.create(
+                courseData as never
+            );
 
             // Fetch states to populate state object
             let allStates = dummyStates as State[];
             try {
-                const statesApiService = (await import('@/api/states-api')).statesApiService;
-                allStates = await statesApiService.getAllStates();
+                const { StatesRepository } =
+                    await import('@/repositories/states');
+                allStates = await StatesRepository.fetchAll();
             } catch (error) {
                 console.warn('Failed to fetch states:', error);
             }
 
-            const stateObj = allStates.find(s => s.id === newCourse.state_id);
+            const stateObj = allStates.find((s) => s.id === newCourse.state_id);
             const convertedCourse = {
                 ...newCourse,
                 state: stateObj,
@@ -245,14 +268,17 @@ export const useCoursesStore = create<CoursesStore>((set, get) => ({
             // Fetch states for state name lookup
             let allStates = dummyStates as State[];
             try {
-                const statesApiService = (await import('@/api/states-api')).statesApiService;
-                allStates = await statesApiService.getAllStates();
+                const { StatesRepository } =
+                    await import('@/repositories/states');
+                allStates = await StatesRepository.fetchAll();
             } catch (error) {
                 console.warn('Failed to fetch states:', error);
             }
 
             if (dataToSend.state_id) {
-                const newState = allStates.find(s => s.id === dataToSend.state_id);
+                const newState = allStates.find(
+                    (s) => s.id === dataToSend.state_id
+                );
                 if (newState) {
                     dataToSend.state = newState.name;
                 }
@@ -261,9 +287,12 @@ export const useCoursesStore = create<CoursesStore>((set, get) => ({
                 delete dataToSend.state_id;
             }
 
-            const updated = await CoursesRepository.update(id, dataToSend as never);
+            const updated = await CoursesRepository.update(
+                id,
+                dataToSend as never
+            );
 
-            const stateObj = allStates.find(s => s.id === updated.state_id);
+            const stateObj = allStates.find((s) => s.id === updated.state_id);
             const convertedCourse = {
                 ...updated,
                 state: stateObj,
@@ -271,7 +300,9 @@ export const useCoursesStore = create<CoursesStore>((set, get) => ({
                 updated_at: new Date(updated.updated_at),
             } as Course;
             set((state) => ({
-                courses: state.courses.map((c) => (c.id === id ? convertedCourse : c)),
+                courses: state.courses.map((c) =>
+                    c.id === id ? convertedCourse : c
+                ),
             }));
             toast.success('Course updated successfully');
             set({ isLoading: false });
@@ -327,7 +358,9 @@ export const useCoursesStore = create<CoursesStore>((set, get) => ({
                 updated_at: new Date(updated.updated_at),
             } as Course;
             set((state) => ({
-                courses: state.courses.map((c) => (c.id === id ? convertedCourse : c)),
+                courses: state.courses.map((c) =>
+                    c.id === id ? convertedCourse : c
+                ),
             }));
             toast.success('Course published successfully');
         } catch (error) {
@@ -349,7 +382,9 @@ export const useCoursesStore = create<CoursesStore>((set, get) => ({
                 updated_at: new Date(updated.updated_at),
             } as Course;
             set((state) => ({
-                courses: state.courses.map((c) => (c.id === id ? convertedCourse : c)),
+                courses: state.courses.map((c) =>
+                    c.id === id ? convertedCourse : c
+                ),
             }));
             toast.success('Course unpublished successfully');
         } catch (error) {

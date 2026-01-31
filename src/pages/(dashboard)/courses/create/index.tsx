@@ -3,7 +3,13 @@
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Upload as UploadIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -16,9 +22,15 @@ import {
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useState, useEffect } from 'react';
-import { useCoursesStore, TRAINING_TYPE, DELIVERY_MODE, dummyStates, dummyInstructors, type Course } from '@/stores/courses-store';
-import { statesApiService } from '@/api/states-api';
-import type { State } from '@/api/states-api';
+import {
+    useCoursesStore,
+    TRAINING_TYPE,
+    DELIVERY_MODE,
+    dummyStates,
+    dummyInstructors,
+    type Course,
+} from '@/stores/courses-store';
+import { StatesRepository, type State } from '@/repositories/states';
 import { bunnyUploadService } from '@/api/bunny-upload';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
@@ -28,7 +40,9 @@ export default function CreateCoursePage() {
     const { addCourse } = useCoursesStore();
     const [step, setStep] = useState(1);
     const [allStates, setAllStates] = useState<State[]>([]);
-    const [thumbnailPreview, setThumbnailPreview] = useState<string | undefined>();
+    const [thumbnailPreview, setThumbnailPreview] = useState<
+        string | undefined
+    >();
     const [preRequirementsText, setPreRequirementsText] = useState('');
     const [isUploadingThumbnail, setIsUploadingThumbnail] = useState(false);
     const [formData, setFormData] = useState<{
@@ -81,11 +95,14 @@ export default function CreateCoursePage() {
     useEffect(() => {
         const loadStates = async () => {
             try {
-                const states = await statesApiService.getAllStates();
+                const states = await StatesRepository.fetchAll();
                 setAllStates(states);
                 // Set first state as default
                 if (states.length > 0) {
-                    setFormData(prev => ({ ...prev, state_id: states[0].id }));
+                    setFormData((prev) => ({
+                        ...prev,
+                        state_id: states[0].id,
+                    }));
                 }
             } catch (error) {
                 console.error('Error loading states:', error);
@@ -96,21 +113,29 @@ export default function CreateCoursePage() {
         loadStates();
     }, []);
 
-    const handleInputChange = (field: string, value: string | number | boolean | string[] | undefined) => {
-        setFormData(prev => ({
+    const handleInputChange = (
+        field: string,
+        value: string | number | boolean | string[] | undefined
+    ) => {
+        setFormData((prev) => ({
             ...prev,
             [field]: value,
         }));
     };
 
-    const handleThumbnailUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleThumbnailUpload = async (
+        e: React.ChangeEvent<HTMLInputElement>
+    ) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
         setIsUploadingThumbnail(true);
         try {
-            const response = await bunnyUploadService.uploadFile(file, 'course/');
-            setFormData(prev => ({ ...prev, thumbnail: response.url }));
+            const response = await bunnyUploadService.uploadFile(
+                file,
+                'course/'
+            );
+            setFormData((prev) => ({ ...prev, thumbnail: response.url }));
             setThumbnailPreview(response.url);
             toast.success('Thumbnail uploaded successfully');
         } catch (error) {
@@ -123,9 +148,10 @@ export default function CreateCoursePage() {
 
     // Auto-fill requirements based on State and Training Type
     useEffect(() => {
-        const selectedState = allStates.length > 0
-            ? allStates.find(s => s.id === formData.state_id)
-            : dummyStates.find(s => s.id === formData.state_id);
+        const selectedState =
+            allStates.length > 0
+                ? allStates.find((s) => s.id === formData.state_id)
+                : dummyStates.find((s) => s.id === formData.state_id);
 
         if (!selectedState) return;
 
@@ -141,17 +167,20 @@ export default function CreateCoursePage() {
         }
 
         if (requiredHours > 0) {
-            setFormData(prev => ({
+            setFormData((prev) => ({
                 ...prev,
                 required_hours: requiredHours,
-                duration_hours: prev.duration_hours === 0 ? requiredHours : prev.duration_hours,
+                duration_hours:
+                    prev.duration_hours === 0
+                        ? requiredHours
+                        : prev.duration_hours,
                 requires_range: requiresRange,
             }));
         }
     }, [formData.state_id, formData.training_type, allStates]);
 
     const handleSubmit = async () => {
-        const selectedState = allStates.find(s => s.id === formData.state_id);
+        const selectedState = allStates.find((s) => s.id === formData.state_id);
         const stateName = selectedState?.name || '';
 
         if (!stateName) {
@@ -162,8 +191,8 @@ export default function CreateCoursePage() {
         // Convert text to array on submit
         const preReqs = preRequirementsText
             .split('\n')
-            .map(r => r.trim())
-            .filter(r => r !== '');
+            .map((r) => r.trim())
+            .filter((r) => r !== '');
 
         // Send only the fields the backend expects
         const courseData: Omit<Course, 'id' | 'created_at' | 'updated_at'> = {
@@ -216,7 +245,8 @@ export default function CreateCoursePage() {
                             Create New Course
                         </h1>
                         <p className="text-sm text-gray-500">
-                            Follow the steps below to create a new training course
+                            Follow the steps below to create a new training
+                            course
                         </p>
                     </div>
                 </div>
@@ -227,12 +257,13 @@ export default function CreateCoursePage() {
                         <button
                             key={s}
                             onClick={() => setStep(s)}
-                            className={`flex items-center justify-center w-10 h-10 rounded-full font-semibold cursor-pointer transition-all ${step === s
-                                ? 'bg-primary text-black scale-110 shadow-md'
-                                : step > s
-                                    ? 'bg-primary/20 text-primary border-2 border-primary/30'
-                                    : 'bg-muted text-muted-foreground'
-                                }`}
+                            className={`flex items-center justify-center w-10 h-10 rounded-full font-semibold cursor-pointer transition-all ${
+                                step === s
+                                    ? 'bg-primary text-black scale-110 shadow-md'
+                                    : step > s
+                                      ? 'bg-primary/20 text-primary border-2 border-primary/30'
+                                      : 'bg-muted text-muted-foreground'
+                            }`}
                         >
                             {s}
                         </button>
@@ -253,7 +284,12 @@ export default function CreateCoursePage() {
                                 <Label>Course Title *</Label>
                                 <Input
                                     value={formData.title}
-                                    onChange={(e) => handleInputChange('title', e.target.value)}
+                                    onChange={(e) =>
+                                        handleInputChange(
+                                            'title',
+                                            e.target.value
+                                        )
+                                    }
                                     placeholder="e.g., Illinois Unarmed 20-Hour"
                                     className="bg-input border-border mt-2"
                                 />
@@ -263,7 +299,12 @@ export default function CreateCoursePage() {
                                 <Label>Description *</Label>
                                 <Textarea
                                     value={formData.description}
-                                    onChange={(e) => handleInputChange('description', e.target.value)}
+                                    onChange={(e) =>
+                                        handleInputChange(
+                                            'description',
+                                            e.target.value
+                                        )
+                                    }
                                     placeholder="Detailed description of the course content and objectives"
                                     rows={5}
                                     className="bg-input border-border mt-2"
@@ -275,14 +316,25 @@ export default function CreateCoursePage() {
                                     <Label>State *</Label>
                                     <Select
                                         value={String(formData.state_id)}
-                                        onValueChange={(val) => handleInputChange('state_id', parseInt(val))}
+                                        onValueChange={(val) =>
+                                            handleInputChange(
+                                                'state_id',
+                                                parseInt(val)
+                                            )
+                                        }
                                     >
                                         <SelectTrigger className="bg-input border-border mt-2">
                                             <SelectValue placeholder="Select State" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            {(allStates.length > 0 ? allStates : dummyStates).map((state) => (
-                                                <SelectItem key={state.id} value={String(state.id)}>
+                                            {(allStates.length > 0
+                                                ? allStates
+                                                : dummyStates
+                                            ).map((state) => (
+                                                <SelectItem
+                                                    key={state.id}
+                                                    value={String(state.id)}
+                                                >
                                                     {state.name} ({state.code})
                                                 </SelectItem>
                                             ))}
@@ -293,25 +345,57 @@ export default function CreateCoursePage() {
                                 <div>
                                     <Label>Instructor (Optional)</Label>
                                     <Select
-                                        value={formData.instructor_id ? String(formData.instructor_id) : "unassigned"}
-                                        onValueChange={(val) => handleInputChange('instructor_id', val === "unassigned" ? undefined : parseInt(val))}
+                                        value={
+                                            formData.instructor_id
+                                                ? String(formData.instructor_id)
+                                                : 'unassigned'
+                                        }
+                                        onValueChange={(val) =>
+                                            handleInputChange(
+                                                'instructor_id',
+                                                val === 'unassigned'
+                                                    ? undefined
+                                                    : parseInt(val)
+                                            )
+                                        }
                                     >
                                         <SelectTrigger className="bg-input border-border mt-2">
                                             <SelectValue placeholder="Select Instructor" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="unassigned">Unassigned</SelectItem>
-                                            {dummyInstructors.map((instructor) => (
-                                                <SelectItem key={instructor.id} value={String(instructor.id)}>
-                                                    <div className="flex items-center gap-2">
-                                                        <Avatar className="h-6 w-6">
-                                                            <AvatarImage src={instructor.avatar} />
-                                                            <AvatarFallback>{instructor.name.charAt(0)}</AvatarFallback>
-                                                        </Avatar>
-                                                        <span>{instructor.name}</span>
-                                                    </div>
-                                                </SelectItem>
-                                            ))}
+                                            <SelectItem value="unassigned">
+                                                Unassigned
+                                            </SelectItem>
+                                            {dummyInstructors.map(
+                                                (instructor) => (
+                                                    <SelectItem
+                                                        key={instructor.id}
+                                                        value={String(
+                                                            instructor.id
+                                                        )}
+                                                    >
+                                                        <div className="flex items-center gap-2">
+                                                            <Avatar className="h-6 w-6">
+                                                                <AvatarImage
+                                                                    src={
+                                                                        instructor.avatar
+                                                                    }
+                                                                />
+                                                                <AvatarFallback>
+                                                                    {instructor.name.charAt(
+                                                                        0
+                                                                    )}
+                                                                </AvatarFallback>
+                                                            </Avatar>
+                                                            <span>
+                                                                {
+                                                                    instructor.name
+                                                                }
+                                                            </span>
+                                                        </div>
+                                                    </SelectItem>
+                                                )
+                                            )}
                                         </SelectContent>
                                     </Select>
                                 </div>
@@ -322,15 +406,32 @@ export default function CreateCoursePage() {
                                     <Label>Training Type *</Label>
                                     <Select
                                         value={formData.training_type}
-                                        onValueChange={(val) => handleInputChange('training_type', val)}
+                                        onValueChange={(val) =>
+                                            handleInputChange(
+                                                'training_type',
+                                                val
+                                            )
+                                        }
                                     >
                                         <SelectTrigger className="bg-input border-border mt-2">
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value={TRAINING_TYPE.UNARMED}>Unarmed</SelectItem>
-                                            <SelectItem value={TRAINING_TYPE.ARMED}>Armed</SelectItem>
-                                            <SelectItem value={TRAINING_TYPE.REFRESHER}>Refresher</SelectItem>
+                                            <SelectItem
+                                                value={TRAINING_TYPE.UNARMED}
+                                            >
+                                                Unarmed
+                                            </SelectItem>
+                                            <SelectItem
+                                                value={TRAINING_TYPE.ARMED}
+                                            >
+                                                Armed
+                                            </SelectItem>
+                                            <SelectItem
+                                                value={TRAINING_TYPE.REFRESHER}
+                                            >
+                                                Refresher
+                                            </SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
@@ -339,15 +440,32 @@ export default function CreateCoursePage() {
                                     <Label>Delivery Mode *</Label>
                                     <Select
                                         value={formData.delivery_mode}
-                                        onValueChange={(val) => handleInputChange('delivery_mode', val)}
+                                        onValueChange={(val) =>
+                                            handleInputChange(
+                                                'delivery_mode',
+                                                val
+                                            )
+                                        }
                                     >
                                         <SelectTrigger className="bg-input border-border mt-2">
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value={DELIVERY_MODE.ONLINE}>Online</SelectItem>
-                                            <SelectItem value={DELIVERY_MODE.IN_PERSON}>In Person</SelectItem>
-                                            <SelectItem value={DELIVERY_MODE.HYBRID}>Hybrid</SelectItem>
+                                            <SelectItem
+                                                value={DELIVERY_MODE.ONLINE}
+                                            >
+                                                Online
+                                            </SelectItem>
+                                            <SelectItem
+                                                value={DELIVERY_MODE.IN_PERSON}
+                                            >
+                                                In Person
+                                            </SelectItem>
+                                            <SelectItem
+                                                value={DELIVERY_MODE.HYBRID}
+                                            >
+                                                Hybrid
+                                            </SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
@@ -359,7 +477,12 @@ export default function CreateCoursePage() {
                                     <Input
                                         type="number"
                                         value={formData.duration_hours}
-                                        onChange={(e) => handleInputChange('duration_hours', parseFloat(e.target.value))}
+                                        onChange={(e) =>
+                                            handleInputChange(
+                                                'duration_hours',
+                                                parseFloat(e.target.value)
+                                            )
+                                        }
                                         placeholder="20"
                                         className="bg-input border-border mt-2"
                                     />
@@ -370,7 +493,12 @@ export default function CreateCoursePage() {
                                     <Input
                                         type="number"
                                         value={formData.required_hours}
-                                        onChange={(e) => handleInputChange('required_hours', parseFloat(e.target.value))}
+                                        onChange={(e) =>
+                                            handleInputChange(
+                                                'required_hours',
+                                                parseFloat(e.target.value)
+                                            )
+                                        }
                                         placeholder="20"
                                         className="bg-input border-border mt-2"
                                     />
@@ -381,9 +509,16 @@ export default function CreateCoursePage() {
                                 <Checkbox
                                     id="is-refresher"
                                     checked={formData.is_refresher}
-                                    onCheckedChange={(checked) => handleInputChange('is_refresher', checked)}
+                                    onCheckedChange={(checked) =>
+                                        handleInputChange(
+                                            'is_refresher',
+                                            checked
+                                        )
+                                    }
                                 />
-                                <Label htmlFor="is-refresher">Is this a Refresher Course?</Label>
+                                <Label htmlFor="is-refresher">
+                                    Is this a Refresher Course?
+                                </Label>
                             </div>
 
                             <div className="flex justify-end gap-4 pt-4">
@@ -415,7 +550,12 @@ export default function CreateCoursePage() {
                                         type="number"
                                         step="0.01"
                                         value={formData.price}
-                                        onChange={(e) => handleInputChange('price', parseFloat(e.target.value))}
+                                        onChange={(e) =>
+                                            handleInputChange(
+                                                'price',
+                                                parseFloat(e.target.value)
+                                            )
+                                        }
                                         placeholder="199.00"
                                         className="bg-input border-border mt-2"
                                     />
@@ -425,7 +565,12 @@ export default function CreateCoursePage() {
                                     <Label>Location (if In-Person)</Label>
                                     <Input
                                         value={formData.location}
-                                        onChange={(e) => handleInputChange('location', e.target.value)}
+                                        onChange={(e) =>
+                                            handleInputChange(
+                                                'location',
+                                                e.target.value
+                                            )
+                                        }
                                         placeholder="e.g., Chicago, IL"
                                         className="bg-input border-border mt-2"
                                     />
@@ -443,7 +588,10 @@ export default function CreateCoursePage() {
                                         className="hidden"
                                         id="thumbnail-input"
                                     />
-                                    <label htmlFor="thumbnail-input" className="cursor-pointer block">
+                                    <label
+                                        htmlFor="thumbnail-input"
+                                        className="cursor-pointer block"
+                                    >
                                         {thumbnailPreview ? (
                                             <div className="space-y-2">
                                                 <img
@@ -451,15 +599,21 @@ export default function CreateCoursePage() {
                                                     alt="Thumbnail preview"
                                                     className="h-32 w-32 object-cover rounded mx-auto"
                                                 />
-                                                <p className="text-sm text-muted-foreground">Click to change thumbnail</p>
+                                                <p className="text-sm text-muted-foreground">
+                                                    Click to change thumbnail
+                                                </p>
                                             </div>
                                         ) : (
                                             <div className="space-y-2">
                                                 <UploadIcon className="w-8 h-8 mx-auto text-muted-foreground" />
                                                 <p className="text-sm font-medium">
-                                                    {isUploadingThumbnail ? 'Uploading...' : 'Click to upload thumbnail'}
+                                                    {isUploadingThumbnail
+                                                        ? 'Uploading...'
+                                                        : 'Click to upload thumbnail'}
                                                 </p>
-                                                <p className="text-xs text-muted-foreground">PNG, JPG, GIF up to 5MB</p>
+                                                <p className="text-xs text-muted-foreground">
+                                                    PNG, JPG, GIF up to 5MB
+                                                </p>
                                             </div>
                                         )}
                                     </label>
@@ -470,16 +624,25 @@ export default function CreateCoursePage() {
                                 <Checkbox
                                     id="price-negotiable"
                                     checked={formData.is_price_negotiable}
-                                    onCheckedChange={(checked) => handleInputChange('is_price_negotiable', checked)}
+                                    onCheckedChange={(checked) =>
+                                        handleInputChange(
+                                            'is_price_negotiable',
+                                            checked
+                                        )
+                                    }
                                 />
-                                <Label htmlFor="price-negotiable">Price is Negotiable</Label>
+                                <Label htmlFor="price-negotiable">
+                                    Price is Negotiable
+                                </Label>
                             </div>
 
                             <div>
                                 <Label>Pre-Requirements (one per line)</Label>
                                 <Textarea
                                     value={preRequirementsText}
-                                    onChange={(e) => setPreRequirementsText(e.target.value)}
+                                    onChange={(e) =>
+                                        setPreRequirementsText(e.target.value)
+                                    }
                                     placeholder="e.g., High School Diploma&#10;Valid ID&#10;Background Check"
                                     rows={4}
                                     className="bg-input border-border mt-2"
@@ -487,7 +650,10 @@ export default function CreateCoursePage() {
                             </div>
 
                             <div className="flex justify-between gap-4 pt-4">
-                                <Button variant="outline" onClick={() => setStep(1)}>
+                                <Button
+                                    variant="outline"
+                                    onClick={() => setStep(1)}
+                                >
                                     Previous Step
                                 </Button>
                                 <Button
@@ -505,54 +671,100 @@ export default function CreateCoursePage() {
                 {step === 3 && (
                     <Card className="bg-card border-border max-w-full">
                         <CardHeader>
-                            <CardTitle>Step 3: Requirements & Settings</CardTitle>
+                            <CardTitle>
+                                Step 3: Requirements & Settings
+                            </CardTitle>
                             <CardDescription>
-                                Configure course requirements and publish settings
+                                Configure course requirements and publish
+                                settings
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-6">
                             <div>
-                                <Label className="text-base font-semibold mb-4 block">Course Requirements</Label>
+                                <Label className="text-base font-semibold mb-4 block">
+                                    Course Requirements
+                                </Label>
                                 <div className="space-y-3">
                                     <div className="flex items-center gap-2">
                                         <Checkbox
                                             id="requires-exam"
                                             checked={formData.requires_exam}
-                                            onCheckedChange={(checked) => handleInputChange('requires_exam', checked)}
+                                            onCheckedChange={(checked) =>
+                                                handleInputChange(
+                                                    'requires_exam',
+                                                    checked
+                                                )
+                                            }
                                         />
-                                        <Label htmlFor="requires-exam">Requires Exam</Label>
+                                        <Label htmlFor="requires-exam">
+                                            Requires Exam
+                                        </Label>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <Checkbox
                                             id="requires-range"
                                             checked={formData.requires_range}
-                                            onCheckedChange={(checked) => handleInputChange('requires_range', checked)}
+                                            onCheckedChange={(checked) =>
+                                                handleInputChange(
+                                                    'requires_range',
+                                                    checked
+                                                )
+                                            }
                                         />
-                                        <Label htmlFor="requires-range">Requires Range Training</Label>
+                                        <Label htmlFor="requires-range">
+                                            Requires Range Training
+                                        </Label>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <Checkbox
                                             id="attendance-required"
-                                            checked={formData.attendance_required}
-                                            onCheckedChange={(checked) => handleInputChange('attendance_required', checked)}
+                                            checked={
+                                                formData.attendance_required
+                                            }
+                                            onCheckedChange={(checked) =>
+                                                handleInputChange(
+                                                    'attendance_required',
+                                                    checked
+                                                )
+                                            }
                                         />
-                                        <Label htmlFor="attendance-required">Attendance Required</Label>
+                                        <Label htmlFor="attendance-required">
+                                            Attendance Required
+                                        </Label>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <Checkbox
                                             id="attendance-enabled"
-                                            checked={formData.attendance_enabled}
-                                            onCheckedChange={(checked) => handleInputChange('attendance_enabled', checked)}
+                                            checked={
+                                                formData.attendance_enabled
+                                            }
+                                            onCheckedChange={(checked) =>
+                                                handleInputChange(
+                                                    'attendance_enabled',
+                                                    checked
+                                                )
+                                            }
                                         />
-                                        <Label htmlFor="attendance-enabled">Enable Attendance Tracking</Label>
+                                        <Label htmlFor="attendance-enabled">
+                                            Enable Attendance Tracking
+                                        </Label>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <Checkbox
                                             id="requires-id-verification"
-                                            checked={formData.requires_id_verification}
-                                            onCheckedChange={(checked) => handleInputChange('requires_id_verification', checked)}
+                                            checked={
+                                                formData.requires_id_verification
+                                            }
+                                            onCheckedChange={(checked) =>
+                                                handleInputChange(
+                                                    'requires_id_verification',
+                                                    checked
+                                                )
+                                            }
                                         />
-                                        <Label htmlFor="requires-id-verification">Requires ID Verification</Label>
+                                        <Label htmlFor="requires-id-verification">
+                                            Requires ID Verification
+                                        </Label>
                                     </div>
                                 </div>
                             </div>
@@ -562,25 +774,40 @@ export default function CreateCoursePage() {
                                     <Checkbox
                                         id="is-active"
                                         checked={formData.is_active}
-                                        onCheckedChange={(checked) => handleInputChange('is_active', checked)}
+                                        onCheckedChange={(checked) =>
+                                            handleInputChange(
+                                                'is_active',
+                                                checked
+                                            )
+                                        }
                                     />
-                                    <Label htmlFor="is-active" className="text-base font-semibold">
-                                        Publish Course (make it available to students)
+                                    <Label
+                                        htmlFor="is-active"
+                                        className="text-base font-semibold"
+                                    >
+                                        Publish Course (make it available to
+                                        students)
                                     </Label>
                                 </div>
                                 <p className="text-sm text-muted-foreground">
-                                    Unpublished courses will not be visible to students unless they have direct access
+                                    Unpublished courses will not be visible to
+                                    students unless they have direct access
                                 </p>
                             </div>
 
                             <div className="flex justify-between gap-4 pt-4">
-                                <Button variant="outline" onClick={() => setStep(2)}>
+                                <Button
+                                    variant="outline"
+                                    onClick={() => setStep(2)}
+                                >
                                     Previous Step
                                 </Button>
                                 <Button
                                     onClick={handleSubmit}
                                     className="bg-primary hover:bg-primary/90 px-8"
-                                    disabled={!formData.title || !formData.description}
+                                    disabled={
+                                        !formData.title || !formData.description
+                                    }
                                 >
                                     Create Course
                                 </Button>
