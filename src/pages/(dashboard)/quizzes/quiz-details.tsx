@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { ChevronLeft, Plus, Trash2, Save, Upload, CheckCircle2, GripVertical, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,15 +11,25 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { useCoursesStore } from '@/stores/courses-store';
-import { quizzesService, type Quiz, type Question } from '@/api/quizzes';
-import { questionsService } from '@/api/questions';
+import { QuizzesRepository, type Quiz, type Question } from '@/repositories/quizzes';
+import { QuestionsRepository } from '@/repositories/questions';
 import { toast } from 'sonner';
 
 export default function QuizDetailsPage() {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { courses } = useCoursesStore();
+    const [searchParams] = useSearchParams();
+
+    // Handle navigation back - if came from course curriculum, go back there
+    const handleGoBack = () => {
+        const from = searchParams.get('from');
+        const courseId = searchParams.get('courseId');
+        if (from === 'course' && courseId) {
+            navigate(`/courses/${courseId}?tab=curriculum`);
+        } else {
+            navigate(-1);
+        }
+    };
 
     const [isLoading, setIsLoading] = useState(true);
     const [quizSettings, setQuizSettings] = useState<Quiz>({
@@ -54,8 +64,8 @@ export default function QuizDetailsPage() {
             try {
                 // Fetch quiz and questions in parallel
                 const [quiz, questions] = await Promise.all([
-                    quizzesService.getQuizById(Number(id)),
-                    questionsService.getQuestionsByQuiz(Number(id))
+                    QuizzesRepository.getById(Number(id)),
+                    QuestionsRepository.getByQuiz(Number(id))
                 ]);
 
                 if (quiz) {
@@ -66,34 +76,14 @@ export default function QuizDetailsPage() {
                 }
             } catch (error) {
                 console.error('Error fetching quiz data:', error);
-                
-                // Fallback to local store
-                let foundQuiz: Quiz | undefined;
-                for (const course of courses) {
-                    const modules = (course.modules || []) as { quizzes?: Quiz[] }[];
-                    for (const module of modules) {
-                        const quiz = (module.quizzes || []).find((q) => String(q.id) === id);
-                        if (quiz) {
-                            foundQuiz = quiz;
-                            break;
-                        }
-                    }
-                    if (foundQuiz) break;
-                }
-
-                if (foundQuiz) {
-                    setQuizSettings({
-                        ...foundQuiz,
-                        questions: foundQuiz.questions || [],
-                    });
-                }
+                toast.error('Failed to load quiz data');
             } finally {
                 setIsLoading(false);
             }
         };
 
         fetchQuizData();
-    }, [id, courses]);
+    }, [id]);
 
     const handleAddOption = () => {
         setCurrentQuestion((prev) => {
@@ -152,7 +142,7 @@ export default function QuizDetailsPage() {
                 order_index: quizSettings.questions?.length || 0,
             };
 
-            const createdQuestion = await questionsService.createQuestion(Number(id), newQuestionData);
+            const createdQuestion = await QuestionsRepository.create(Number(id), newQuestionData);
 
             setQuizSettings((prev) => ({
                 ...prev,
@@ -178,7 +168,7 @@ export default function QuizDetailsPage() {
 
     const handleDeleteQuestion = async (questionId: number) => {
         try {
-            await questionsService.deleteQuestion(questionId);
+            await QuestionsRepository.delete(questionId);
             setQuizSettings((prev) => ({
                 ...prev,
                 questions: prev.questions?.filter((q) => q.id !== questionId)
@@ -196,13 +186,13 @@ export default function QuizDetailsPage() {
             const { questions, ...quizData } = quizSettings;
 
             // Use API to update quiz
-            await quizzesService.updateQuiz(Number(id), quizData);
+            await QuizzesRepository.update(Number(id), quizData);
 
             toast.success('Quiz saved successfully');
-            navigate(-1);
+            handleGoBack();
         } catch (error) {
             console.error('Error saving quiz:', error);
-            toast.error(quizzesService.getErrorMessage(error, 'Failed to save quiz'));
+            toast.error('Failed to save quiz');
         }
     };
 
@@ -212,16 +202,16 @@ export default function QuizDetailsPage() {
 
         try {
             toast.loading('Importing questions...', { id: 'import-questions' });
-            await questionsService.bulkImportQuestions(Number(id), file);
+            await QuestionsRepository.bulkImport(Number(id), file);
             
             // Re-fetch quiz data to ensure everything is in sync and decoded correctly
-            const quizData = await quizzesService.getQuizById(Number(id));
+            const quizData = await QuizzesRepository.getById(Number(id));
             setQuizSettings(quizData);
             
             toast.success('Questions imported successfully', { id: 'import-questions' });
         } catch (error) {
             console.error('Error importing questions:', error);
-            toast.error(questionsService.getErrorMessage(error, 'Failed to import questions'), { id: 'import-questions' });
+            toast.error('Failed to import questions', { id: 'import-questions' });
         }
         e.target.value = '';
     };
@@ -242,7 +232,7 @@ export default function QuizDetailsPage() {
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-card">
                 <div className="flex items-center gap-4">
-                    <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+                    <Button variant="ghost" size="icon" onClick={handleGoBack}>
                         <ChevronLeft className="w-5 h-5" />
                     </Button>
                     <div>
@@ -251,7 +241,7 @@ export default function QuizDetailsPage() {
                     </div>
                 </div>
                 <div className="flex items-center gap-3">
-                    <Button variant="outline" onClick={() => navigate(-1)}>Cancel</Button>
+                    <Button variant="outline" onClick={handleGoBack}>Cancel</Button>
                     <Button onClick={handleSave} className="gap-2">
                         <Save className="w-4 h-4" /> Save Quiz
                     </Button>

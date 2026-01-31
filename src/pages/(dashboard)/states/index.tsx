@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -13,50 +14,66 @@ import {
 import { DataTable } from '@/components/shared/DataTable';
 import { StatesFilters } from '@/components/states/states-filters';
 import { getStateColumns } from '@/components/states/state-columns';
-import { useStatesStore } from '@/stores/states-store';
-import { Plus } from 'lucide-react';
+import { Plus, Loader2 } from 'lucide-react';
 import { DeleteConfirmationDialog } from '@/components/shared/delete-confirmation-dialog';
-import { StatesRepository } from '@/repositories/states';
+import {
+    StatesRepository,
+    type State,
+    type StateFilters,
+} from '@/repositories/states';
 import { toast } from 'sonner';
-import type { StateFilters } from '@/repositories/states';
 
 export default function StatesPage() {
     const navigate = useNavigate();
-    const { states, fetchStates, deleteState, unpublishState, setFilters } =
-        useStatesStore();
+    const queryClient = useQueryClient();
 
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState<string>('all');
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-    const [stateToDelete, setStateToDelete] = useState<any>(null);
+    const [stateToDelete, setStateToDelete] = useState<State | null>(null);
 
-    // Fetch states on mount and when filters change
-    useEffect(() => {
-        const loadStates = async () => {
-            try {
-                const filters: StateFilters = {};
+    // Build filters object
+    const filters: StateFilters = useMemo(() => {
+        const f: StateFilters = {};
+        if (searchTerm) f.search = searchTerm;
+        if (statusFilter !== 'all') f.is_active = statusFilter === 'true';
+        return f;
+    }, [searchTerm, statusFilter]);
 
-                if (searchTerm) {
-                    filters.search = searchTerm;
-                }
+    // Fetch states with TanStack Query
+    const { data: states = [], isLoading } = useQuery({
+        queryKey: ['states', filters],
+        queryFn: () => StatesRepository.getAll(filters),
+    });
 
-                if (statusFilter !== 'all') {
-                    filters.is_active = statusFilter === 'true';
-                }
+    // Delete mutation
+    const deleteMutation = useMutation({
+        mutationFn: (id: number) => StatesRepository.delete(id),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['states'] });
+            toast.success('State deleted successfully');
+        },
+        onError: (error) => {
+            console.error('Error deleting state:', error);
+            toast.error('Failed to delete state');
+        },
+    });
 
-                await fetchStates(filters);
-                setFilters(filters);
-            } catch (error) {
-                console.error('Error loading states:', error);
-            }
-        };
-
-        loadStates();
-    }, [searchTerm, statusFilter, fetchStates, setFilters]);
+    // Unpublish mutation
+    const unpublishMutation = useMutation({
+        mutationFn: (id: number) => StatesRepository.unpublish(id),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['states'] });
+            toast.success('State unpublished successfully');
+        },
+        onError: (error) => {
+            console.error('Error unpublishing state:', error);
+            toast.error('Failed to unpublish state');
+        },
+    });
 
     const filteredStates = useMemo(() => {
-        // If we have search or status filter, backend already filtered
-        // But we still apply local search/filter for immediate UI feedback
+        // Apply local filtering for immediate UI feedback
         return states.filter((state) => {
             const matchesSearch =
                 !searchTerm ||
@@ -68,36 +85,25 @@ export default function StatesPage() {
         });
     }, [states, searchTerm, statusFilter]);
 
-    const handleView = (state: any) => {
+    const handleView = (state: State) => {
         navigate(`/states/${state.id}`);
     };
 
-    const handleDeleteClick = (state: any) => {
+    const handleDeleteClick = (state: State) => {
         setStateToDelete(state);
         setIsDeleteDialogOpen(true);
     };
 
     const handleConfirmDelete = async () => {
         if (stateToDelete) {
-            try {
-                await StatesRepository.delete(stateToDelete.id);
-                deleteState(stateToDelete.id);
-                setStateToDelete(null);
-                setIsDeleteDialogOpen(false);
-            } catch (error) {
-                console.error('Error deleting state:', error);
-            }
+            deleteMutation.mutate(stateToDelete.id);
+            setStateToDelete(null);
+            setIsDeleteDialogOpen(false);
         }
     };
 
-    const handleUnpublish = async (state: any) => {
-        try {
-            await StatesRepository.unpublish(state.id);
-            unpublishState(state.id);
-            toast.success(`${state.name} unpublished successfully`);
-        } catch (error) {
-            console.error('Error unpublishing state:', error);
-        }
+    const handleUnpublish = async (state: State) => {
+        unpublishMutation.mutate(state.id);
     };
 
     const handleCreateClick = () => {
@@ -109,6 +115,14 @@ export default function StatesPage() {
         handleDeleteClick,
         handleUnpublish
     );
+
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-gray-50 p-4 md:p-6 pt-2 md:pt-4 flex items-center justify-center">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-gray-50 p-4 md:p-6 pt-2 md:pt-4">

@@ -8,18 +8,13 @@ import {
     DropdownMenuLabel,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { type Session } from '@/repositories/sessions';
 
-interface Session {
-    id: number | string;
-    title: string;
-    course_title: string;
-    session_type: string;
-    start_time: string;
-    location?: string;
-    meeting_url?: string;
+interface SessionWithCourse extends Session {
+    course_title?: string;
 }
 
-export const getSessionColumns = (onView: (session: Session) => void, onDelete: (session: Session) => void): ColumnDef<Session>[] => [
+export const getSessionColumns = (onView: (session: SessionWithCourse) => void, onDelete: (session: SessionWithCourse) => void): ColumnDef<SessionWithCourse>[] => [
     {
         accessorKey: 'title',
         header: 'Session Title',

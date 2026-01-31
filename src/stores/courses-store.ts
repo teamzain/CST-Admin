@@ -3,7 +3,7 @@ import { CoursesRepository } from '@/repositories/courses';
 import { toast } from 'sonner';
 import { AxiosError } from 'axios';
 import type { State } from '@/repositories/states';
-import type { Module } from '@/api/modules';
+import type { Module } from '@/repositories/modules';
 
 // Helper function to extract error messages from backend response
 const getErrorMessage = (error: unknown): string => {
@@ -142,14 +142,14 @@ export const useCoursesStore = create<CoursesStore>((set, get) => ({
                 state_id: filters?.state_id as number | undefined,
             };
 
-            const apiCourses = await CoursesRepository.fetchAll(queryFilters);
+            const apiCourses = await CoursesRepository.getAll(queryFilters);
 
             // Fetch states to populate state objects in courses
-            let allStates = dummyStates as State[];
+            let allStates: State[] = dummyStates;
             try {
-                const { StatesRepository } =
-                    await import('@/repositories/states');
-                allStates = await StatesRepository.fetchAll();
+                allStates = await (
+                    await import('@/repositories/states')
+                ).StatesRepository.getAll();
             } catch (error) {
                 console.warn(
                     'Failed to fetch states from API, using dummy states:',
@@ -158,15 +158,21 @@ export const useCoursesStore = create<CoursesStore>((set, get) => ({
             }
 
             // Convert API courses to store courses and populate state object
-            const courses = apiCourses.map((c) => {
-                const stateObj = allStates.find((s) => s.id === c.state_id);
-                return {
-                    ...c,
-                    state: stateObj,
-                    created_at: new Date(c.created_at),
-                    updated_at: new Date(c.updated_at),
-                } as Course;
-            });
+            const courses = apiCourses.map(
+                (c: {
+                    state_id?: number;
+                    created_at: string | Date;
+                    updated_at: string | Date;
+                }) => {
+                    const stateObj = allStates.find((s) => s.id === c.state_id);
+                    return {
+                        ...c,
+                        state: stateObj,
+                        created_at: new Date(c.created_at),
+                        updated_at: new Date(c.updated_at),
+                    } as Course;
+                }
+            );
             set((state) => ({
                 ...state,
                 courses,
@@ -183,14 +189,14 @@ export const useCoursesStore = create<CoursesStore>((set, get) => ({
     fetchCourseById: async (id: number) => {
         set({ isLoading: true, error: null });
         try {
-            const apiCourse = await CoursesRepository.fetchById(id);
+            const apiCourse = await CoursesRepository.getById(id);
 
             // Fetch states to populate state object
-            let allStates = dummyStates as State[];
+            let allStates: State[] = dummyStates;
             try {
-                const { StatesRepository } =
-                    await import('@/repositories/states');
-                allStates = await StatesRepository.fetchAll();
+                allStates = await (
+                    await import('@/repositories/states')
+                ).StatesRepository.getAll();
             } catch (error) {
                 console.warn('Failed to fetch states:', error);
             }
@@ -230,11 +236,11 @@ export const useCoursesStore = create<CoursesStore>((set, get) => ({
             );
 
             // Fetch states to populate state object
-            let allStates = dummyStates as State[];
+            let allStates: State[] = dummyStates;
             try {
-                const { StatesRepository } =
-                    await import('@/repositories/states');
-                allStates = await StatesRepository.fetchAll();
+                allStates = await (
+                    await import('@/repositories/states')
+                ).StatesRepository.getAll();
             } catch (error) {
                 console.warn('Failed to fetch states:', error);
             }
@@ -266,11 +272,11 @@ export const useCoursesStore = create<CoursesStore>((set, get) => ({
             const dataToSend: any = { ...courseData };
 
             // Fetch states for state name lookup
-            let allStates = dummyStates as State[];
+            let allStates: State[] = dummyStates;
             try {
-                const { StatesRepository } =
-                    await import('@/repositories/states');
-                allStates = await StatesRepository.fetchAll();
+                allStates = await (
+                    await import('@/repositories/states')
+                ).StatesRepository.getAll();
             } catch (error) {
                 console.warn('Failed to fetch states:', error);
             }

@@ -47,7 +47,7 @@ export const useStatesStore = create<StatesStore>((set, get) => ({
         set({ isLoading: true, error: null });
         try {
             const filtersToUse = filters || get().currentFilters;
-            const states = await StatesRepository.fetchAll(filtersToUse);
+            const states = await StatesRepository.getAll(filtersToUse);
             set({ states, isLoading: false, currentFilters: filtersToUse });
         } catch (error) {
             const errorMessage =

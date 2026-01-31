@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { modulesService, type Module, type CreateModuleInput } from '@/api/modules';
+import { ModulesRepository, type Module, type CreateModuleInput } from '@/repositories/modules';
 import { toast } from 'sonner';
 import { AxiosError } from 'axios';
 
@@ -38,7 +38,7 @@ export const useModulesStore = create<ModulesStore>((set) => ({
     fetchModules: async (courseId: number) => {
         set({ isLoading: true, error: null, currentCourseId: courseId });
         try {
-            const modules = await modulesService.getModulesByCourse(courseId);
+            const modules = await ModulesRepository.getByCourse(courseId);
             // Ensure modules are sorted by order_index
             const sortedModules = modules.sort((a, b) => a.order_index - b.order_index);
             set({ modules: sortedModules });
@@ -55,7 +55,7 @@ export const useModulesStore = create<ModulesStore>((set) => ({
     addModule: async (courseId: number, moduleData: CreateModuleInput) => {
         set({ isLoading: true, error: null });
         try {
-            const newModule = await modulesService.createModule(courseId, moduleData);
+            const newModule = await ModulesRepository.create(courseId, moduleData);
             set((state) => ({
                 modules: [...state.modules, newModule].sort((a, b) => a.order_index - b.order_index),
             }));
@@ -73,7 +73,7 @@ export const useModulesStore = create<ModulesStore>((set) => ({
     updateModule: async (moduleId: number, moduleData: Partial<CreateModuleInput>) => {
         set({ isLoading: true, error: null });
         try {
-            const updated = await modulesService.updateModule(moduleId, moduleData);
+            const updated = await ModulesRepository.update(moduleId, moduleData);
             set((state) => ({
                 modules: state.modules
                     .map((m) => (m.id === moduleId ? updated : m))
@@ -93,7 +93,7 @@ export const useModulesStore = create<ModulesStore>((set) => ({
     deleteModule: async (moduleId: number) => {
         set({ isLoading: true, error: null });
         try {
-            await modulesService.deleteModule(moduleId);
+            await ModulesRepository.delete(moduleId);
             set((state) => ({
                 modules: state.modules.filter((m) => m.id !== moduleId),
             }));
@@ -119,7 +119,7 @@ export const useModulesStore = create<ModulesStore>((set) => ({
         try {
             // Update order for each module
             const updatePromises = moduleIds.map((moduleId, index) =>
-                modulesService.updateModuleOrder(moduleId, newOrderIndices[index])
+                ModulesRepository.updateOrder(moduleId, newOrderIndices[index])
             );
 
             const updatedModules = await Promise.all(updatePromises);
