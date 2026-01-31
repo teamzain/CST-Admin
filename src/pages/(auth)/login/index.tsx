@@ -98,8 +98,8 @@ export default function LoginPage() {
                                 Email Address
                             </label>
                             <Input
-                                type="email"
-                                placeholder="admin@trainhub.com"
+                                type="text"
+                                placeholder="Enter your username"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 disabled={isLoading}
