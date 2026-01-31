@@ -1,5 +1,10 @@
 import { courseApi } from '@/api';
-import type { State, CreateStateInput, UpdateStateInput, StateFilters } from './types';
+import type {
+    State,
+    CreateStateInput,
+    UpdateStateInput,
+    StateFilters,
+} from './types';
 
 interface ApiResponse<T> {
     data?: T;
@@ -17,8 +22,10 @@ export class StatesRepository {
             const nested = data.data as ApiResponse<T> | T[] | T;
             if (Array.isArray(nested)) return nested as unknown as T;
             const nestedObj = nested as ApiResponse<T>;
-            if (nestedObj.states !== undefined) return nestedObj.states as unknown as T;
-            if (nestedObj.state !== undefined) return nestedObj.state as unknown as T;
+            if (nestedObj.states !== undefined)
+                return nestedObj.states as unknown as T;
+            if (nestedObj.state !== undefined)
+                return nestedObj.state as unknown as T;
             return nested as T;
         }
         if (data.states !== undefined) return data.states as unknown as T;
@@ -33,11 +40,12 @@ export class StatesRepository {
     static async getAll(filters?: StateFilters): Promise<State[]> {
         const params = new URLSearchParams();
         if (filters?.search) params.append('search', filters.search);
-        if (filters?.is_active !== undefined) params.append('is_active', String(filters.is_active));
+        if (filters?.is_active !== undefined)
+            params.append('is_active', String(filters.is_active));
 
         const queryString = params.toString();
         const url = queryString ? `/state?${queryString}` : '/state';
-        
+
         const { data } = await courseApi.get(url);
         return this.extractData<State[]>(data);
     }
@@ -74,29 +82,6 @@ export class StatesRepository {
     }
 
     /**
-<<<<<<< HEAD
-     * Unpublish state
-     */
-    static async unpublish(id: number): Promise<State> {
-        const response = await courseApi.patch(`/state/unpublish/${id}`);
-        return response.data.data || response.data;
-    }
-
-    /**
-     * Get all active states
-     */
-    static async fetchActive(): Promise<State[]> {
-        return this.fetchAll({ is_active: true });
-    }
-
-    /**
-     * Search states by name
-     */
-    static async search(searchTerm: string): Promise<State[]> {
-        return this.fetchAll({ search: searchTerm });
-    }
-}
-=======
      * Unpublish/deactivate a state
      */
     static async unpublish(id: number): Promise<State> {
@@ -119,4 +104,3 @@ export class StatesRepository {
 }
 
 export const statesRepository = new StatesRepository();
->>>>>>> a7109fd5393777c33e4fdd939108f51112731089

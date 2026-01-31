@@ -34,9 +34,10 @@ export interface CreateStateInput {
 }
 
 export interface UpdateStateInput extends Partial<CreateStateInput> {
-    id: number;
+    id?: number;
 }
 
 export interface StateFilters {
+    search?: string;
     is_active?: boolean;
 }
