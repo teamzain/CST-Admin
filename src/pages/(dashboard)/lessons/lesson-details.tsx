@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -8,8 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Save, ChevronLeft, Video, FileText, Upload, AlignLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import type { Lesson } from '@/components/course/module-item';
-import { lessonsService } from '@/api/lessons';
+import type { Lesson } from '@/repositories/lessons';
+import { LessonsRepository } from '@/repositories/lessons';
 import { Progress } from '@/components/ui/progress';
 import { bunnyUploadService } from '@/api/bunny-upload';
 import { useDropzone } from 'react-dropzone';
@@ -17,8 +17,20 @@ import { useDropzone } from 'react-dropzone';
 export default function LessonDetailsPage() {
     const { id } = useParams();
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
+
+    // Handle navigation back - if came from course curriculum, go back there
+    const handleGoBack = () => {
+        const from = searchParams.get('from');
+        const courseId = searchParams.get('courseId');
+        if (from === 'course' && courseId) {
+            navigate(`/courses/${courseId}?tab=curriculum`);
+        } else {
+            navigate(-1);
+        }
+    };
 
     const [lessonData, setLessonData] = useState<Partial<Lesson>>({
         title: '',
@@ -41,7 +53,7 @@ export default function LessonDetailsPage() {
             if (!id) return;
             try {
                 setIsLoading(true);
-                const data = await lessonsService.getLessonById(parseInt(id));
+                const data = await LessonsRepository.getById(parseInt(id));
                 setLessonData(data);
 
                 // Initialize upload status if content exists
@@ -69,12 +81,12 @@ export default function LessonDetailsPage() {
         try {
             setIsSaving(true);
             const { course, module, ...cleanData } = lessonData as any;
-            await lessonsService.updateLesson(parseInt(id), cleanData);
+            await LessonsRepository.update(parseInt(id), cleanData);
             toast.success('Lesson updated successfully');
-            navigate(-1);
+            handleGoBack();
         } catch (error) {
             console.error('Failed to update lesson:', error);
-            toast.error(lessonsService.getErrorMessage(error, 'Failed to update lesson'));
+            toast.error('Failed to update lesson');
         } finally {
             setIsSaving(false);
         }
@@ -99,7 +111,7 @@ export default function LessonDetailsPage() {
 
             if (lessonData.content_type === 'video') {
                 toast.loading('Uploading video...', { id: 'upload-video' });
-                const updatedLesson = await lessonsService.replaceVideo(parseInt(id), file);
+                const updatedLesson = await LessonsRepository.replaceVideo(parseInt(id), file);
                 setLessonData(updatedLesson);
                 toast.success('Video uploaded successfully', { id: 'upload-video' });
             } else if (lessonData.content_type === 'pdf') {
@@ -119,7 +131,7 @@ export default function LessonDetailsPage() {
                 const uploadRes = await bunnyUploadService.uploadFile(file, 'course-lesson/');
                 const updatedData = { ...lessonData, pdf_url: uploadRes.url };
                 const { course, module, ...cleanData } = updatedData as any;
-                await lessonsService.updateLesson(parseInt(id), cleanData);
+                await LessonsRepository.update(parseInt(id), cleanData);
                 setLessonData(updatedData);
                 toast.success('PDF uploaded successfully', { id: 'pdf-upload' });
             }
@@ -158,7 +170,7 @@ export default function LessonDetailsPage() {
             try {
                 const libraryId = lessonData.bunny_library_id || parseInt(import.meta.env.VITE_BUNNY_LIBRARY_ID);
                 if (!libraryId) throw new Error('Library ID not found');
-                await lessonsService.deleteBunnyVideo(libraryId, lessonData.bunny_video_id);
+                await LessonsRepository.deleteBunnyVideo(libraryId, lessonData.bunny_video_id);
                 setLessonData({ ...lessonData, bunny_video_id: undefined, video_status: undefined, content_url: '' });
                 setUploadStatus('idle');
                 setUploadedFileName('');
@@ -174,7 +186,7 @@ export default function LessonDetailsPage() {
 
                 const updatedData = { ...lessonData, pdf_url: '' };
                 const { course, module, ...cleanData } = updatedData as any;
-                await lessonsService.updateLesson(parseInt(id), cleanData);
+                await LessonsRepository.update(parseInt(id), cleanData);
                 setLessonData(updatedData);
                 setUploadStatus('idle');
                 setUploadedFileName('');
@@ -206,7 +218,7 @@ export default function LessonDetailsPage() {
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-card">
                 <div className="flex items-center gap-4">
-                    <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+                    <Button variant="ghost" size="icon" onClick={handleGoBack}>
                         <ChevronLeft className="w-5 h-5" />
                     </Button>
                     <div>
@@ -215,7 +227,7 @@ export default function LessonDetailsPage() {
                     </div>
                 </div>
                 <div className="flex items-center gap-3">
-                    <Button variant="outline" onClick={() => navigate(-1)} disabled={isSaving}>Cancel</Button>
+                    <Button variant="outline" onClick={handleGoBack} disabled={isSaving}>Cancel</Button>
                     <Button onClick={handleSave} className="gap-2 bg-primary hover:bg-primary/90 text-black font-medium" disabled={isSaving}>
                         <Save className="w-4 h-4" /> {isSaving ? 'Saving...' : 'Save Lesson'}
                     </Button>

@@ -5,7 +5,7 @@ interface CoursesTabProps {
     instructorId: string;
 }
 
-const CoursesTab: React.FC<CoursesTabProps> = ({ instructorId }) => {
+const CoursesTab: React.FC<CoursesTabProps> = ({ instructorId: _instructorId }) => {
     const courses = [
         {
             id: 1,

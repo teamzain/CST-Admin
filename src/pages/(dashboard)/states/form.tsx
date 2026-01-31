@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,17 +8,14 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
-import { StatesRepository } from '@/repositories/states';
-import { useStatesStore, type State } from '@/stores/states-store';
-import type { CreateStateInput } from '@/api/states';
+import { StatesRepository, type CreateStateInput } from '@/repositories/states';
 
 export default function StateFormPage() {
     const navigate = useNavigate();
     const { id } = useParams();
-    const { addState, updateState, getStateById } = useStatesStore();
+    const queryClient = useQueryClient();
+    const isEditing = Boolean(id);
 
-    const [isLoading, setIsLoading] = useState(false);
-    const [isEditing, setIsEditing] = useState(false);
     const [formData, setFormData] = useState<CreateStateInput>({
         name: '',
         code: '',
@@ -34,30 +32,69 @@ export default function StateFormPage() {
         id_check_frequency: 3,
     });
 
+    // Fetch state data if editing
+    useQuery({
+        queryKey: ['state', id],
+        queryFn: () => StatesRepository.getById(Number(id)),
+        enabled: isEditing,
+        staleTime: 0,
+    });
+
+    // Create mutation
+    const createMutation = useMutation({
+        mutationFn: (data: CreateStateInput) => StatesRepository.create(data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['states'] });
+            toast.success('State created successfully');
+            navigate('/states');
+        },
+        onError: (error) => {
+            console.error('Error creating state:', error);
+            toast.error('Failed to create state');
+        },
+    });
+
+    // Update mutation
+    const updateMutation = useMutation({
+        mutationFn: (data: CreateStateInput) => StatesRepository.update(Number(id), data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['states'] });
+            queryClient.invalidateQueries({ queryKey: ['state', id] });
+            toast.success('State updated successfully');
+            navigate('/states');
+        },
+        onError: (error) => {
+            console.error('Error updating state:', error);
+            toast.error('Failed to update state');
+        },
+    });
+
+    const isLoading = createMutation.isPending || updateMutation.isPending;
+
     // Load state data if editing
     useEffect(() => {
         if (id) {
-            setIsEditing(true);
-            const existingState = getStateById(Number(id));
-            if (existingState) {
-                setFormData({
-                    name: existingState.name,
-                    code: existingState.code,
-                    unarmed_hours: existingState.unarmed_hours,
-                    armed_hours: existingState.armed_hours,
-                    unarmed_passing_score: existingState.unarmed_passing_score,
-                    armed_passing_score: existingState.armed_passing_score,
-                    requires_range_training: existingState.requires_range_training,
-                    requires_range_pass: existingState.requires_range_pass,
-                    certificate_template: existingState.certificate_template || '',
-                    certificate_validity_years: existingState.certificate_validity_years || 1,
-                    is_active: existingState.is_active,
-                    is_seat_time_enabled: existingState.is_seat_time_enabled,
-                    id_check_frequency: existingState.id_check_frequency,
-                });
-            }
+            StatesRepository.getById(Number(id)).then((existingState) => {
+                if (existingState) {
+                    setFormData({
+                        name: existingState.name,
+                        code: existingState.code,
+                        unarmed_hours: existingState.unarmed_hours,
+                        armed_hours: existingState.armed_hours,
+                        unarmed_passing_score: existingState.unarmed_passing_score,
+                        armed_passing_score: existingState.armed_passing_score,
+                        requires_range_training: existingState.requires_range_training,
+                        requires_range_pass: existingState.requires_range_pass,
+                        certificate_template: existingState.certificate_template || '',
+                        certificate_validity_years: existingState.certificate_validity_years || 1,
+                        is_active: existingState.is_active,
+                        is_seat_time_enabled: existingState.is_seat_time_enabled,
+                        id_check_frequency: existingState.id_check_frequency,
+                    });
+                }
+            });
         }
-    }, [id, getStateById]);
+    }, [id]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value, type } = e.target;
@@ -107,22 +144,10 @@ export default function StateFormPage() {
             return;
         }
 
-        setIsLoading(true);
-        try {
-            if (isEditing && id) {
-                const response = await StatesRepository.update(Number(id), formData);
-                updateState(Number(id), response);
-                toast.success('State updated successfully');
-            } else {
-                const response = await StatesRepository.create(formData);
-                addState(response as State);
-                toast.success('State created successfully');
-            }
-            navigate('/states');
-        } catch (error) {
-            console.error('Error saving state:', error);
-        } finally {
-            setIsLoading(false);
+        if (isEditing && id) {
+            updateMutation.mutate(formData);
+        } else {
+            createMutation.mutate(formData);
         }
     };
 

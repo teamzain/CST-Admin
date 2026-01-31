@@ -1,22 +1,21 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/shared/DataTable';
 import { CoursesFilters } from '@/components/courses/courses-filters';
 import { getCourseColumns } from '@/components/courses/course-columns';
-import { useCoursesStore, type Course } from '@/stores/courses-store';
-import { statesApiService } from '@/api/states-api';
-import type { State } from '@/api/states-api';
+import { CoursesRepository, type Course } from '@/repositories/courses';
+import { StatesRepository } from '@/repositories/states';
 import { Plus, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { DeleteConfirmationDialog } from '@/components/shared/delete-confirmation-dialog';
 
 export default function CoursesPage() {
     const navigate = useNavigate();
-    const { courses, fetchCourses } = useCoursesStore();
-    const [allStates, setAllStates] = useState<State[]>([]);
+    const queryClient = useQueryClient();
 
     const [searchTerm, setSearchTerm] = useState('');
     const [stateFilter, setStateFilter] = useState<string>('all');
@@ -25,28 +24,30 @@ export default function CoursesPage() {
     const [modeFilter, setModeFilter] = useState<string>('all');
     const [instructorFilter, setInstructorFilter] = useState<string>('all');
 
-    // Fetch courses and states on mount
-    useEffect(() => {
-        const loadData = async () => {
-            try {
-                // Fetch courses from API
-                await fetchCourses();
-            } catch (error) {
-                console.error('Error loading courses:', error);
-            }
+    // Fetch courses with TanStack Query
+    const { data: courses = [] } = useQuery({
+        queryKey: ['courses'],
+        queryFn: () => CoursesRepository.getAll(),
+    });
 
-            try {
-                // Fetch states from API
-                const states = await statesApiService.getAllStates();
-                setAllStates(states);
-            } catch (error) {
-                console.error('Error loading states:', error);
-                toast.error('Failed to load states');
-            }
-        };
+    // Fetch states with TanStack Query
+    const { data: allStates = [] } = useQuery({
+        queryKey: ['states'],
+        queryFn: () => StatesRepository.getAll(),
+    });
 
-        loadData();
-    }, [fetchCourses]);
+    // Delete mutation
+    const deleteMutation = useMutation({
+        mutationFn: (id: number) => CoursesRepository.permanentDelete(id),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['courses'] });
+            toast.success('Course deleted successfully');
+        },
+        onError: (error) => {
+            console.error('Failed to delete course:', error);
+            toast.error('Failed to delete course');
+        },
+    });
 
     // Filter courses
     const filteredCourses = useMemo(() => {
@@ -76,13 +77,9 @@ export default function CoursesPage() {
 
     const handleConfirmDelete = async () => {
         if (courseToDelete) {
-            try {
-                await useCoursesStore.getState().permanentDeleteCourse(courseToDelete.id);
-                setIsDeleteDialogOpen(false);
-                setCourseToDelete(null);
-            } catch (error) {
-                console.error('Failed to delete course:', error);
-            }
+            deleteMutation.mutate(courseToDelete.id);
+            setIsDeleteDialogOpen(false);
+            setCourseToDelete(null);
         }
     };
 

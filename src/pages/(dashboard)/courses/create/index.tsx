@@ -1,6 +1,7 @@
 'use client';
 
 import { useNavigate } from 'react-router-dom';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Upload as UploadIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,18 +17,47 @@ import {
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useState, useEffect } from 'react';
-import { useCoursesStore, TRAINING_TYPE, DELIVERY_MODE, dummyStates, dummyInstructors, type Course } from '@/stores/courses-store';
-import { statesApiService } from '@/api/states-api';
-import type { State } from '@/api/states-api';
+import { CoursesRepository, type CreateCourseInput, TRAINING_TYPE, DELIVERY_MODE, dummyInstructors } from '@/repositories/courses';
+import { StatesRepository } from '@/repositories/states';
 import { bunnyUploadService } from '@/api/bunny-upload';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
 
 export default function CreateCoursePage() {
     const navigate = useNavigate();
-    const { addCourse } = useCoursesStore();
+    const queryClient = useQueryClient();
+
+    // Create mutation
+    const createMutation = useMutation({
+        mutationFn: (data: CreateCourseInput) => CoursesRepository.create(data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['courses'] });
+            toast.success('Course created successfully');
+            navigate('/courses');
+        },
+        onError: (error: unknown) => {
+            console.error('Failed to create course:', error);
+            // Extract error message from API response
+            const axiosError = error as { response?: { data?: { message?: string | string[] } } };
+            const message = axiosError?.response?.data?.message;
+            if (Array.isArray(message)) {
+                toast.error(message.join(', '));
+            } else if (message) {
+                toast.error(message);
+            } else {
+                toast.error('Failed to create course');
+            }
+            // Form state is preserved - no reset on error
+        },
+    });
+
+    // Fetch states with TanStack Query
+    const { data: allStates = [] } = useQuery({
+        queryKey: ['states'],
+        queryFn: () => StatesRepository.getAll(),
+    });
+
     const [step, setStep] = useState(1);
-    const [allStates, setAllStates] = useState<State[]>([]);
     const [thumbnailPreview, setThumbnailPreview] = useState<string | undefined>();
     const [preRequirementsText, setPreRequirementsText] = useState('');
     const [isUploadingThumbnail, setIsUploadingThumbnail] = useState(false);
@@ -77,24 +107,12 @@ export default function CreateCoursePage() {
         instructor_id: undefined,
     });
 
-    // Fetch states on mount
+    // Set first state as default when states are loaded
     useEffect(() => {
-        const loadStates = async () => {
-            try {
-                const states = await statesApiService.getAllStates();
-                setAllStates(states);
-                // Set first state as default
-                if (states.length > 0) {
-                    setFormData(prev => ({ ...prev, state_id: states[0].id }));
-                }
-            } catch (error) {
-                console.error('Error loading states:', error);
-                // Fallback to dummy states
-                setAllStates(dummyStates as State[]);
-            }
-        };
-        loadStates();
-    }, []);
+        if (allStates.length > 0 && formData.state_id === 1) {
+            setFormData(prev => ({ ...prev, state_id: allStates[0].id }));
+        }
+    }, [allStates]);
 
     const handleInputChange = (field: string, value: string | number | boolean | string[] | undefined) => {
         setFormData(prev => ({
@@ -123,9 +141,7 @@ export default function CreateCoursePage() {
 
     // Auto-fill requirements based on State and Training Type
     useEffect(() => {
-        const selectedState = allStates.length > 0
-            ? allStates.find(s => s.id === formData.state_id)
-            : dummyStates.find(s => s.id === formData.state_id);
+        const selectedState = allStates.find(s => s.id === formData.state_id);
 
         if (!selectedState) return;
 
@@ -166,7 +182,7 @@ export default function CreateCoursePage() {
             .filter(r => r !== '');
 
         // Send only the fields the backend expects
-        const courseData: Omit<Course, 'id' | 'created_at' | 'updated_at'> = {
+        const courseData: CreateCourseInput = {
             title: formData.title,
             description: formData.description,
             duration_hours: formData.duration_hours,
@@ -175,7 +191,7 @@ export default function CreateCoursePage() {
             delivery_mode: formData.delivery_mode,
             thumbnail: formData.thumbnail,
             price: formData.price,
-            state: { id: formData.state_id, name: stateName },
+            state: stateName, // Send state as string
             location: formData.location,
             requires_exam: formData.requires_exam,
             requires_range: formData.requires_range,
@@ -186,16 +202,12 @@ export default function CreateCoursePage() {
             is_price_negotiable: formData.is_price_negotiable,
             pre_requirements: preReqs,
             certificate_template: formData.certificate_template,
-            is_active: formData.is_active,
-            instructor_id: formData.instructor_id,
         };
 
         try {
-            await addCourse(courseData);
-            navigate('/courses');
+            createMutation.mutate(courseData);
         } catch (error) {
             console.error('Failed to create course:', error);
-            // Error toast is already handled in the store
         }
     };
 
@@ -281,7 +293,7 @@ export default function CreateCoursePage() {
                                             <SelectValue placeholder="Select State" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            {(allStates.length > 0 ? allStates : dummyStates).map((state) => (
+                                            {allStates.map((state) => (
                                                 <SelectItem key={state.id} value={String(state.id)}>
                                                     {state.name} ({state.code})
                                                 </SelectItem>

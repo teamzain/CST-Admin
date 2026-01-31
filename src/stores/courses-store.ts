@@ -2,8 +2,8 @@ import { create } from 'zustand';
 import { CoursesRepository } from '@/repositories/courses';
 import { toast } from 'sonner';
 import { AxiosError } from 'axios';
-import type { State } from '@/api/states-api';
-import type { Module } from '@/api/modules';
+import type { State } from '@/repositories/states';
+import type { Module } from '@/repositories/modules';
 
 // Helper function to extract error messages from backend response
 const getErrorMessage = (error: unknown): string => {
@@ -133,19 +133,18 @@ export const useCoursesStore = create<CoursesStore>((set, get) => ({
                 state_id: filters?.state_id as number | undefined,
             };
 
-            const apiCourses = await CoursesRepository.fetchAll(queryFilters);
+            const apiCourses = await CoursesRepository.getAll(queryFilters);
 
             // Fetch states to populate state objects in courses
-            let allStates = dummyStates as State[];
+            let allStates: State[] = dummyStates;
             try {
-                const statesApiService = (await import('@/api/states-api')).statesApiService;
-                allStates = await statesApiService.getAllStates();
+                allStates = await (await import('@/repositories/states')).StatesRepository.getAll();
             } catch (error) {
                 console.warn('Failed to fetch states from API, using dummy states:', error);
             }
 
             // Convert API courses to store courses and populate state object
-            const courses = apiCourses.map((c) => {
+            const courses = apiCourses.map((c: { state_id?: number; created_at: string | Date; updated_at: string | Date }) => {
                 const stateObj = allStates.find(s => s.id === c.state_id);
                 return {
                     ...c,
@@ -166,13 +165,12 @@ export const useCoursesStore = create<CoursesStore>((set, get) => ({
     fetchCourseById: async (id: number) => {
         set({ isLoading: true, error: null });
         try {
-            const apiCourse = await CoursesRepository.fetchById(id);
+            const apiCourse = await CoursesRepository.getById(id);
 
             // Fetch states to populate state object
-            let allStates = dummyStates as State[];
+            let allStates: State[] = dummyStates;
             try {
-                const statesApiService = (await import('@/api/states-api')).statesApiService;
-                allStates = await statesApiService.getAllStates();
+                allStates = await (await import('@/repositories/states')).StatesRepository.getAll();
             } catch (error) {
                 console.warn('Failed to fetch states:', error);
             }
@@ -208,10 +206,9 @@ export const useCoursesStore = create<CoursesStore>((set, get) => ({
             const newCourse = await CoursesRepository.create(courseData as never);
 
             // Fetch states to populate state object
-            let allStates = dummyStates as State[];
+            let allStates: State[] = dummyStates;
             try {
-                const statesApiService = (await import('@/api/states-api')).statesApiService;
-                allStates = await statesApiService.getAllStates();
+                allStates = await (await import('@/repositories/states')).StatesRepository.getAll();
             } catch (error) {
                 console.warn('Failed to fetch states:', error);
             }
@@ -243,10 +240,9 @@ export const useCoursesStore = create<CoursesStore>((set, get) => ({
             const dataToSend: any = { ...courseData };
 
             // Fetch states for state name lookup
-            let allStates = dummyStates as State[];
+            let allStates: State[] = dummyStates;
             try {
-                const statesApiService = (await import('@/api/states-api')).statesApiService;
-                allStates = await statesApiService.getAllStates();
+                allStates = await (await import('@/repositories/states')).StatesRepository.getAll();
             } catch (error) {
                 console.warn('Failed to fetch states:', error);
             }

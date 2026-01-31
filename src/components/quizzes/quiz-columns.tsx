@@ -9,21 +9,17 @@ import {
     DropdownMenuLabel,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { type Quiz } from '@/repositories/quizzes';
 
-interface Quiz {
-    id: number | string;
-    title: string;
-    course_title: string;
-    module_title: string;
-    passing_score: number;
-    is_final: boolean;
-    questions: unknown[];
+interface QuizWithDetails extends Quiz {
+    course_title?: string;
+    module_title?: string;
 }
 
 export const getQuizColumns = (
-    onView: (quiz: Quiz) => void,
-    onDelete: (quiz: Quiz) => void
-): ColumnDef<Quiz>[] => [
+    onView: (quiz: QuizWithDetails) => void,
+    onDelete: (quiz: QuizWithDetails) => void
+): ColumnDef<QuizWithDetails>[] => [
     {
         accessorKey: 'title',
         header: 'Quiz Title',
@@ -65,11 +61,13 @@ export const getQuizColumns = (
         },
     },
     {
-        accessorKey: 'questions',
+        id: 'questions_count',
         header: 'Questions',
         cell: ({ row }) => {
-            const value = row.getValue<unknown[]>('questions');
-            return <span className="text-gray-600">{value?.length || 0}</span>;
+            const quiz = row.original;
+            // Try questions array first, then _count, then 0
+            const count = quiz.questions?.length ?? quiz._count?.questions ?? 0;
+            return <span className="text-gray-600">{count}</span>;
         },
     },
     {

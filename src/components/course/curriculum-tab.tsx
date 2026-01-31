@@ -12,9 +12,10 @@ import { convertToISO8601 } from '@/lib/utils';
 import { SessionModal } from './session-modal';
 import { QuizModal } from './quiz-modal';
 import { DeleteConfirmationDialog } from '@/components/shared/delete-confirmation-dialog';
-import { sessionsService } from '@/api/sessions';
-import { lessonsService } from '@/api/lessons';
-import { quizzesService } from '@/api/quizzes';
+import { SessionsRepository } from '@/repositories/sessions';
+import { LessonsRepository } from '@/repositories/lessons';
+import { QuizzesRepository } from '@/repositories/quizzes';
+import { ModulesRepository } from '@/repositories/modules';
 import { bunnyUploadService } from '@/api/bunny-upload';
 
 interface CurriculumTabProps {
@@ -54,8 +55,7 @@ export function CurriculumTab({ courseId }: CurriculumTabProps) {
         const fetchModules = async () => {
             try {
                 setIsLoading(true);
-                const { modulesService } = await import('@/api/modules');
-                const fetchedModules = await modulesService.getModulesByCourse(courseId);
+                const fetchedModules = await ModulesRepository.getByCourse(courseId);
                 setModules(fetchedModules as Module[]);
             } catch (error) {
                 console.error('Failed to fetch modules:', error);
@@ -95,15 +95,34 @@ export function CurriculumTab({ courseId }: CurriculumTabProps) {
         if (source.droppableId === destination.droppableId && source.index === destination.index) return;
 
         try {
-            const { modulesService } = await import('@/api/modules');
-
             if (type === 'MODULE') {
                 const newModules = reorder(modules, source.index, destination.index);
                 const updatedModules = newModules.map((m, i) => ({ ...m, order_index: i + 1 }));
                 setModules(updatedModules);
 
-                const moduleId = modules[source.index].id;
-                await modulesService.updateModuleOrder(moduleId, destination.index + 1);
+                // Backend has unique constraint on (course_id, order_index)
+                // We need to update ALL modules to avoid conflicts
+                // Strategy: First set all to temp high values, then set final values
+                
+                // Step 1: Set all modules to temporary high order_index values (avoid conflicts)
+                const tempUpdatePromises = updatedModules.map((m, i) => 
+                    ModulesRepository.update(m.id, { 
+                        title: m.title,
+                        order_index: 10000 + i 
+                    })
+                );
+                await Promise.all(tempUpdatePromises);
+
+                // Step 2: Set all modules to their final order_index values
+                const finalUpdatePromises = updatedModules.map((m) => 
+                    ModulesRepository.update(m.id, { 
+                        title: m.title,
+                        order_index: m.order_index 
+                    })
+                );
+                await Promise.all(finalUpdatePromises);
+                
+                toast.success('Module order updated');
             }
 
             if (type === 'MODULE_ITEM') {
@@ -207,21 +226,21 @@ export function CurriculumTab({ courseId }: CurriculumTabProps) {
 
                     if (item.itemType === 'lesson') {
                         updatePromises.push(
-                            lessonsService.updateLesson(item.id, {
+                            LessonsRepository.update(item.id, {
                                 order_index: item.order_index,
                                 ...(item.module_id && { module_id: item.module_id }),
                             })
                         );
                     } else if (item.itemType === 'session') {
                         updatePromises.push(
-                            sessionsService.updateSession(item.id, {
+                            SessionsRepository.update(item.id, {
                                 order_index: item.order_index,
                                 ...(item.module_id && { module_id: item.module_id }),
                             })
                         );
                     } else if (item.itemType === 'quiz') {
                         updatePromises.push(
-                            quizzesService.updateQuiz(item.id, {
+                            QuizzesRepository.update(item.id, {
                                 order_index: item.order_index,
                             })
                         );
@@ -250,9 +269,8 @@ export function CurriculumTab({ courseId }: CurriculumTabProps) {
 
     const handleSaveModule = async (moduleData: Partial<Module>) => {
         try {
-            const { modulesService } = await import('@/api/modules');
             if (selectedModule) {
-                const updatedModule = await modulesService.updateModule(selectedModule.id, {
+                const updatedModule = await ModulesRepository.update(selectedModule.id, {
                     title: moduleData.title || '',
                     description: moduleData.description,
                     order_index: selectedModule.order_index,
@@ -273,7 +291,7 @@ export function CurriculumTab({ courseId }: CurriculumTabProps) {
                 ));
                 toast.success('Module updated successfully');
             } else {
-                const response = await modulesService.createModule(courseId, {
+                const response = await ModulesRepository.create(courseId, {
                     title: moduleData.title || '',
                     description: moduleData.description,
                     order_index: modules.length + 1,
@@ -292,8 +310,7 @@ export function CurriculumTab({ courseId }: CurriculumTabProps) {
             setIsModuleModalOpen(false);
         } catch (error) {
             console.error('Failed to save module:', error);
-            const { modulesService } = await import('@/api/modules');
-            toast.error(modulesService.getErrorMessage(error, 'Failed to save module'));
+            toast.error('Failed to save module');
         }
     };
 
@@ -311,7 +328,7 @@ export function CurriculumTab({ courseId }: CurriculumTabProps) {
     };
 
     const handleEditLesson = (lesson: Lesson) => {
-        navigate(`/lessons/${lesson.id}`);
+        navigate(`/lessons/${lesson.id}?from=course&courseId=${courseId}`);
     };
 
     const handleSaveLesson = async (lessonData: Partial<Lesson>, file?: File) => {
@@ -358,11 +375,11 @@ export function CurriculumTab({ courseId }: CurriculumTabProps) {
                         }
                     });
                     formData.append('video', file);
-                    apiResult = await lessonsService.updateLesson(selectedLesson.id, formData as any);
+                    apiResult = await LessonsRepository.update(selectedLesson.id, formData as any);
                 } else {
                     // Clean up finalData to remove nested objects
                     const { course, module, ...cleanData } = finalData as any;
-                    apiResult = await lessonsService.updateLesson(selectedLesson.id, cleanData);
+                    apiResult = await LessonsRepository.update(selectedLesson.id, cleanData);
                 }
 
                 setModules(modules.map(module => {
@@ -408,7 +425,7 @@ export function CurriculumTab({ courseId }: CurriculumTabProps) {
                     }
                     formData.append('video', file);
 
-                    apiResult = await lessonsService.createLesson(courseId, formData);
+                    apiResult = await LessonsRepository.create(courseId, formData);
                 } else {
                     const payload = {
                         title: lessonData.title || '',
@@ -422,7 +439,7 @@ export function CurriculumTab({ courseId }: CurriculumTabProps) {
                         pdf_url: finalPdfUrl,
                         content_url: lessonData.content_url || '',
                     };
-                    apiResult = await lessonsService.createLesson(courseId, payload);
+                    apiResult = await LessonsRepository.create(courseId, payload);
                 }
 
                 setModules(modules.map(module => {
@@ -437,7 +454,7 @@ export function CurriculumTab({ courseId }: CurriculumTabProps) {
             setSelectedLesson(undefined);
         } catch (error) {
             console.error('Failed to save lesson:', error);
-            toast.error(lessonsService.getErrorMessage(error, 'Failed to save lesson'));
+            toast.error('Failed to save lesson');
         }
     };
 
@@ -449,7 +466,7 @@ export function CurriculumTab({ courseId }: CurriculumTabProps) {
 
     const handleEditSession = async (session: Session) => {
         try {
-            const fullSessionData = await sessionsService.getSessionById(session.id);
+            const fullSessionData = await SessionsRepository.getById(session.id);
             setSelectedSession(fullSessionData);
             setIsSessionModalOpen(true);
         } catch (error) {
@@ -470,7 +487,7 @@ export function CurriculumTab({ courseId }: CurriculumTabProps) {
             }
 
             if (selectedSession) {
-                const apiResult = await sessionsService.updateSession(selectedSession.id, {
+                const apiResult = await SessionsRepository.update(selectedSession.id, {
                     title: sessionData.title || '',
                     start_time: startTime,
                     end_time: endTime,
@@ -498,7 +515,7 @@ export function CurriculumTab({ courseId }: CurriculumTabProps) {
                 const targetModule = modules.find(m => m.id === currentModuleId);
                 const nextOrderIndex = targetModule ? getNextOrderIndex(targetModule) : 1;
 
-                const apiResult = await sessionsService.createSessionForCourse(courseId, {
+                const apiResult = await SessionsRepository.create(courseId, {
                     title: sessionData.title || '',
                     start_time: startTime,
                     end_time: endTime,
@@ -525,8 +542,7 @@ export function CurriculumTab({ courseId }: CurriculumTabProps) {
             setCurrentModuleId(undefined);
         } catch (error) {
             console.error('Failed to save session:', error);
-            const { modulesService } = await import('@/api/modules');
-            toast.error(modulesService.getErrorMessage(error, 'Failed to save session'));
+            toast.error('Failed to save session');
         }
     };
 
@@ -537,7 +553,7 @@ export function CurriculumTab({ courseId }: CurriculumTabProps) {
     };
 
     const handleEditQuiz = (quiz: Quiz) => {
-        navigate(`/quizzes/${quiz.id}`);
+        navigate(`/quizzes/${quiz.id}?from=course&courseId=${courseId}`);
     };
 
     const handleSaveQuiz = async (quizData: Partial<Quiz>) => {
@@ -548,7 +564,7 @@ export function CurriculumTab({ courseId }: CurriculumTabProps) {
 
             const nextOrderIndex = getNextOrderIndex(targetModule);
 
-            const newQuiz = await quizzesService.createQuizForCourse(courseId, {
+            const newQuiz = await QuizzesRepository.create(courseId, {
                 title: quizData.title || '',
                 passing_score: quizData.passing_score || 70,
                 is_final: quizData.is_final || false,
@@ -569,33 +585,31 @@ export function CurriculumTab({ courseId }: CurriculumTabProps) {
             setIsQuizModalOpen(false);
         } catch (error) {
             console.error('Failed to save quiz:', error);
-            toast.error(quizzesService.getErrorMessage(error, 'Failed to save quiz'));
+            toast.error('Failed to save quiz');
         }
     };
 
     const handleConfirmDelete = async () => {
         const { type, id } = deleteState;
         try {
-            const { modulesService } = await import('@/api/modules');
             if (type === 'module') {
-                await modulesService.deleteModule(id);
+                await ModulesRepository.delete(id);
                 setModules(modules.filter(m => m.id !== id));
             } else if (type === 'lesson') {
-                await lessonsService.deleteLesson(id);
+                await LessonsRepository.delete(id);
                 setModules(modules.map(m => ({ ...m, lessons: m.lessons.filter(l => l.id !== id) })));
             } else if (type === 'session') {
-                await sessionsService.deleteSession(id);
+                await SessionsRepository.delete(id);
                 setModules(modules.map(m => ({ ...m, sessions: m.sessions?.filter(s => s.id !== id) || [] })));
             } else if (type === 'quiz') {
-                await quizzesService.deleteQuiz(id);
+                await QuizzesRepository.delete(id);
                 setModules(modules.map(m => ({ ...m, quizzes: m.quizzes.filter(q => q.id !== id) })));
             }
             setDeleteState(prev => ({ ...prev, isOpen: false }));
             toast.success(`${type.charAt(0).toUpperCase() + type.slice(1)} deleted successfully`);
         } catch (error) {
             console.error(`Failed to delete ${type}:`, error);
-            const { modulesService } = await import('@/api/modules');
-            toast.error(modulesService.getErrorMessage(error, `Failed to delete ${type}`));
+            toast.error(`Failed to delete ${type}`);
         }
     };
 

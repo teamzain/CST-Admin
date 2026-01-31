@@ -1,43 +1,50 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { DataTable } from '@/components/shared/DataTable';
 import { LessonsFilters } from '@/components/lessons/lessons-filters';
 import { getLessonColumns } from '@/components/lessons/lesson-columns';
-import { useCoursesStore } from '@/stores/courses-store';
+import { CoursesRepository, type Course } from '@/repositories/courses';
 import { Loader2 } from 'lucide-react';
 import { DeleteConfirmationDialog } from '@/components/shared/delete-confirmation-dialog';
-import { lessonsService, type Lesson } from '@/api/lessons';
+import { LessonsRepository, type Lesson } from '@/repositories/lessons';
 import { toast } from 'sonner';
 
 export default function AllLessonsPage() {
     const navigate = useNavigate();
-    const { courses } = useCoursesStore();
+    const queryClient = useQueryClient();
 
-    const [lessons, setLessons] = useState<Lesson[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [contentTypeFilter, setContentTypeFilter] = useState<string>('all');
     const [courseFilter, setCourseFilter] = useState<string>('all');
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [lessonToDelete, setLessonToDelete] = useState<Lesson | null>(null);
 
-    useEffect(() => {
-        const fetchLessons = async () => {
-            try {
-                setIsLoading(true);
-                const data = await lessonsService.getAllLessons();
-                setLessons(data);
-            } catch (error) {
-                console.error('Failed to fetch lessons:', error);
-                toast.error('Failed to load lessons');
-            } finally {
-                setIsLoading(false);
-            }
-        };
+    // Fetch lessons with TanStack Query
+    const { data: lessons = [], isLoading } = useQuery({
+        queryKey: ['lessons'],
+        queryFn: () => LessonsRepository.getAll(),
+    });
 
-        fetchLessons();
-    }, []);
+    // Fetch courses for filter dropdown
+    const { data: courses = [] } = useQuery({
+        queryKey: ['courses'],
+        queryFn: () => CoursesRepository.getAll(),
+    });
+
+    // Delete mutation
+    const deleteMutation = useMutation({
+        mutationFn: (id: number) => LessonsRepository.delete(id),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['lessons'] });
+            toast.success('Lesson deleted successfully');
+        },
+        onError: (error) => {
+            console.error('Failed to delete lesson:', error);
+            toast.error('Failed to delete lesson');
+        },
+    });
 
     const filteredLessons = useMemo(() => {
         return lessons.filter((lesson) => {
@@ -60,17 +67,9 @@ export default function AllLessonsPage() {
 
     const handleConfirmDelete = async () => {
         if (lessonToDelete) {
-            try {
-                await lessonsService.deleteLesson(lessonToDelete.id);
-                setLessons(prev => prev.filter(l => l.id !== lessonToDelete.id));
-                toast.success('Lesson deleted successfully');
-            } catch (error) {
-                console.error('Failed to delete lesson:', error);
-                toast.error('Failed to delete lesson');
-            } finally {
-                setLessonToDelete(null);
-                setIsDeleteDialogOpen(false);
-            }
+            deleteMutation.mutate(lessonToDelete.id);
+            setLessonToDelete(null);
+            setIsDeleteDialogOpen(false);
         }
     };
 
@@ -102,7 +101,7 @@ export default function AllLessonsPage() {
                     onContentTypeChange={setContentTypeFilter}
                     courseFilter={courseFilter}
                     onCourseChange={setCourseFilter}
-                    courses={courses.map(c => ({ id: c.id, title: c.title }))}
+                    courses={courses.map((c: Course) => ({ id: c.id, title: c.title }))}
                 />
 
                 {/* Data Table */}

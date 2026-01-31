@@ -7,12 +7,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, Users, DollarSign, MapPin, Award, Upload, X } from 'lucide-react';
-import { TRAINING_TYPE, DELIVERY_MODE, type Course, dummyInstructors, dummyStates } from '@/stores/courses-store';
+import { useQuery } from '@tanstack/react-query';
+import { TRAINING_TYPE, DELIVERY_MODE, type Course, dummyInstructors } from '@/repositories/courses';
+import { StatesRepository } from '@/repositories/states';
 import { bunnyUploadService } from '@/api/bunny-upload';
-import { statesApiService } from '@/api/states-api';
-import type { State } from '@/api/states-api';
-import { useEffect } from 'react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
@@ -26,26 +25,17 @@ interface GeneralInformationTabProps {
 export function GeneralInformationTab({ course, formData, isEditing, onInputChange }: GeneralInformationTabProps) {
     const [thumbnailPreview, setThumbnailPreview] = useState<string>('');
     const [isUploadingThumbnail, setIsUploadingThumbnail] = useState(false);
-    const [allStates, setAllStates] = useState<State[]>([]);
+
+    // Fetch states with TanStack Query
+    const { data: allStates = [] } = useQuery({
+        queryKey: ['states'],
+        queryFn: () => StatesRepository.getAll(),
+    });
 
     // Sync thumbnail preview with course/formData
     useEffect(() => {
         setThumbnailPreview(formData.thumbnail || course.thumbnail || '');
     }, [course.thumbnail, formData.thumbnail]);
-
-    // Fetch states on mount
-    useEffect(() => {
-        const loadStates = async () => {
-            try {
-                const states = await statesApiService.getAllStates();
-                setAllStates(states);
-            } catch (error) {
-                console.error('Error loading states:', error);
-                setAllStates(dummyStates as State[]);
-            }
-        };
-        loadStates();
-    }, []);
 
     const handleThumbnailUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -210,7 +200,7 @@ export function GeneralInformationTab({ course, formData, isEditing, onInputChan
                                                 <SelectValue placeholder="Select State" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                {(allStates.length > 0 ? allStates : dummyStates).map((state) => (
+                                                {allStates.map((state) => (
                                                     <SelectItem key={state.id} value={String(state.id)}>
                                                         {state.name} ({state.code})
                                                     </SelectItem>

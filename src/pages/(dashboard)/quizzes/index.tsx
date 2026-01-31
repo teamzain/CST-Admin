@@ -2,53 +2,59 @@
 
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { DataTable } from '@/components/shared/DataTable';
 import { QuizzesFilters } from '@/components/quizzes/quizzes-filters';
 import { getQuizColumns } from '@/components/quizzes/quiz-columns';
-import { useCoursesStore } from '@/stores/courses-store';
-import { quizzesService } from '@/api/quizzes';
+import { CoursesRepository, type Course } from '@/repositories/courses';
+import { QuizzesRepository, type Quiz } from '@/repositories/quizzes';
 import { toast } from 'sonner';
-import { useEffect } from 'react';
 
 import { DeleteConfirmationDialog } from '@/components/shared/delete-confirmation-dialog';
 
 export default function AllQuizzesPage() {
     const navigate = useNavigate();
-    const { courses } = useCoursesStore();
+    const queryClient = useQueryClient();
 
-    const [quizzes, setQuizzes] = useState<any[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [quizTypeFilter, setQuizTypeFilter] = useState<string>('all');
     const [courseFilter, setCourseFilter] = useState<string>('all');
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-    const [quizToDelete, setQuizToDelete] = useState<any>(null);
+    const [quizToDelete, setQuizToDelete] = useState<Quiz | null>(null);
 
-    useEffect(() => {
-        const fetchQuizzes = async () => {
-            setIsLoading(true);
-            try {
-                const data = await quizzesService.getAllQuizzes();
-                setQuizzes(data || []);
-            } catch (error) {
-                console.error('Error fetching quizzes:', error);
-                toast.error('Failed to load quizzes');
-            } finally {
-                setIsLoading(false);
-            }
-        };
+    // Fetch quizzes with TanStack Query
+    const { data: quizzes = [], isLoading } = useQuery({
+        queryKey: ['quizzes'],
+        queryFn: () => QuizzesRepository.getAll(),
+    });
 
-        fetchQuizzes();
-    }, []);
+    // Fetch courses for filter dropdown
+    const { data: courses = [] } = useQuery({
+        queryKey: ['courses'],
+        queryFn: () => CoursesRepository.getAll(),
+    });
+
+    // Delete mutation
+    const deleteMutation = useMutation({
+        mutationFn: (id: number) => QuizzesRepository.delete(id),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['quizzes'] });
+            toast.success('Quiz deleted successfully');
+        },
+        onError: (error) => {
+            console.error('Error deleting quiz:', error);
+            toast.error('Failed to delete quiz');
+        },
+    });
 
     // Flatten quizzes from all courses
     const allQuizzes = useMemo(() => {
-        return quizzes.map(quiz => {
+        return quizzes.map((quiz: Quiz & { course_title?: string; module?: { title: string } }) => {
             // Find course title if missing
             let course_title = quiz.course_title;
             if (!course_title && quiz.course_id) {
-                const course = courses.find(c => c.id === quiz.course_id);
+                const course = courses.find((c: Course) => c.id === quiz.course_id);
                 if (course) course_title = course.title;
             }
 
@@ -70,20 +76,20 @@ export default function AllQuizzesPage() {
         });
     }, [allQuizzes, searchTerm, courseFilter, quizTypeFilter]);
 
-    const handleView = (quiz: any) => {
+    const handleView = (quiz: Quiz) => {
         navigate(`/quizzes/${quiz.id}`);
     };
 
-    const handleDeleteClick = (quiz: any) => {
+    const handleDeleteClick = (quiz: Quiz) => {
         setQuizToDelete(quiz);
         setIsDeleteDialogOpen(true);
     };
 
     const handleConfirmDelete = () => {
         if (quizToDelete) {
-            // Implement quiz deletion logic here
-            console.log('Delete quiz:', quizToDelete);
+            deleteMutation.mutate(quizToDelete.id);
             setQuizToDelete(null);
+            setIsDeleteDialogOpen(false);
         }
     };
 
