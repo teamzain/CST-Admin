@@ -7,7 +7,9 @@ interface PersonalTabProps {
     instructorId: string;
 }
 
-const PersonalTab: React.FC<PersonalTabProps> = ({ instructorId }) => {
+const PersonalTab: React.FC<PersonalTabProps> = ({
+    instructorId: _instructorId,
+}) => {
     const personalInfo = {
         fullName: 'Name',
         email: 'name@gmail.com',

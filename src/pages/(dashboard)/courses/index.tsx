@@ -7,8 +7,7 @@ import { DataTable } from '@/components/shared/DataTable';
 import { CoursesFilters } from '@/components/courses/courses-filters';
 import { getCourseColumns } from '@/components/courses/course-columns';
 import { useCoursesStore, type Course } from '@/stores/courses-store';
-import { statesApiService } from '@/api/states-api';
-import type { State } from '@/api/states-api';
+import { StatesRepository, type State } from '@/repositories/states';
 import { Plus, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { DeleteConfirmationDialog } from '@/components/shared/delete-confirmation-dialog';
@@ -37,7 +36,7 @@ export default function CoursesPage() {
 
             try {
                 // Fetch states from API
-                const states = await statesApiService.getAllStates();
+                const states = await StatesRepository.fetchAll();
                 setAllStates(states);
             } catch (error) {
                 console.error('Error loading states:', error);
@@ -51,16 +50,41 @@ export default function CoursesPage() {
     // Filter courses
     const filteredCourses = useMemo(() => {
         return courses.filter((course) => {
-            const matchesSearch = course.title.toLowerCase().includes(searchTerm.toLowerCase());
-            const matchesState = stateFilter === 'all' || String(course.state_id) === stateFilter;
-            const matchesStatus = statusFilter === 'all' || String(course.is_active) === statusFilter;
-            const matchesType = typeFilter === 'all' || course.training_type === typeFilter;
-            const matchesMode = modeFilter === 'all' || course.delivery_mode === modeFilter;
-            const matchesInstructor = instructorFilter === 'all' || String(course.instructor_id) === instructorFilter;
+            const matchesSearch = course.title
+                .toLowerCase()
+                .includes(searchTerm.toLowerCase());
+            const matchesState =
+                stateFilter === 'all' ||
+                String(course.state_id) === stateFilter;
+            const matchesStatus =
+                statusFilter === 'all' ||
+                String(course.is_active) === statusFilter;
+            const matchesType =
+                typeFilter === 'all' || course.training_type === typeFilter;
+            const matchesMode =
+                modeFilter === 'all' || course.delivery_mode === modeFilter;
+            const matchesInstructor =
+                instructorFilter === 'all' ||
+                String(course.instructor_id) === instructorFilter;
 
-            return matchesSearch && matchesState && matchesStatus && matchesType && matchesMode && matchesInstructor;
+            return (
+                matchesSearch &&
+                matchesState &&
+                matchesStatus &&
+                matchesType &&
+                matchesMode &&
+                matchesInstructor
+            );
         });
-    }, [courses, searchTerm, stateFilter, statusFilter, typeFilter, modeFilter, instructorFilter]);
+    }, [
+        courses,
+        searchTerm,
+        stateFilter,
+        statusFilter,
+        typeFilter,
+        modeFilter,
+        instructorFilter,
+    ]);
 
     const handleView = (course: Course) => {
         navigate(`/courses/${course.id}`);
@@ -77,7 +101,9 @@ export default function CoursesPage() {
     const handleConfirmDelete = async () => {
         if (courseToDelete) {
             try {
-                await useCoursesStore.getState().permanentDeleteCourse(courseToDelete.id);
+                await useCoursesStore
+                    .getState()
+                    .permanentDeleteCourse(courseToDelete.id);
                 setIsDeleteDialogOpen(false);
                 setCourseToDelete(null);
             } catch (error) {
@@ -93,17 +119,27 @@ export default function CoursesPage() {
     const columns = getCourseColumns(handleView, handleDelete);
 
     // Get unique instructors for filter
-    const instructors = useMemo(() => Array.from(
-        new Map(
-            courses
-                .filter((c) => c.instructor_id)
-                .map((c) => [c.instructor_id as number, c.instructor?.name || ''])
-        ).entries()
-    ), [courses]);
+    const instructors = useMemo(
+        () =>
+            Array.from(
+                new Map(
+                    courses
+                        .filter((c) => c.instructor_id)
+                        .map((c) => [
+                            c.instructor_id as number,
+                            c.instructor?.name || '',
+                        ])
+                ).entries()
+            ),
+        [courses]
+    );
 
     // Use API states for filter (already have all states)
-    const states = useMemo(() =>
-        allStates.map((state) => [state.id, state.name] as [number, string]),
+    const states = useMemo(
+        () =>
+            allStates.map(
+                (state) => [state.id, state.name] as [number, string]
+            ),
         [allStates]
     );
 
@@ -176,9 +212,13 @@ export default function CoursesPage() {
                             alt="No courses"
                             className="w-64 h-64 mb-6 opacity-80"
                         />
-                        <h3 className="text-xl font-semibold text-gray-900 mb-2">No Courses Found</h3>
+                        <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                            No Courses Found
+                        </h3>
                         <p className="text-gray-500 mb-8 max-w-md text-center">
-                            You haven't created any courses yet. Start by creating your first course to begin building your curriculum.
+                            You haven't created any courses yet. Start by
+                            creating your first course to begin building your
+                            curriculum.
                         </p>
                         <Button
                             className="bg-primary hover:bg-primary/90 text-black font-semibold px-8 py-6 h-auto text-lg rounded-xl shadow-lg transition-all hover:scale-105 active:scale-95"

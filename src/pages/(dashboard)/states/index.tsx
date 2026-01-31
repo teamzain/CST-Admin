@@ -18,11 +18,12 @@ import { Plus } from 'lucide-react';
 import { DeleteConfirmationDialog } from '@/components/shared/delete-confirmation-dialog';
 import { StatesRepository } from '@/repositories/states';
 import { toast } from 'sonner';
-import type { StateFilters } from '@/api/states';
+import type { StateFilters } from '@/repositories/states';
 
 export default function StatesPage() {
     const navigate = useNavigate();
-    const { states, fetchStates, deleteState, unpublishState, setFilters } = useStatesStore();
+    const { states, fetchStates, deleteState, unpublishState, setFilters } =
+        useStatesStore();
 
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -34,11 +35,11 @@ export default function StatesPage() {
         const loadStates = async () => {
             try {
                 const filters: StateFilters = {};
-                
+
                 if (searchTerm) {
                     filters.search = searchTerm;
                 }
-                
+
                 if (statusFilter !== 'all') {
                     filters.is_active = statusFilter === 'true';
                 }
@@ -49,7 +50,7 @@ export default function StatesPage() {
                 console.error('Error loading states:', error);
             }
         };
-        
+
         loadStates();
     }, [searchTerm, statusFilter, fetchStates, setFilters]);
 
@@ -57,8 +58,12 @@ export default function StatesPage() {
         // If we have search or status filter, backend already filtered
         // But we still apply local search/filter for immediate UI feedback
         return states.filter((state) => {
-            const matchesSearch = !searchTerm || state.name.toLowerCase().includes(searchTerm.toLowerCase());
-            const matchesStatus = statusFilter === 'all' || String(state.is_active) === statusFilter;
+            const matchesSearch =
+                !searchTerm ||
+                state.name.toLowerCase().includes(searchTerm.toLowerCase());
+            const matchesStatus =
+                statusFilter === 'all' ||
+                String(state.is_active) === statusFilter;
             return matchesSearch && matchesStatus;
         });
     }, [states, searchTerm, statusFilter]);
@@ -99,7 +104,11 @@ export default function StatesPage() {
         navigate('/states/create');
     };
 
-    const columns = getStateColumns(handleView, handleDeleteClick, handleUnpublish);
+    const columns = getStateColumns(
+        handleView,
+        handleDeleteClick,
+        handleUnpublish
+    );
 
     return (
         <div className="min-h-screen bg-gray-50 p-4 md:p-6 pt-2 md:pt-4">
@@ -148,26 +157,42 @@ export default function StatesPage() {
                     <CardHeader>
                         <CardTitle>State Compliance Overview</CardTitle>
                         <CardDescription>
-                            Summary of active states and their training requirements
+                            Summary of active states and their training
+                            requirements
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div className="border border-gray-200 rounded-lg p-6 bg-gray-50">
-                                <div className="text-2xl font-bold">{states.length}</div>
-                                <div className="text-gray-600 text-sm">Total Configured States</div>
+                                <div className="text-2xl font-bold">
+                                    {states.length}
+                                </div>
+                                <div className="text-gray-600 text-sm">
+                                    Total Configured States
+                                </div>
                             </div>
                             <div className="border border-gray-200 rounded-lg p-6 bg-gray-50">
                                 <div className="text-2xl font-bold text-primary">
-                                    {states.filter(s => s.is_active).length}
+                                    {states.filter((s) => s.is_active).length}
                                 </div>
-                                <div className="text-gray-600 text-sm">Active & Published</div>
+                                <div className="text-gray-600 text-sm">
+                                    Active & Published
+                                </div>
                             </div>
                             <div className="border border-gray-200 rounded-lg p-6 bg-gray-50">
                                 <div className="text-2xl font-bold">
-                                    {(states.reduce((avg, s) => avg + (s.unarmed_hours || 0), 0) / (states.length || 1)).toFixed(1)}h
+                                    {(
+                                        states.reduce(
+                                            (avg, s) =>
+                                                avg + (s.unarmed_hours || 0),
+                                            0
+                                        ) / (states.length || 1)
+                                    ).toFixed(1)}
+                                    h
                                 </div>
-                                <div className="text-gray-600 text-sm">Avg. Unarmed Duration</div>
+                                <div className="text-gray-600 text-sm">
+                                    Avg. Unarmed Duration
+                                </div>
                             </div>
                         </div>
                     </CardContent>
