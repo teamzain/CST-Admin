@@ -9,18 +9,7 @@ import {
     DropdownMenuLabel,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-
-interface State {
-    id: number | string;
-    name: string;
-    code: string;
-    unarmed_hours: number;
-    armed_hours: number;
-    requires_range_training: boolean;
-    is_active: boolean;
-    is_seat_time_enabled: boolean;
-    id_check_frequency: number;
-}
+import { type State } from '@/repositories/states';
 
 export const getStateColumns = (onView: (state: State) => void, onDelete: (state: State) => void, onUnpublish: (state: State) => void): ColumnDef<State>[] => [
     {

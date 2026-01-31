@@ -13,7 +13,7 @@ const createApiClient = (appName: APP_NAMES): AxiosInstance => {
 
     api.interceptors.request.use(
         (config) => {
-            const token = localStorage.getItem('auth-token');
+            const token = localStorage.getItem('token');
             if (token) {
                 config.headers.Authorization = `Bearer ${token}`;
             }
@@ -24,7 +24,7 @@ const createApiClient = (appName: APP_NAMES): AxiosInstance => {
 
     api.interceptors.response.use(
         (response) => {
-            const token = localStorage.getItem('auth-token');
+            const token = localStorage.getItem('token');
             if (token) {
                 response.headers.Authorization = `Bearer ${token}`;
             }
@@ -32,7 +32,8 @@ const createApiClient = (appName: APP_NAMES): AxiosInstance => {
         },
         (error) => {
             if (error.response?.status === 401) {
-                localStorage.removeItem('auth-token');
+                console.error('401 Unauthorized - Token may be invalid or expired');
+                localStorage.removeItem('token');
                 localStorage.removeItem('user');
                 window.location.href = '/login';
             }

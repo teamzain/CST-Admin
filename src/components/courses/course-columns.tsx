@@ -1,6 +1,6 @@
 import { type ColumnDef } from '@tanstack/react-table';
 import { Badge } from '@/components/ui/badge';
-import { type Course } from '@/stores/courses-store';
+import { type Course } from '@/repositories/courses';
 import { MoreVertical, Clock, Eye, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {

@@ -21,17 +21,16 @@ import {
     Upload,
     X,
 } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import {
     TRAINING_TYPE,
     DELIVERY_MODE,
     type Course,
     dummyInstructors,
-    dummyStates,
-} from '@/stores/courses-store';
+} from '@/repositories/courses';
+import { StatesRepository } from '@/repositories/states';
 import { bunnyUploadService } from '@/api/bunny-upload';
-import { StatesRepository, type State } from '@/repositories/states';
-import { useEffect } from 'react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
@@ -50,26 +49,17 @@ export function GeneralInformationTab({
 }: GeneralInformationTabProps) {
     const [thumbnailPreview, setThumbnailPreview] = useState<string>('');
     const [isUploadingThumbnail, setIsUploadingThumbnail] = useState(false);
-    const [allStates, setAllStates] = useState<State[]>([]);
+
+    // Fetch states with TanStack Query
+    const { data: allStates = [] } = useQuery({
+        queryKey: ['states'],
+        queryFn: () => StatesRepository.getAll(),
+    });
 
     // Sync thumbnail preview with course/formData
     useEffect(() => {
         setThumbnailPreview(formData.thumbnail || course.thumbnail || '');
     }, [course.thumbnail, formData.thumbnail]);
-
-    // Fetch states on mount
-    useEffect(() => {
-        const loadStates = async () => {
-            try {
-                const states = await StatesRepository.fetchAll();
-                setAllStates(states);
-            } catch (error) {
-                console.error('Error loading states:', error);
-                setAllStates(dummyStates as State[]);
-            }
-        };
-        loadStates();
-    }, []);
 
     const handleThumbnailUpload = async (
         e: React.ChangeEvent<HTMLInputElement>
@@ -286,10 +276,7 @@ export function GeneralInformationTab({
                                                 <SelectValue placeholder="Select State" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                {(allStates.length > 0
-                                                    ? allStates
-                                                    : dummyStates
-                                                ).map((state) => (
+                                                {allStates.map((state) => (
                                                     <SelectItem
                                                         key={state.id}
                                                         value={String(state.id)}

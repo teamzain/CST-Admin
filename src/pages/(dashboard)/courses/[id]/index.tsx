@@ -1,30 +1,67 @@
 'use client';
 
-import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Save, Trash2 } from 'lucide-react';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { ArrowLeft, Save, Trash2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useCoursesStore, type Course } from '@/stores/courses-store';
+import { CoursesRepository, type Course, type UpdateCourseInput } from '@/repositories/courses';
 import { useState, useEffect } from 'react';
 import { DeleteConfirmationDialog } from '@/components/shared/delete-confirmation-dialog';
 import { GeneralInformationTab } from '@/components/course/general-information-tab';
 import { CurriculumTab } from '@/components/course/curriculum-tab';
 import { ComplianceTab } from '@/components/course/compliance-tab';
+import { toast } from 'sonner';
 
 export default function CourseDetailsPage() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
-    const { courses, fetchCourseById, updateCourse, isLoading } = useCoursesStore();
-    const course = id ? courses.find(c => c.id === Number(id)) : null;
+    const queryClient = useQueryClient();
+    const [searchParams, setSearchParams] = useSearchParams();
+
+    // Get initial tab from URL or default to 'general'
+    const initialTab = searchParams.get('tab') || 'general';
+    const [activeTab, setActiveTab] = useState(initialTab);
+
     const [isEditing, setIsEditing] = useState(false);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [formData, setFormData] = useState<Partial<Course>>({});
 
-    useEffect(() => {
-        if (id && !course) {
-            fetchCourseById(Number(id));
-        }
-    }, [id, course, fetchCourseById]);
+    // Fetch course with TanStack Query
+    const { data: course, isLoading } = useQuery({
+        queryKey: ['course', id],
+        queryFn: () => CoursesRepository.getById(Number(id)),
+        enabled: !!id,
+    });
+
+    // Update mutation
+    const updateMutation = useMutation({
+        mutationFn: (data: UpdateCourseInput) => CoursesRepository.update(Number(id), data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['course', id] });
+            queryClient.invalidateQueries({ queryKey: ['courses'] });
+            toast.success('Course updated successfully');
+            setIsEditing(false);
+        },
+        onError: (error) => {
+            console.error('Failed to update course:', error);
+            toast.error('Failed to update course');
+        },
+    });
+
+    // Delete mutation
+    const deleteMutation = useMutation({
+        mutationFn: () => CoursesRepository.permanentDelete(Number(id)),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['courses'] });
+            toast.success('Course deleted successfully');
+            navigate('/courses');
+        },
+        onError: (error) => {
+            console.error('Failed to delete course:', error);
+            toast.error('Failed to delete course');
+        },
+    });
 
     useEffect(() => {
         if (course && !isEditing) {
@@ -32,10 +69,10 @@ export default function CourseDetailsPage() {
         }
     }, [course, isEditing]);
 
-    if (isLoading && !course) {
+    if (isLoading) {
         return (
             <div className="flex-1 bg-background p-8 flex items-center justify-center">
-                <p className="text-muted-foreground">Loading course...</p>
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
             </div>
         );
     }
@@ -59,8 +96,13 @@ export default function CourseDetailsPage() {
 
     const handleSave = async () => {
         if (!course) return;
-        await updateCourse(course.id, formData);
-        setIsEditing(false);
+        // Convert formData to UpdateCourseInput format
+        const updateData: UpdateCourseInput = {
+            ...formData,
+            // Convert state object to string if present
+            state: typeof formData.state === 'object' ? formData.state?.name : formData.state,
+        };
+        updateMutation.mutate(updateData);
     };
 
     const handleDeleteClick = () => {
@@ -68,8 +110,7 @@ export default function CourseDetailsPage() {
     };
 
     const handleConfirmDelete = async () => {
-        await useCoursesStore.getState().permanentDeleteCourse(course.id);
-        navigate('/courses');
+        deleteMutation.mutate();
     };
 
     const handleInputChange = (field: keyof Course, value: string | number | boolean | string[] | undefined) => {
@@ -155,7 +196,10 @@ export default function CourseDetailsPage() {
 
                 {/* Tabs Container */}
                 <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm">
-                    <Tabs defaultValue="general" className="w-full">
+                    <Tabs value={activeTab} onValueChange={(value) => {
+                        setActiveTab(value);
+                        setSearchParams({ tab: value });
+                    }} className="w-full">
                         <TabsList className="flex w-full justify-start bg-muted/30 h-14 p-0 border-b border-border rounded-none gap-8 px-8">
                             <TabsTrigger
                                 value="general"

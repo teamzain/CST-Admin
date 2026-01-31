@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Save, ChevronLeft, MapPin, Link as LinkIcon, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { sessionsService, type Session } from '@/api/sessions';
+import { SessionsRepository, type Session } from '@/repositories/sessions';
 import { convertFromISO8601, convertToISO8601 } from '@/lib/utils';
 
 export default function SessionDetailsPage() {
@@ -30,7 +30,7 @@ export default function SessionDetailsPage() {
             if (!id) return;
             try {
                 setIsLoading(true);
-                const data = await sessionsService.getSessionById(Number(id));
+                const data = await SessionsRepository.getById(Number(id));
 
                 // Convert ISO dates to datetime-local format for inputs
                 setSessionData({
@@ -63,12 +63,12 @@ export default function SessionDetailsPage() {
                 end_time: convertToISO8601(sessionData.end_time || ''),
             };
 
-            await sessionsService.updateSession(Number(id), payload);
+            await SessionsRepository.update(Number(id), payload);
             toast.success('Session updated successfully');
             navigate(-1);
         } catch (error) {
             console.error('Failed to update session:', error);
-            toast.error(sessionsService.getErrorMessage(error, 'Failed to update session'));
+            toast.error('Failed to update session');
         } finally {
             setIsSaving(false);
         }

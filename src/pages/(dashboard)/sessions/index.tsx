@@ -1,49 +1,57 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { DataTable } from '@/components/shared/DataTable';
 import { SessionsFilters } from '@/components/sessions/sessions-filters';
 import { getSessionColumns } from '@/components/sessions/session-columns';
-import { useCoursesStore } from '@/stores/courses-store';
+import { CoursesRepository, type Course } from '@/repositories/courses';
 
 import { DeleteConfirmationDialog } from '@/components/shared/delete-confirmation-dialog';
-import { sessionsService, type Session } from '@/api/sessions';
+import { SessionsRepository, type Session } from '@/repositories/sessions';
 import { toast } from 'sonner';
 
 export default function AllSessionsPage() {
     const navigate = useNavigate();
-    const { courses } = useCoursesStore();
+    const queryClient = useQueryClient();
 
-    const [sessions, setSessions] = useState<Session[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [sessionTypeFilter, setSessionTypeFilter] = useState<string>('all');
     const [courseFilter, setCourseFilter] = useState<string>('all');
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-    const [sessionToDelete, setSessionToDelete] = useState<any>(null);
+    const [sessionToDelete, setSessionToDelete] = useState<Session | null>(null);
 
-    useEffect(() => {
-        const fetchSessions = async () => {
-            try {
-                setIsLoading(true);
-                const data = await sessionsService.getAllSessions();
-                setSessions(data);
-            } catch (error) {
-                console.error('Failed to fetch sessions:', error);
-                toast.error('Failed to load sessions');
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        fetchSessions();
-    }, []);
+    // Fetch sessions with TanStack Query
+    const { data: sessions = [], isLoading } = useQuery({
+        queryKey: ['sessions'],
+        queryFn: () => SessionsRepository.getAll(),
+    });
+
+    // Fetch courses for filter dropdown
+    const { data: courses = [] } = useQuery({
+        queryKey: ['courses'],
+        queryFn: () => CoursesRepository.getAll(),
+    });
+
+    // Delete mutation
+    const deleteMutation = useMutation({
+        mutationFn: (id: number) => SessionsRepository.delete(id),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['sessions'] });
+            toast.success('Session deleted successfully');
+        },
+        onError: (error) => {
+            console.error('Failed to delete session:', error);
+            toast.error('Failed to delete session');
+        },
+    });
 
     const allSessions = useMemo(() => {
-        return sessions.map((session: any) => {
+        return sessions.map((session: Session & { course_title?: string }) => {
             // Find course title if not provided by API
-            const course = (courses as any[]).find((c: any) => c.id === session.course_id);
+            const course = courses.find((c: Course) => c.id === session.course_id);
 
             return {
                 ...session,
@@ -62,28 +70,20 @@ export default function AllSessionsPage() {
         });
     }, [allSessions, searchTerm, courseFilter, sessionTypeFilter]);
 
-    const handleView = (session: any) => {
+    const handleView = (session: Session) => {
         navigate(`/sessions/${session.id}`);
     };
 
-    const handleDeleteClick = (session: any) => {
+    const handleDeleteClick = (session: Session) => {
         setSessionToDelete(session);
         setIsDeleteDialogOpen(true);
     };
 
     const handleConfirmDelete = async () => {
         if (sessionToDelete) {
-            try {
-                await sessionsService.deleteSession(sessionToDelete.id);
-                setSessions(prev => prev.filter(s => s.id !== sessionToDelete.id));
-                toast.success('Session deleted successfully');
-            } catch (error) {
-                console.error('Failed to delete session:', error);
-                toast.error('Failed to delete session');
-            } finally {
-                setSessionToDelete(null);
-                setIsDeleteDialogOpen(false);
-            }
+            deleteMutation.mutate(sessionToDelete.id);
+            setSessionToDelete(null);
+            setIsDeleteDialogOpen(false);
         }
     };
 
