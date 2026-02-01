@@ -19,8 +19,16 @@ export enum EnrollmentStatus {
 // MAIN ENTITY TYPES
 // ============================================================================
 
+export interface UserAuth {
+    status: StudentStatus;
+    is_verified: boolean;
+    created_at: string;
+    updated_at: string;
+}
+
 export interface Student {
     id: number;
+    username: string;
     first_name: string;
     last_name: string;
     email: string;
@@ -28,12 +36,17 @@ export interface Student {
     avatar?: string;
     bio?: string;
     state_id: number;
-    user_id: number;
-    status: StudentStatus;
-    enrollment_date: string;
-    progress: number;
-    created_at: Date | string;
-    updated_at: Date | string;
+    auth_id: number;
+    role: string;
+    enrolledCoursesCount: number;
+    lastActivity: string | null;
+    latestInstructor: string | null;
+    link: string | null;
+    created_at: string;
+    updated_at: string;
+    user_auth: UserAuth;
+    AuditLog?: any[];
+    CourseEnrollment?: CourseEnrollment[];
 }
 
 export interface Course {

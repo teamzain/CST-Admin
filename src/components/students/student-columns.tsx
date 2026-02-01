@@ -14,7 +14,6 @@ import {
     Ban,
     CheckCircle,
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
 import {
     type StudentWithEnrollments,
     StudentStatus,
@@ -41,7 +40,8 @@ export const getStudentColumns = (
     onStatusChange: (id: number, status: StudentStatus) => void
 ): ColumnDef<StudentWithEnrollments>[] => [
     {
-        accessorKey: 'name',
+        id: 'name',
+        accessorFn: (row) => `${row.first_name} ${row.last_name}`,
         header: 'Student',
         cell: ({ row }) => (
             <div className="flex items-center gap-3 min-w-[200px]">
@@ -90,26 +90,13 @@ export const getStudentColumns = (
         ),
     },
     {
-        accessorKey: 'enrollments',
+        accessorKey: 'enrolledCoursesCount',
         header: 'Enrolled Courses',
         cell: ({ row }) => (
-            <div className="flex flex-wrap gap-1 max-w-[250px]">
-                {row.original.enrollments &&
-                row.original.enrollments.length > 0 ? (
-                    row.original.enrollments.map((en) => (
-                        <Link
-                            key={en.id}
-                            to={`/courses/${en.course_id}`}
-                            className="text-xs text-primary hover:underline font-medium inline-block bg-primary/5 px-2 py-0.5 rounded"
-                        >
-                            {en.course?.title || `Course ID: ${en.course_id}`}
-                        </Link>
-                    ))
-                ) : (
-                    <span className="text-xs text-gray-400 italic">
-                        No enrollments
-                    </span>
-                )}
+            <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-700">
+                    {row.original.enrolledCoursesCount} Courses
+                </span>
             </div>
         ),
     },
@@ -134,16 +121,17 @@ export const getStudentColumns = (
         ),
     },
     {
-        accessorKey: 'status',
+        id: 'status',
+        accessorFn: (row) => row.user_auth.status,
         header: 'Status',
         cell: ({ row }) => (
             <Badge
                 variant="outline"
                 className={`rounded-full px-3 py-1 text-xs font-medium whitespace-nowrap inline-block border-none ${getStatusColor(
-                    row.original.status
+                    row.original.user_auth.status
                 )}`}
             >
-                {row.original.status}
+                {row.original.user_auth.status}
             </Badge>
         ),
     },
@@ -178,7 +166,8 @@ export const getStudentColumns = (
                                 <Edit2 className="w-4 h-4" />
                                 Edit Student
                             </DropdownMenuItem>
-                            {row.original.status === StudentStatus.ACTIVE ? (
+                            {row.original.user_auth.status ===
+                            StudentStatus.ACTIVE ? (
                                 <DropdownMenuItem
                                     className="gap-2 text-yellow-600"
                                     onClick={() =>
