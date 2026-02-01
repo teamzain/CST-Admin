@@ -67,7 +67,7 @@ export class StudentsRepository {
             const url = queryString ? `${path}?${queryString}` : path;
 
             const response = await userApi.get(url);
-            return response.data.data || response.data;
+            return response.data.data;
         } catch (error: unknown) {
             console.error('Error fetching students:', error);
             toast.error('Failed to fetch students');

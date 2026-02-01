@@ -12,7 +12,7 @@ import {
     type PaginationState,
     type RowSelectionState,
     type ColumnDef,
-    type Table
+    type Table,
 } from '@tanstack/react-table';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -49,7 +49,7 @@ export function DataTable<TData, TValue>({
 
     // Update column filters when search value changes
     useEffect(() => {
-        if (searchColumn && searchValue !== undefined) {
+        if (searchColumn && searchValue) {
             setColumnFilters([{ id: searchColumn, value: searchValue }]);
         } else {
             setColumnFilters([]);
@@ -70,9 +70,9 @@ export function DataTable<TData, TValue>({
                           aria-label="Select all"
                       />
                   ),
-                   
+
                   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  cell: ({ row }: {row: any}) => (
+                  cell: ({ row }: { row: any }) => (
                       <Checkbox
                           checked={row.getIsSelected()}
                           onCheckedChange={(value) =>
@@ -155,7 +155,10 @@ export function DataTable<TData, TValue>({
                                     }
                                 >
                                     {row.getVisibleCells().map((cell) => (
-                                        <td key={cell.id} className="px-6 py-4 text-sm text-gray-600">
+                                        <td
+                                            key={cell.id}
+                                            className="px-6 py-4 text-sm text-gray-600"
+                                        >
                                             {flexRender(
                                                 cell.column.columnDef.cell,
                                                 cell.getContext()
