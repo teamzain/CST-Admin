@@ -1,47 +1,122 @@
 import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/shared/DataTable';
-import { type ColumnDef } from '@/components/shared/DataTable';
 import { UsersFilters } from '@/components/users/users-filters';
 import { DateRangePicker } from '@/components/shared/date-range-picker';
-import { getUserColumns } from '@/components/users/user-columns';
-import { dummyUsers } from '@/components/users/dummy-users';
-import type { User } from '@/repositories/users/types';
+import { getStudentColumns } from '@/components/students/student-columns';
+import { StudentsRepository } from '@/repositories/students/repo';
+import {
+    StudentStatus,
+    type StudentFilters,
+    type StudentWithEnrollments,
+} from '@/repositories/students/types';
+import { toast } from 'sonner';
+import { Loader2, Plus } from 'lucide-react';
+import { DeleteConfirmationDialog } from '@/components/shared/delete-confirmation-dialog';
 
-export default function UsersPage() {
-    const [users] = useState<User[]>(dummyUsers);
+export default function StudentsPage() {
+    const navigate = useNavigate();
+    const queryClient = useQueryClient();
+
     const [searchTerm, setSearchTerm] = useState('');
-    const [selectedUsers, setSelectedUsers] = useState<User[]>([]);
-    const [roleFilter, setRoleFilter] = useState<string>('all');
     const [statusFilter, setStatusFilter] = useState<string>('All Users');
+    const [roleFilter, setRoleFilter] = useState<string>('all'); // Keeping for compatibility with Filter component
     const [dateModalOpen, setDateModalOpen] = useState(false);
 
-    // Filter users based on role and status
-    const filteredUsers = useMemo(() => {
-        return users.filter((user) => {
-            const matchesRole =
-                roleFilter === 'all' || user.role === roleFilter;
-            const matchesStatus =
-                statusFilter === 'All Users' ||
-                user.status.toLowerCase() === statusFilter.toLowerCase();
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+    const [studentToDelete, setStudentToDelete] = useState<number | null>(null);
 
-            return matchesRole && matchesStatus;
-        });
-    }, [users, roleFilter, statusFilter]);
+    // Build filters object
+    const filters: StudentFilters = useMemo(() => {
+        const f: StudentFilters = {};
+        if (searchTerm) f.search = searchTerm;
+        if (statusFilter !== 'All Users') {
+            f.status = statusFilter.toUpperCase() as StudentStatus;
+        }
+        return f;
+    }, [searchTerm, statusFilter]);
 
-    // Bulk actions handler
-    const handleBulkAction = (action: string) => {
-        console.log(`Bulk action: ${action}`, selectedUsers);
-        alert(`${action} will be performed on ${selectedUsers.length} user(s)`);
+    // Fetch students with TanStack Query
+    const { data: students = [], isLoading } = useQuery({
+        queryKey: ['students', filters],
+        queryFn: async () => {
+            const data = await StudentsRepository.getAllStudents(filters);
+            // Assuming the API might return Student[] but columns expect StudentWithEnrollments[]
+            return data as StudentWithEnrollments[];
+        },
+    });
+
+    // Delete mutation
+    const deleteMutation = useMutation({
+        mutationFn: (id: number) => StudentsRepository.deleteStudent(id),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['students'] });
+            toast.success('Student deleted successfully');
+            setIsDeleteDialogOpen(false);
+        },
+    });
+
+    // Status change mutation
+    const statusMutation = useMutation({
+        mutationFn: ({ id, status }: { id: number; status: StudentStatus }) => {
+            if (status === StudentStatus.SUSPENDED) {
+                return StudentsRepository.suspendStudent(id);
+            } else {
+                return StudentsRepository.activateStudent(id);
+            }
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['students'] });
+        },
+    });
+
+    const handleView = (id: number) => {
+        navigate(`/students/${id}`);
     };
 
-    // Date filter handler
+    const handleEdit = (id: number) => {
+        navigate(`/students/${id}/edit`);
+    };
+
+    const handleDeleteClick = (id: number) => {
+        setStudentToDelete(id);
+        setIsDeleteDialogOpen(true);
+    };
+
+    const handleConfirmDelete = async () => {
+        if (studentToDelete) {
+            deleteMutation.mutate(studentToDelete);
+        }
+    };
+
+    const handleStatusChange = (id: number, status: StudentStatus) => {
+        statusMutation.mutate({ id, status });
+    };
+
+    const handleBulkAction = (action: string) => {
+        console.log(`Bulk action: ${action}`);
+    };
+
     const handleDateApply = (startDate: string, endDate: string) => {
         console.log('Date filter applied:', { startDate, endDate });
-        // Implement date filtering logic here
     };
 
-    const columns: ColumnDef<User>[] = getUserColumns();
+    const columns = getStudentColumns(
+        handleView,
+        handleEdit,
+        handleDeleteClick,
+        handleStatusChange
+    );
+
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-gray-50 p-4 md:p-6 pt-2 md:pt-4">
@@ -50,14 +125,18 @@ export default function UsersPage() {
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                     <div>
                         <h1 className="text-2xl md:text-3xl font-semibold text-gray-900">
-                            All Users
+                            Students
                         </h1>
                         <p className="text-sm text-gray-600 mt-1">
-                            {filteredUsers.length} Users Found
+                            {students.length} Students Found
                         </p>
                     </div>
-                    <Button className="bg-primary hover:bg-primary/90 text-secondary font-medium w-full sm:w-auto">
-                        + Add User
+                    <Button
+                        onClick={() => navigate('/students/create')}
+                        className="bg-primary hover:bg-primary/90 text-black font-medium w-full sm:w-auto gap-2"
+                    >
+                        <Plus className="w-4 h-4" />
+                        Add Student
                     </Button>
                 </div>
 
@@ -70,7 +149,7 @@ export default function UsersPage() {
                     statusFilter={statusFilter}
                     onStatusChange={setStatusFilter}
                     onDateFilterClick={() => setDateModalOpen(true)}
-                    selectedCount={selectedUsers.length}
+                    selectedCount={0}
                     onBulkAction={handleBulkAction}
                 />
 
@@ -78,10 +157,9 @@ export default function UsersPage() {
                 <div className="overflow-x-auto">
                     <DataTable
                         columns={columns}
-                        data={filteredUsers}
+                        data={students}
                         pageSize={10}
                         enableRowSelection={true}
-                        onRowSelectionChange={setSelectedUsers}
                         searchColumn="name"
                         searchValue={searchTerm}
                     />
@@ -92,6 +170,16 @@ export default function UsersPage() {
                     open={dateModalOpen}
                     onOpenChange={setDateModalOpen}
                     onApply={handleDateApply}
+                />
+
+                <DeleteConfirmationDialog
+                    isOpen={isDeleteDialogOpen}
+                    onClose={() => setIsDeleteDialogOpen(false)}
+                    onConfirm={handleConfirmDelete}
+                    title="Delete Student"
+                    description="Are you sure you want to delete this student? This action cannot be undone."
+                    itemType="Student"
+                    itemName={`Student #${studentToDelete}`}
                 />
             </div>
         </div>

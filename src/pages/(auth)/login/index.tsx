@@ -21,7 +21,7 @@ export default function LoginPage() {
     const navigate = useNavigate();
     const setAuth = useAuthStore((state) => state.setAuth);
 
-    const [email, setEmail] = useState('');
+    const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -30,7 +30,7 @@ export default function LoginPage() {
         e.preventDefault();
         setError(null);
 
-        if (!email || !password) {
+        if (!username || !password) {
             setError('Please enter both email and password');
             return;
         }
@@ -38,9 +38,13 @@ export default function LoginPage() {
         setIsLoading(true);
 
         try {
-            const response = await authRepository.login({ email, password });
+            const response = await authRepository.login({ username, password });
 
-            setAuth(response.user, response.token);
+            setAuth(
+                response.user,
+                response.access_token,
+                response.refresh_token
+            );
 
             navigate('/');
         } catch (err: any) {
@@ -95,13 +99,13 @@ export default function LoginPage() {
                         <div className="space-y-2">
                             <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
                                 <Mail className="w-4 h-4" />
-                                Email Address
+                                Username
                             </label>
                             <Input
                                 type="text"
                                 placeholder="Enter your username"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
+                                value={username}
+                                onChange={(e) => setUsername(e.target.value)}
                                 disabled={isLoading}
                                 className="h-10 sm:h-11 bg-slate-50 border-slate-200 focus:border-purple-500 focus:ring-purple-500/20 transition-all text-sm sm:text-base"
                                 required
