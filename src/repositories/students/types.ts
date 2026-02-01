@@ -70,9 +70,11 @@ export interface CreateStudentInput {
     first_name: string;
     last_name: string;
     email: string;
+    username: string;
+    password?: string;
     phone?: string;
-    state_id: number;
-    enrollment_date: string;
+    state_id?: number;
+    enrollment_date?: string;
     avatar?: string;
     bio?: string;
 }

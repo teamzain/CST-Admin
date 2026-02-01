@@ -1,5 +1,6 @@
 import { userApi } from '@/api';
 import { toast } from 'sonner';
+import { USER_ROUTES, buildUrl } from '@/config/routes';
 import {
     type Student,
     type CreateStudentInput,
@@ -62,12 +63,9 @@ export class StudentsRepository {
             }
 
             const queryString = params.toString();
-            const url = queryString ? `/students?${queryString}` : '/students';
+            const path = USER_ROUTES.STUDENTS.GET_ALL.url;
+            const url = queryString ? `${path}?${queryString}` : path;
 
-            // Use userApi from @/api/index.ts - it automatically handles:
-            // - Base URL (from getBaseApiUrl)
-            // - Auth token injection
-            // - Request/response interceptors
             const response = await userApi.get(url);
             return response.data.data || response.data;
         } catch (error: unknown) {
@@ -82,7 +80,8 @@ export class StudentsRepository {
      */
     static async getStudentById(id: number): Promise<Student> {
         try {
-            const response = await userApi.get(`/students/${id}`);
+            const url = buildUrl(USER_ROUTES.STUDENTS.GET_BY_ID, { id });
+            const response = await userApi.get(url);
             return response.data.data || response.data;
         } catch (error: unknown) {
             console.error('Error fetching student:', error);
@@ -98,7 +97,8 @@ export class StudentsRepository {
         id: number
     ): Promise<StudentWithEnrollments> {
         try {
-            const response = await userApi.get(`/students/${id}/enrollments`);
+            const url = buildUrl(USER_ROUTES.STUDENTS.GET_ENROLLMENTS, { id });
+            const response = await userApi.get(url);
             return response.data.data || response.data;
         } catch (error: unknown) {
             console.error('Error fetching student enrollments:', error);
@@ -112,7 +112,10 @@ export class StudentsRepository {
      */
     static async createStudent(data: CreateStudentInput): Promise<Student> {
         try {
-            const response = await userApi.post('/students', data);
+            const response = await userApi.post(
+                USER_ROUTES.STUDENTS.CREATE.url,
+                data
+            );
             toast.success('Student created successfully');
             return response.data.data || response.data;
         } catch (error: unknown) {
@@ -134,7 +137,8 @@ export class StudentsRepository {
         data: UpdateStudentInput
     ): Promise<Student> {
         try {
-            const response = await userApi.patch(`/students/${id}`, data);
+            const url = buildUrl(USER_ROUTES.STUDENTS.UPDATE, { id });
+            const response = await userApi.patch(url, data);
             toast.success('Student updated successfully');
             return response.data.data || response.data;
         } catch (error: unknown) {
@@ -153,7 +157,8 @@ export class StudentsRepository {
      */
     static async deleteStudent(id: number): Promise<void> {
         try {
-            await userApi.delete(`/students/${id}`);
+            const url = buildUrl(USER_ROUTES.STUDENTS.DELETE, { id });
+            await userApi.delete(url);
             toast.success('Student deleted successfully');
         } catch (error: unknown) {
             console.error('Error deleting student:', error);
@@ -171,7 +176,8 @@ export class StudentsRepository {
      */
     static async suspendStudent(id: number): Promise<Student> {
         try {
-            const response = await userApi.patch(`/students/${id}/suspend`);
+            const url = buildUrl(USER_ROUTES.STUDENTS.SUSPEND, { id });
+            const response = await userApi.patch(url);
             toast.success('Student suspended successfully');
             return response.data.data || response.data;
         } catch (error: unknown) {
@@ -190,7 +196,8 @@ export class StudentsRepository {
      */
     static async activateStudent(id: number): Promise<Student> {
         try {
-            const response = await userApi.patch(`/students/${id}/activate`);
+            const url = buildUrl(USER_ROUTES.STUDENTS.ACTIVATE, { id });
+            const response = await userApi.patch(url);
             toast.success('Student activated successfully');
             return response.data.data || response.data;
         } catch (error: unknown) {

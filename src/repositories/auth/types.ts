@@ -7,14 +7,14 @@ export interface User {
 }
 
 export interface LoginCredentials {
-    email: string;
+    username: string;
     password: string;
 }
 
 export interface LoginResponse {
     user: User;
-    token: string;
-    refreshToken?: string;
+    access_token: string;
+    refresh_token: string;
 }
 
 export interface AuthError {

@@ -84,40 +84,90 @@ export const AUTH_ROUTES = {
  */
 export const USER_ROUTES = {
     GET_ALL: {
-        url: '/users',
+        url: '/',
         method: HTTP_METHOD.GET,
         requiresAuth: true,
         description: 'Get all users',
     },
     GET_BY_ID: {
-        url: '/users/:id',
+        url: '/:id',
         method: HTTP_METHOD.GET,
         requiresAuth: true,
         description: 'Get user by ID',
     },
     CREATE: {
-        url: '/users',
+        url: '/',
         method: HTTP_METHOD.POST,
         requiresAuth: true,
         description: 'Create new user',
     },
     UPDATE: {
-        url: '/users/:id',
+        url: '/:id',
         method: HTTP_METHOD.PUT,
         requiresAuth: true,
         description: 'Update user',
     },
     DELETE: {
-        url: '/users/:id',
+        url: '/:id',
         method: HTTP_METHOD.DELETE,
         requiresAuth: true,
         description: 'Delete user',
     },
     UPDATE_PROFILE: {
-        url: '/users/profile',
+        url: '/profile',
         method: HTTP_METHOD.PATCH,
         requiresAuth: true,
         description: 'Update user profile',
+    },
+    STUDENTS: {
+        GET_ALL: {
+            url: '/student',
+            method: HTTP_METHOD.GET,
+            requiresAuth: true,
+            description: 'Get all students',
+        },
+        GET_BY_ID: {
+            url: '/student/:id',
+            method: HTTP_METHOD.GET,
+            requiresAuth: true,
+            description: 'Get student by ID',
+        },
+        GET_ENROLLMENTS: {
+            url: '/student/:id/enrollments',
+            method: HTTP_METHOD.GET,
+            requiresAuth: true,
+            description: 'Get student enrollments',
+        },
+        CREATE: {
+            url: '/student/create',
+            method: HTTP_METHOD.POST,
+            requiresAuth: true,
+            description: 'Create new student',
+        },
+        UPDATE: {
+            url: '/student/:id',
+            method: HTTP_METHOD.PATCH,
+            requiresAuth: true,
+            description: 'Update student',
+        },
+        DELETE: {
+            url: '/student/:id',
+            method: HTTP_METHOD.DELETE,
+            requiresAuth: true,
+            description: 'Delete student',
+        },
+        SUSPEND: {
+            url: '/student/:id/suspend',
+            method: HTTP_METHOD.PATCH,
+            requiresAuth: true,
+            description: 'Suspend student',
+        },
+        ACTIVATE: {
+            url: '/student/:id/activate',
+            method: HTTP_METHOD.PATCH,
+            requiresAuth: true,
+            description: 'Activate student',
+        },
     },
 } as const satisfies ServiceRoutes;
 

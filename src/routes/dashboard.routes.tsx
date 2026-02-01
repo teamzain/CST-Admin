@@ -21,6 +21,8 @@ import LessonDetailsPage from '@/pages/(dashboard)/lessons/lesson-details';
 import AllSessionsPage from '@/pages/(dashboard)/sessions';
 import SessionDetailsPage from '@/pages/(dashboard)/sessions/session-details';
 import SettingsPage from '@/pages/(dashboard)/settings';
+import CreateStudentPage from '@/pages/(dashboard)/students/create';
+import EditStudentPage from '@/pages/(dashboard)/students/[id]/edit';
 
 export const dashboardRoutes: RouteObject[] = [
     {
@@ -76,6 +78,14 @@ export const dashboardRoutes: RouteObject[] = [
                     {
                         path: '/students',
                         element: <StudentsPage />,
+                    },
+                    {
+                        path: '/students/create',
+                        element: <CreateStudentPage />,
+                    },
+                    {
+                        path: '/students/:id/edit',
+                        element: <EditStudentPage />,
                     },
                     {
                         path: '/students/:id',
