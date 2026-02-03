@@ -26,6 +26,52 @@ export interface UserAuth {
     updated_at: string;
 }
 
+export interface AuditLog {
+    id: number;
+    user_id: number | null;
+    action: string;
+    meta: any;
+    created_at: string;
+}
+
+export interface LessonProgress {
+    id: number;
+    user_id: number;
+    lesson_id: number;
+    enrollment_id: number;
+    watched_seconds: number;
+    total_seconds: number | null;
+    progress_percent: number;
+    is_completed: boolean;
+    last_position: number;
+    updated_at: string;
+}
+
+export interface ComplianceCheck {
+    id: number;
+    user_id: number;
+    id_verified: boolean;
+    selfie_verified: boolean;
+    last_check: string | null;
+    provider: string | null;
+    compliance_type: string | null;
+}
+
+export interface ESignature {
+    id: number;
+    user_id: number;
+    document_type: string;
+    signed_at: string;
+    ip_address: string | null;
+    signature_url: string | null;
+}
+
+export interface State {
+    id: number;
+    name: string;
+    code: string;
+}
+
 export interface Student {
     id: number;
     username: string;
@@ -44,9 +90,12 @@ export interface Student {
     link: string | null;
     created_at: string;
     updated_at: string;
+    state?: State;
     user_auth: UserAuth;
-    AuditLog?: any[];
+    AuditLog?: AuditLog[];
     CourseEnrollment?: CourseEnrollment[];
+    ComplianceCheck?: ComplianceCheck[];
+    ESignature?: ESignature[];
 }
 
 export interface Course {
@@ -69,10 +118,11 @@ export interface CourseEnrollment {
     status: EnrollmentStatus;
     progress: number;
     seat_time_min: number;
-    last_activity?: Date;
-    started_at: Date;
-    completed_at?: Date;
+    last_activity?: string | null;
+    started_at: string;
+    completed_at?: string | null;
     course: Course;
+    lessonProgress?: LessonProgress[];
 }
 
 // ============================================================================

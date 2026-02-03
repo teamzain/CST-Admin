@@ -66,7 +66,7 @@ export default function EditStudentPage() {
 
     return (
         <div className="p-4 md:p-6 pt-2 md:pt-4">
-            <div className="mx-auto max-w-4xl">
+            <div className="mx-auto">
                 <div className="mb-6">
                     <h1 className="text-2xl md:text-3xl font-semibold text-gray-900">
                         Edit Student

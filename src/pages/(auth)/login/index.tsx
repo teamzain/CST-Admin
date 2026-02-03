@@ -75,7 +75,7 @@ export default function LoginPage() {
 
                         <div className="text-center space-y-1 sm:space-y-2">
                             <CardTitle className="text-2xl sm:text-3xl font-bold bg-secondary bg-clip-text text-transparent">
-                                TrainHub Admin
+                                CompleteSecurityTraining Admin
                             </CardTitle>
                             <CardDescription className="text-secondary font-medium text-sm sm:text-base">
                                 Security Training Platform

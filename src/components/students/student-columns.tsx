@@ -36,7 +36,7 @@ const getStatusColor = (status: StudentStatus) => {
 export const getStudentColumns = (
     onView: (id: number) => void,
     onEdit: (id: number) => void,
-    onDelete: (id: number) => void,
+    onDelete: (student: StudentWithEnrollments) => void,
     onStatusChange: (id: number, status: StudentStatus) => void
 ): ColumnDef<StudentWithEnrollments>[] => [
     {
@@ -80,12 +80,12 @@ export const getStudentColumns = (
         ),
     },
     {
-        accessorKey: 'state_id',
+        id: 'state',
         header: 'State',
+        accessorFn: (row) => row.state?.name || row.state?.code || row.state_id,
         cell: ({ row }) => (
             <span className="text-sm text-gray-700 whitespace-nowrap">
-                {/* State name would ideally come from the API or a map */}
-                State ID: {row.original.state_id}
+                {row.original.state?.name || `ID: ${row.original.state_id}`}
             </span>
         ),
     },
@@ -196,7 +196,7 @@ export const getStudentColumns = (
                             )}
                             <DropdownMenuItem
                                 className="text-red-600 gap-2"
-                                onClick={() => onDelete(row.original.id)}
+                                onClick={() => onDelete(row.original)}
                             >
                                 <Trash2 className="w-4 h-4" />
                                 Delete Student
