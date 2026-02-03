@@ -60,8 +60,18 @@ export function StudentForm({
 
     const selectedStateId = watch('state_id');
 
+    const handleFormSubmit = (data: any) => {
+        // Filter out empty password if in edit mode
+        if (isEdit && !data.password) {
+            const { password, ...rest } = data;
+            onSubmit(rest);
+        } else {
+            onSubmit(data);
+        }
+    };
+
     return (
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* First Name */}
                 <div className="space-y-2">

@@ -23,6 +23,9 @@ import SessionDetailsPage from '@/pages/(dashboard)/sessions/session-details';
 import SettingsPage from '@/pages/(dashboard)/settings';
 import CreateStudentPage from '@/pages/(dashboard)/students/create';
 import EditStudentPage from '@/pages/(dashboard)/students/[id]/edit';
+import RangeSessionsPage from '@/pages/(dashboard)/scheduling/range-sessions';
+import LocationsPage from '@/pages/(dashboard)/scheduling/locations';
+import WaitListPage from '@/pages/(dashboard)/scheduling/wait-list';
 
 export const dashboardRoutes: RouteObject[] = [
     {
@@ -114,6 +117,18 @@ export const dashboardRoutes: RouteObject[] = [
                     {
                         path: '/sessions/:id',
                         element: <SessionDetailsPage />,
+                    },
+                    {
+                        path: '/scheduling/range-sessions',
+                        element: <RangeSessionsPage />,
+                    },
+                    {
+                        path: '/scheduling/locations',
+                        element: <LocationsPage />,
+                    },
+                    {
+                        path: '/scheduling/wait-list',
+                        element: <WaitListPage />,
                     },
                     {
                         path: '/settings',

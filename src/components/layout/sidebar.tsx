@@ -76,8 +76,9 @@ export function Sidebar({ open, toggleSidebar }: SidebarProps) {
             icon: Calendar,
             label: 'Scheduling',
             subItems: [
-                { href: '/scheduling', label: 'View Schedule' },
-                { href: '/scheduling/slots', label: 'Manage Slots' },
+                { href: '/scheduling/range-sessions', label: 'Range Sessions' },
+                { href: '/scheduling/locations', label: 'Locations' },
+                { href: '/scheduling/wait-list', label: 'Wait list' },
             ],
         },
         { href: '/reports', icon: FileText, label: 'Reports' },

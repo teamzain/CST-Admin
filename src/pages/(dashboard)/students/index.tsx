@@ -26,7 +26,8 @@ export default function StudentsPage() {
     const [dateModalOpen, setDateModalOpen] = useState(false);
 
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-    const [studentToDelete, setStudentToDelete] = useState<number | null>(null);
+    const [studentToDelete, setStudentToDelete] =
+        useState<StudentWithEnrollments | null>(null);
 
     // Build filters object
     const filters: StudentFilters = useMemo(() => {
@@ -80,14 +81,14 @@ export default function StudentsPage() {
         navigate(`/students/${id}/edit`);
     };
 
-    const handleDeleteClick = (id: number) => {
-        setStudentToDelete(id);
+    const handleDeleteClick = (student: StudentWithEnrollments) => {
+        setStudentToDelete(student);
         setIsDeleteDialogOpen(true);
     };
 
     const handleConfirmDelete = async () => {
         if (studentToDelete) {
-            deleteMutation.mutate(studentToDelete);
+            deleteMutation.mutate(studentToDelete.id);
         }
     };
 
@@ -179,7 +180,11 @@ export default function StudentsPage() {
                     title="Delete Student"
                     description="Are you sure you want to delete this student? This action cannot be undone."
                     itemType="Student"
-                    itemName={`Student #${studentToDelete}`}
+                    itemName={
+                        studentToDelete
+                            ? `${studentToDelete.first_name} ${studentToDelete.last_name}`
+                            : ''
+                    }
                 />
             </div>
         </div>

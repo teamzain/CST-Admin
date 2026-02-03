@@ -31,6 +31,11 @@ interface Student {
     course: string;
     progress: number;
     status: 'enrolled' | 'completed' | 'dropped';
+    state?: {
+        id: number;
+        name: string;
+        code: string;
+    };
 }
 
 interface StudentModalProps {

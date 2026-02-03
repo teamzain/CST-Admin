@@ -23,7 +23,7 @@ export const updateStudentSchema = z.object({
     last_name: z.string().min(1).max(100).optional(),
     email: z.string().email().optional(),
     username: z.string().min(1).optional(),
-    password: z.string().min(6).optional(),
+    password: z.string().min(6).optional().or(z.literal('')),
     phone: z.string().optional(),
     state_id: z.number().int().positive().optional(),
     enrollment_date: z.string().optional(),

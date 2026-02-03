@@ -122,7 +122,7 @@ export function DataTable<TData, TValue>({
     return (
         <div className="space-y-4">
             {/* Table */}
-            <div className="rounded-lg border bg-white overflow-hidden">
+            <div className="rounded-lg border bg-white overflow-scroll">
                 <table className="w-full">
                     <thead className="bg-white border-b">
                         {table.getHeaderGroups().map((headerGroup) => (
