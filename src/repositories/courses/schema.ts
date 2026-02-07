@@ -21,6 +21,7 @@ export const createCourseSchema = z.object({
     is_price_negotiable: z.boolean(),
     pre_requirements: z.array(z.string()),
     certificate_template: z.string().optional(),
+    instructor_id: z.number().optional(),
 });
 
 export const updateCourseSchema = createCourseSchema.partial().extend({

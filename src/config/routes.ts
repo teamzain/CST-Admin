@@ -121,7 +121,7 @@ export const USER_ROUTES = {
     },
     STUDENTS: {
         GET_ALL: {
-            url: '/student',
+            url: '/',
             method: HTTP_METHOD.GET,
             requiresAuth: true,
             description: 'Get all students',
@@ -167,6 +167,70 @@ export const USER_ROUTES = {
             method: HTTP_METHOD.PATCH,
             requiresAuth: true,
             description: 'Activate student',
+        },
+    },
+    INSTRUCTOR: {
+        GET_BY_ID: {
+            url: '/instructor/:id',
+            method: HTTP_METHOD.GET,
+            requiresAuth: true,
+            description: 'Get instructor by ID',
+        },
+        CREATE: {
+            url: '/instructor/create',
+            method: HTTP_METHOD.POST,
+            requiresAuth: true,
+            description: 'Create new instructor',
+        },
+        UPDATE: {
+            url: '/instructor/:id',
+            method: HTTP_METHOD.PATCH,
+            requiresAuth: true,
+            description: 'Update instructor',
+        },
+        DELETE: {
+            url: '/instructor/:id',
+            method: HTTP_METHOD.DELETE,
+            requiresAuth: true,
+            description: 'Delete instructor',
+        },
+    },
+    EMPLOYER: {
+        GET_ALL: {
+            url: '/',
+            method: HTTP_METHOD.GET,
+            requiresAuth: true,
+            description: 'Get all employers',
+        },
+        GET_BY_ID: {
+            url: '/employer/:id',
+            method: HTTP_METHOD.GET,
+            requiresAuth: true,
+            description: 'Get employer by ID',
+        },
+        CREATE: {
+            url: '/employer/create',
+            method: HTTP_METHOD.POST,
+            requiresAuth: true,
+            description: 'Create new employer with profile',
+        },
+        UPDATE: {
+            url: '/employer/:id',
+            method: HTTP_METHOD.PATCH,
+            requiresAuth: true,
+            description: 'Update employer',
+        },
+        DELETE: {
+            url: '/employer/:id',
+            method: HTTP_METHOD.DELETE,
+            requiresAuth: true,
+            description: 'Delete employer',
+        },
+        PURCHASE_SEATS: {
+            url: '/employer/purchase-seats',
+            method: HTTP_METHOD.POST,
+            requiresAuth: true,
+            description: 'Purchase seats for a course',
         },
     },
 } as const satisfies ServiceRoutes;
@@ -307,6 +371,38 @@ export const ADMIN_ROUTES = {
             method: HTTP_METHOD.POST,
             requiresAuth: true,
             description: 'Reject course',
+        },
+    },
+    PLATFORM_SETTINGS: {
+        CREATE: {
+            url: '/platform-settings',
+            method: HTTP_METHOD.POST,
+            requiresAuth: true,
+            description: 'Create platform settings',
+        },
+        GET_ALL: {
+            url: '/platform-settings',
+            method: HTTP_METHOD.GET,
+            requiresAuth: true,
+            description: 'Get all platform settings',
+        },
+        GET_CURRENT: {
+            url: '/platform-settings/current',
+            method: HTTP_METHOD.GET,
+            requiresAuth: true,
+            description: 'Get current/active platform settings',
+        },
+        GET_BY_ID: {
+            url: '/platform-settings/:id',
+            method: HTTP_METHOD.GET,
+            requiresAuth: true,
+            description: 'Get platform settings by ID',
+        },
+        UPDATE: {
+            url: '/platform-settings/:id',
+            method: HTTP_METHOD.PATCH,
+            requiresAuth: true,
+            description: 'Update platform settings',
         },
     },
 } as const satisfies ServiceRoutes;

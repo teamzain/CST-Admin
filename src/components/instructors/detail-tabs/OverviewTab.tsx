@@ -1,10 +1,13 @@
+import type { Instructor } from '@/repositories/instructors/types';
 import { BookOpen, Star, Activity } from 'lucide-react';
 
 interface OverviewTabProps {
+    instructor?: Instructor;
     instructorId: string;
 }
 
 const OverviewTab: React.FC<OverviewTabProps> = ({
+    instructor,
     instructorId: _instructorId,
 }) => {
     return (
@@ -20,7 +23,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
                                     Total Courses
                                 </p>
                                 <p className="text-2xl font-bold text-gray-900">
-                                    13
+                                    {instructor?.assigned_courses?.length || 0}
                                 </p>
                             </div>
                             <div className="p-2 bg-gray-50 rounded-lg">

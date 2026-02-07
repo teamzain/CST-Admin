@@ -12,13 +12,14 @@ const InstructorCard: React.FC<InstructorCardProps> = ({
     onViewProfile,
 }) => {
     // Get status badge styling
-    const getStatusBadge = (status: string) => {
+    const getStatusBadge = (status: string | undefined) => {
         const styles = {
             active: 'bg-green-50 text-green-700 border border-green-200',
             pending: 'bg-yellow-50 text-yellow-700 border border-yellow-200',
             expired: 'bg-red-50 text-red-700 border border-red-200',
         };
-        return styles[status as keyof typeof styles] || styles.active;
+        const normalizedStatus = String(status || 'active').toLowerCase();
+        return styles[normalizedStatus as keyof typeof styles] || styles.active;
     };
 
     // Get initials from name
@@ -31,9 +32,9 @@ const InstructorCard: React.FC<InstructorCardProps> = ({
             .slice(0, 2);
     };
 
-    // Mock data for stats (you can replace with actual data)
+    // Stats from instructor data
     const stats = {
-        courses: instructor.assignedCourses?.length || 5,
+        courses: instructor.assigned_courses?.length || 0,
         students: 500,
         rating: 4.5,
     };
@@ -60,14 +61,14 @@ const InstructorCard: React.FC<InstructorCardProps> = ({
             <div className="flex flex-col items-center mt-8">
                 {/* Avatar */}
                 <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white text-xl font-semibold mb-3 relative">
-                    {instructor.user?.avatar ? (
+                    {instructor.avatar ? (
                         <img
-                            src={instructor.user.avatar}
-                            alt={instructor.name}
+                            src={instructor.avatar}
+                            alt={instructor.name || instructor.first_name}
                             className="w-full h-full rounded-full object-cover"
                         />
                     ) : (
-                        getInitials(instructor.name)
+                        getInitials(instructor.name || `${instructor.first_name} ${instructor.last_name}`)
                     )}
                     {/* Online indicator */}
                     <div className="absolute bottom-0 right-0 w-5 h-5 bg-green-500 border-2 border-white rounded-full"></div>
@@ -75,7 +76,7 @@ const InstructorCard: React.FC<InstructorCardProps> = ({
 
                 {/* Name */}
                 <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                    {instructor.name}
+                    {instructor.name || `${instructor.first_name} ${instructor.last_name}`}
                 </h3>
 
                 {/* Email */}

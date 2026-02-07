@@ -3,6 +3,8 @@
 import type React from 'react';
 
 import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { InstructorsRepository } from '@/repositories/instructors/repo';
 import {
     Dialog,
     DialogContent,
@@ -28,7 +30,7 @@ interface Course {
     category: 'PRERECORDED' | 'LIVE_WEBINAR' | 'IN_PERSON';
     duration_hours: number;
     is_active: boolean;
-    instructor: string;
+    instructor_id?: number | string;
     enrolled_students: number;
     price: number;
     state: string;
@@ -64,7 +66,7 @@ export function CourseModal({
                 category: 'PRERECORDED',
                 duration_hours: 0,
                 is_active: true,
-                instructor: '',
+                instructor_id: '',
                 enrolled_students: 0,
                 price: 0,
                 state: '',
@@ -79,6 +81,13 @@ export function CourseModal({
     }
     
     const [formData, setFormData] = useState<Omit<Course, 'id'>>(() => getInitialFormData(course));
+
+    // Fetch instructors from API
+    const { data: instructors = [] } = useQuery({
+        queryKey: ['instructors-list'],
+        queryFn: () => InstructorsRepository.getAllInstructors(),
+        staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    });
 
     useEffect(() => {
         if (open) {
@@ -176,12 +185,30 @@ export function CourseModal({
 
                         <div>
                             <Label htmlFor="instructor">Instructor</Label>
-                            <Input
-                                id="instructor"
-                                value={formData.instructor}
-                                onChange={(e) => setFormData({ ...formData, instructor: e.target.value })}
-                                className="bg-input border-border mt-1"
-                            />
+                            <Select
+                                value={String(formData.instructor_id || '')}
+                                onValueChange={(value) => setFormData({ ...formData, instructor_id: value ? parseInt(value) : '' })}
+                            >
+                                <SelectTrigger className="bg-input border-border mt-1">
+                                    <SelectValue placeholder="Select instructor" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {instructors.length > 0 ? (
+                                        instructors.map((instructor: any) => {
+                                            const fullName = `${instructor.first_name || ''} ${instructor.last_name || ''}`.trim();
+                                            return (
+                                                <SelectItem key={instructor.id} value={String(instructor.id)}>
+                                                    {fullName || `Instructor ${instructor.id}`}
+                                                </SelectItem>
+                                            );
+                                        })
+                                    ) : (
+                                        <SelectItem value="" disabled>
+                                            No instructors available
+                                        </SelectItem>
+                                    )}
+                                </SelectContent>
+                            </Select>
                         </div>
 
                         <div>

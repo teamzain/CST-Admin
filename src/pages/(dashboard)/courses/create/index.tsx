@@ -28,9 +28,9 @@ import {
     type CreateCourseInput,
     TRAINING_TYPE,
     DELIVERY_MODE,
-    dummyInstructors,
 } from '@/repositories/courses';
 import { StatesRepository } from '@/repositories/states';
+import { InstructorsRepository } from '@/repositories/instructors/repo';
 import { bunnyUploadService } from '@/api/bunny-upload';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
@@ -69,6 +69,13 @@ export default function CreateCoursePage() {
     const { data: allStates = [] } = useQuery({
         queryKey: ['states'],
         queryFn: () => StatesRepository.getAll(),
+    });
+
+    // Fetch instructors with TanStack Query 
+    const { data: allInstructors = [] } = useQuery({
+        queryKey: ['instructors-course-create'],
+        queryFn: () => InstructorsRepository.getAllInstructors(),
+        staleTime: 5 * 60 * 1000, // Cache for 5 minutes
     });
 
     const [step, setStep] = useState(1);
@@ -229,6 +236,7 @@ export default function CreateCoursePage() {
             is_price_negotiable: formData.is_price_negotiable,
             pre_requirements: preReqs,
             certificate_template: formData.certificate_template,
+            instructor_id: formData.instructor_id,
         };
 
         try {
@@ -373,8 +381,8 @@ export default function CreateCoursePage() {
                                             <SelectItem value="unassigned">
                                                 Unassigned
                                             </SelectItem>
-                                            {dummyInstructors.map(
-                                                (instructor) => (
+                                            {allInstructors.map(
+                                                (instructor: any) => (
                                                     <SelectItem
                                                         key={instructor.id}
                                                         value={String(
@@ -389,15 +397,11 @@ export default function CreateCoursePage() {
                                                                     }
                                                                 />
                                                                 <AvatarFallback>
-                                                                    {instructor.name.charAt(
-                                                                        0
-                                                                    )}
+                                                                    {`${instructor.first_name?.[0]}${instructor.last_name?.[0]}`}
                                                                 </AvatarFallback>
                                                             </Avatar>
                                                             <span>
-                                                                {
-                                                                    instructor.name
-                                                                }
+                                                                {instructor.first_name} {instructor.last_name}
                                                             </span>
                                                         </div>
                                                     </SelectItem>

@@ -2,6 +2,10 @@
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
+import { InstructorsRepository } from '@/repositories/instructors/repo';
+import { StatesRepository } from '@/repositories/states';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,7 +21,14 @@ import { ArrowLeft, Save } from 'lucide-react';
 
 export default function CreateInstructorPage() {
     const router = useNavigate();
-    const [loading, setLoading] = useState(false);
+    const queryClient = useQueryClient();
+    
+    // Fetch states dynamically
+    const { data: allStates = [] } = useQuery({
+        queryKey: ['states'],
+        queryFn: () => StatesRepository.getAll(),
+    });
+    
     const [formData, setFormData] = useState({
         firstName: '',
         lastName: '',
@@ -29,28 +40,34 @@ export default function CreateInstructorPage() {
         userId: '', // Optional: if linking to existing user
     });
 
+    const mutation = useMutation({
+        mutationFn: async (data: typeof formData) => {
+            const payload = {
+                first_name: data.firstName,
+                last_name: data.lastName,
+                email: data.email,
+                phone: data.phone || undefined,
+                state_id: parseInt(data.stateId),
+                license_no: data.licenseNo,
+                license_expiry: data.licenseExpiry,
+                username: `${data.firstName.toLowerCase()}_${Date.now()}`,
+            };
+            return InstructorsRepository.createInstructor(payload);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['instructors'] });
+            toast.success('Instructor created successfully');
+            router('/instructors');
+        },
+        onError: (error: any) => {
+            console.error('Error creating instructor:', error);
+            toast.error(error.message || 'Failed to create instructor');
+        },
+    });
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setLoading(true);
-
-        try {
-            // API call to create instructor
-            const response = await fetch('/api/instructors', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(formData),
-            });
-
-            if (response.ok) {
-                router('/instructors');
-            }
-        } catch (error) {
-            console.error('Error creating instructor:', error);
-        } finally {
-            setLoading(false);
-        }
+        mutation.mutate(formData);
     };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -167,21 +184,14 @@ export default function CreateInstructorPage() {
                                                 <SelectValue placeholder="Select state" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                <SelectItem value="1">
-                                                    Illinois
-                                                </SelectItem>
-                                                <SelectItem value="2">
-                                                    Texas
-                                                </SelectItem>
-                                                <SelectItem value="3">
-                                                    California
-                                                </SelectItem>
-                                                <SelectItem value="4">
-                                                    New York
-                                                </SelectItem>
-                                                <SelectItem value="5">
-                                                    Florida
-                                                </SelectItem>
+                                                {allStates.map((state: any) => (
+                                                    <SelectItem
+                                                        key={state.id}
+                                                        value={state.id.toString()}
+                                                    >
+                                                        {state.name}
+                                                    </SelectItem>
+                                                ))}
                                             </SelectContent>
                                         </Select>
                                     </div>
@@ -227,10 +237,10 @@ export default function CreateInstructorPage() {
                         <Button
                             type="submit"
                             className="gap-2"
-                            disabled={loading}
+                            disabled={mutation.isPending}
                         >
                             <Save className="w-4 h-4" />
-                            {loading ? 'Creating...' : 'Create Instructor'}
+                            {mutation.isPending ? 'Creating...' : 'Create Instructor'}
                         </Button>
                     </div>
                 </form>
