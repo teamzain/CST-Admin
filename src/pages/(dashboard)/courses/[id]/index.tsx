@@ -30,7 +30,15 @@ export default function CourseDetailsPage() {
     // Fetch course with TanStack Query
     const { data: course, isLoading } = useQuery({
         queryKey: ['course', id],
-        queryFn: () => CoursesRepository.getById(Number(id)),
+        queryFn: async () => {
+            const courseData = await CoursesRepository.getById(Number(id));
+            console.log('FETCHED COURSE:', {
+                id: courseData.id,
+                instructor_id: courseData.instructor_id,
+                instructor: courseData.instructor,
+            });
+            return courseData;
+        },
         enabled: !!id,
     });
 
@@ -65,7 +73,16 @@ export default function CourseDetailsPage() {
 
     useEffect(() => {
         if (course && !isEditing) {
-            setFormData(course);
+            const courseData = { ...course };
+            // Ensure instructor_id is set correctly from instructor.id if not present
+            if (!courseData.instructor_id && course.instructor?.id) {
+                courseData.instructor_id = course.instructor.id;
+            }
+            console.log('FORMDATA INITIALIZED:', {
+                instructor_id: courseData.instructor_id,
+                instructor_from_api: course.instructor,
+            });
+            setFormData(courseData);
         }
     }, [course, isEditing]);
 
@@ -96,12 +113,41 @@ export default function CourseDetailsPage() {
 
     const handleSave = async () => {
         if (!course) return;
-        // Convert formData to UpdateCourseInput format
-        const updateData: UpdateCourseInput = {
-            ...formData,
-            // Convert state object to string if present
-            state: typeof formData.state === 'object' ? formData.state?.name : formData.state,
-        };
+        
+        // Build update data with only defined fields to avoid API validation errors
+        const updateData: UpdateCourseInput = {};
+        
+        if (formData.title !== undefined) updateData.title = formData.title;
+        if (formData.description !== undefined) updateData.description = formData.description;
+        if (formData.duration_hours !== undefined) updateData.duration_hours = formData.duration_hours;
+        if (formData.required_hours !== undefined) updateData.required_hours = formData.required_hours;
+        if (formData.training_type !== undefined) updateData.training_type = formData.training_type;
+        if (formData.delivery_mode !== undefined) updateData.delivery_mode = formData.delivery_mode;
+        if (formData.thumbnail !== undefined) updateData.thumbnail = formData.thumbnail;
+        if (formData.price !== undefined) updateData.price = formData.price;
+        if (formData.location !== undefined) updateData.location = formData.location;
+        if (formData.requires_exam !== undefined) updateData.requires_exam = formData.requires_exam;
+        if (formData.requires_range !== undefined) updateData.requires_range = formData.requires_range;
+        if (formData.attendance_required !== undefined) updateData.attendance_required = formData.attendance_required;
+        if (formData.attendance_enabled !== undefined) updateData.attendance_enabled = formData.attendance_enabled;
+        if (formData.requires_id_verification !== undefined) updateData.requires_id_verification = formData.requires_id_verification;
+        if (formData.is_refresher !== undefined) updateData.is_refresher = formData.is_refresher;
+        if (formData.is_price_negotiable !== undefined) updateData.is_price_negotiable = formData.is_price_negotiable;
+        if (formData.pre_requirements !== undefined) updateData.pre_requirements = formData.pre_requirements;
+        if (formData.certificate_template !== undefined) updateData.certificate_template = formData.certificate_template;
+        if (formData.instructor_id !== undefined) updateData.instructor_id = formData.instructor_id;
+        if (formData.is_active !== undefined) updateData.is_active = formData.is_active;
+        
+        // Handle state: convert object to string if needed
+        if (formData.state !== undefined) {
+            updateData.state = typeof formData.state === 'object' ? formData.state?.name : formData.state;
+        }
+        
+        // Also send state_id if available
+        if (formData.state_id !== undefined) {
+            updateData.state_id = formData.state_id;
+        }
+        
         updateMutation.mutate(updateData);
     };
 

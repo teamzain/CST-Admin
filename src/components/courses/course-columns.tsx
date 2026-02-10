@@ -73,11 +73,15 @@ export const getCourseColumns = (onView: (course: Course) => void, onDelete: (co
         },
     },
     {
-        accessorKey: 'instructor.name',
+        accessorKey: 'instructor',
         header: 'Instructor',
-        cell: ({ row }) => (
-            <span className="text-gray-600">{row.original.instructor?.name || 'N/A'}</span>
-        ),
+        cell: ({ row }) => {
+            const instructor = row.original.instructor;
+            const instructorName = instructor?.user
+                ? `${instructor.user.first_name || ''} ${instructor.user.last_name || ''}`.trim()
+                : 'N/A';
+            return <span className="text-gray-600">{instructorName}</span>;
+        },
     },
     {
         accessorKey: 'enrolled_students',

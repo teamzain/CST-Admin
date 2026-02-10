@@ -22,7 +22,7 @@ export default function StudentsPage() {
 
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState<string>('All Users');
-    const [roleFilter, setRoleFilter] = useState<string>('all'); // Keeping for compatibility with Filter component
+    const [roleFilter, setRoleFilter] = useState<string>('all');
     const [dateModalOpen, setDateModalOpen] = useState(false);
 
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -135,6 +135,7 @@ export default function StudentsPage() {
                     <Button
                         onClick={() => navigate('/students/create')}
                         className="bg-primary hover:bg-primary/90 text-black font-medium w-full sm:w-auto gap-2"
+                        style={{ display: roleFilter === 'Instructor' ? 'none' : 'flex' }}
                     >
                         <Plus className="w-4 h-4" />
                         Add Student

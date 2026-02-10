@@ -1,57 +1,19 @@
+import type { Instructor } from '@/repositories/instructors/types';
 import { Card } from '@/components/ui/card';
 import { Trash2 } from 'lucide-react';
 
 interface CoursesTabProps {
+    instructor?: Instructor;
     instructorId: string;
 }
 
 const CoursesTab: React.FC<CoursesTabProps> = ({
+    instructor,
     instructorId: _instructorId,
 }) => {
-    const courses = [
-        {
-            id: 1,
-            name: 'Course Name',
-            status: 'Active',
-            studentsEnrolled: 560,
-            lastUpdate: 'Nov 5, 2025',
-        },
-        {
-            id: 2,
-            name: 'Course Name',
-            status: 'Active',
-            studentsEnrolled: 560,
-            lastUpdate: 'Nov 5, 2025',
-        },
-        {
-            id: 3,
-            name: 'Course Name',
-            status: 'Inactive',
-            studentsEnrolled: 0,
-            lastUpdate: 'Nov 5, 2025',
-        },
-        {
-            id: 4,
-            name: 'Course Name',
-            status: 'Active',
-            studentsEnrolled: 234,
-            lastUpdate: 'Nov 5, 2025',
-        },
-        {
-            id: 5,
-            name: 'Course Name',
-            status: 'Inactive',
-            studentsEnrolled: 0,
-            lastUpdate: 'Nov 5, 2025',
-        },
-        {
-            id: 6,
-            name: 'Course Name',
-            status: 'Active',
-            studentsEnrolled: 24,
-            lastUpdate: 'Nov 5, 2025',
-        },
-    ];
+    const courses = instructor?.assigned_courses && instructor.assigned_courses.length > 0 
+        ? instructor.assigned_courses
+        : [];
 
     return (
         <Card className="bg-white">
@@ -80,41 +42,49 @@ const CoursesTab: React.FC<CoursesTabProps> = ({
                         </tr>
                     </thead>
                     <tbody>
-                        {courses.map((course, index) => (
-                            <tr
-                                key={course.id}
-                                className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
-                            >
-                                <td className="py-4 px-6 text-sm text-gray-900">
-                                    {index + 1}.
-                                </td>
-                                <td className="py-4 px-6 text-sm text-gray-900">
-                                    {course.name}
-                                </td>
-                                <td className="py-4 px-6">
-                                    <span
-                                        className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${
-                                            course.status === 'Active'
-                                                ? 'bg-green-50 text-green-700 border border-green-200'
-                                                : 'bg-gray-100 text-gray-700 border border-gray-200'
-                                        }`}
-                                    >
-                                        {course.status}
-                                    </span>
-                                </td>
-                                <td className="py-4 px-6 text-sm text-gray-900">
-                                    {course.studentsEnrolled}
-                                </td>
-                                <td className="py-4 px-6 text-sm text-gray-900">
-                                    {course.lastUpdate}
-                                </td>
-                                <td className="py-4 px-6">
-                                    <button className="text-gray-400 hover:text-red-600 transition-colors">
-                                        <Trash2 className="w-4 h-4" />
-                                    </button>
+                        {courses.length === 0 ? (
+                            <tr>
+                                <td colSpan={6} className="py-8 px-6 text-center text-gray-500">
+                                    No courses assigned
                                 </td>
                             </tr>
-                        ))}
+                        ) : (
+                            courses.map((course, index) => (
+                                <tr
+                                    key={course.id || index}
+                                    className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                                >
+                                    <td className="py-4 px-6 text-sm text-gray-900">
+                                        {index + 1}.
+                                    </td>
+                                    <td className="py-4 px-6 text-sm text-gray-900">
+                                        {course.title || course.name || `Course ${course.id}`}
+                                    </td>
+                                    <td className="py-4 px-6">
+                                        <span
+                                            className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${
+                                                course.status === 'Active' || course.status === 'active'
+                                                    ? 'bg-green-50 text-green-700 border border-green-200'
+                                                    : 'bg-gray-100 text-gray-700 border border-gray-200'
+                                            }`}
+                                        >
+                                            {course.status || 'Active'}
+                                        </span>
+                                    </td>
+                                    <td className="py-4 px-6 text-sm text-gray-900">
+                                        {course.students_enrolled || course.studentsEnrolled || 0}
+                                    </td>
+                                    <td className="py-4 px-6 text-sm text-gray-900">
+                                        {course.updated_at ? new Date(course.updated_at).toLocaleDateString() : course.lastUpdate || '-'}
+                                    </td>
+                                    <td className="py-4 px-6">
+                                        <button className="text-gray-400 hover:text-red-600 transition-colors">
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))
+                        )}
                     </tbody>
                 </table>
             </div>

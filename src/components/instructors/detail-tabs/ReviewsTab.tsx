@@ -2,11 +2,15 @@ import { Card } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Star, Trash2, MoreVertical } from 'lucide-react';
 
+import type { Instructor } from '@/repositories/instructors/types';
+
 interface ReviewsTabProps {
+    instructor?: Instructor;
     instructorId: string;
 }
 
 const ReviewsTab: React.FC<ReviewsTabProps> = ({
+    instructor: _instructor,
     instructorId: _instructorId,
 }) => {
     const reviews = [

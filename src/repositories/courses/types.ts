@@ -29,8 +29,27 @@ export interface Course {
     instructor_id?: number;
     instructor?: {
         id: number;
-        name: string;
-        avatar?: string;
+        user_id?: number;
+        state_id?: number;
+        license_no?: string;
+        license_expiry?: Date;
+        created_at?: Date;
+        updated_at?: Date;
+        user?: {
+            id: number;
+            username?: string;
+            first_name?: string;
+            last_name?: string;
+            avatar?: string | null;
+            email?: string;
+            phone?: string | null;
+            bio?: string | null;
+            link?: string | null;
+            role?: string;
+            state_id?: number;
+            created_at?: Date;
+            updated_at?: Date;
+        };
     };
     location?: string;
     requires_exam: boolean;
@@ -47,6 +66,12 @@ export interface Course {
     created_at: Date;
     updated_at: Date;
     enrolled_students?: number;
+    lessons?: Array<{
+        id: number;
+        title: string;
+        duration_min?: number;
+    }>;
+    enrollments?: unknown[];
     modules?: unknown[];
 }
 
@@ -70,10 +95,12 @@ export interface CreateCourseInput {
     is_price_negotiable: boolean;
     pre_requirements: string[];
     certificate_template?: string;
+    instructor_id?: number;
 }
 
 export interface UpdateCourseInput extends Partial<CreateCourseInput> {
     is_active?: boolean;
+    state_id?: number;
 }
 
 export interface CourseFilters {

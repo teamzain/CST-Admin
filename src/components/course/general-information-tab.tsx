@@ -26,9 +26,9 @@ import {
     TRAINING_TYPE,
     DELIVERY_MODE,
     type Course,
-    dummyInstructors,
 } from '@/repositories/courses';
 import { StatesRepository } from '@/repositories/states';
+import { InstructorsRepository } from '@/repositories/instructors/repo';
 import { bunnyUploadService } from '@/api/bunny-upload';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
@@ -49,6 +49,13 @@ export function GeneralInformationTab({
 }: GeneralInformationTabProps) {
     const [thumbnailPreview, setThumbnailPreview] = useState<string>('');
     const [isUploadingThumbnail, setIsUploadingThumbnail] = useState(false);
+
+    // Fetch instructors from API
+    const { data: instructors = [] } = useQuery({
+        queryKey: ['instructors-general-info'],
+        queryFn: () => InstructorsRepository.getAllInstructors(),
+        staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    });
 
     // Fetch states with TanStack Query
     const { data: allStates = [] } = useQuery({
@@ -127,6 +134,30 @@ export function GeneralInformationTab({
 
     const displayCourse = { ...course, ...formData };
 
+    // Get instructor display name - handle both course.instructor and formData.instructor_id
+    const getInstructorName = () => {
+        // If instructor_id was changed in formData, find it from instructors list
+        if (formData.instructor_id) {
+            const instructor = instructors.find((i: any) => i.id === formData.instructor_id);
+            // InstructorsRepository returns flattened structure with first_name/last_name directly
+            if (instructor) {
+                return `${instructor.first_name || ''} ${instructor.last_name || ''}`.trim();
+            }
+        }
+
+        // Otherwise use the course's instructor data (nested user object from API)
+        if (course.instructor?.user) {
+            return `${course.instructor.user.first_name || ''} ${course.instructor.user.last_name || ''}`.trim();
+        }
+
+        // Fallback: check if instructor has first_name/last_name directly (flat structure)
+        if (course.instructor && 'first_name' in course.instructor) {
+            return `${(course.instructor as any).first_name || ''} ${(course.instructor as any).last_name || ''}`.trim();
+        }
+
+        return 'N/A';
+    };
+
     return (
         <div className="space-y-8">
             {/* Quick Stats */}
@@ -180,7 +211,7 @@ export function GeneralInformationTab({
                                 Instructor
                             </p>
                             <p className="text-lg font-bold truncate">
-                                {displayCourse.instructor?.name || 'N/A'}
+                                {getInstructorName()}
                             </p>
                         </div>
                         <Award className="w-8 h-8 text-muted-foreground/50" />
@@ -293,14 +324,10 @@ export function GeneralInformationTab({
                                         <Select
                                             value={
                                                 formData.instructor_id
-                                                    ? String(
-                                                          formData.instructor_id
-                                                      )
-                                                    : course.instructor_id
-                                                      ? String(
-                                                            course.instructor_id
-                                                        )
-                                                      : 'unassigned'
+                                                    ? String(formData.instructor_id)
+                                                    : course.instructor?.id
+                                                    ? String(course.instructor.id)
+                                                    : 'unassigned'
                                             }
                                             onValueChange={(val) => {
                                                 const id =
@@ -311,14 +338,6 @@ export function GeneralInformationTab({
                                                     'instructor_id',
                                                     id
                                                 );
-                                                const instructor =
-                                                    dummyInstructors.find(
-                                                        (i) => i.id === id
-                                                    );
-                                                onInputChange(
-                                                    'instructor',
-                                                    instructor
-                                                );
                                             }}
                                         >
                                             <SelectTrigger className="bg-background border-border">
@@ -328,8 +347,8 @@ export function GeneralInformationTab({
                                                 <SelectItem value="unassigned">
                                                     Unassigned
                                                 </SelectItem>
-                                                {dummyInstructors.map(
-                                                    (instructor) => (
+                                                {instructors.map(
+                                                    (instructor: any) => (
                                                         <SelectItem
                                                             key={instructor.id}
                                                             value={String(
@@ -344,15 +363,11 @@ export function GeneralInformationTab({
                                                                         }
                                                                     />
                                                                     <AvatarFallback>
-                                                                        {instructor.name.charAt(
-                                                                            0
-                                                                        )}
+                                                                        {`${instructor.first_name?.[0]}${instructor.last_name?.[0]}`}
                                                                     </AvatarFallback>
                                                                 </Avatar>
                                                                 <span>
-                                                                    {
-                                                                        instructor.name
-                                                                    }
+                                                                    {instructor.first_name} {instructor.last_name}
                                                                 </span>
                                                             </div>
                                                         </SelectItem>
@@ -536,8 +551,11 @@ export function GeneralInformationTab({
                                         Instructor
                                     </p>
                                     <p className="font-semibold">
-                                        {course.instructor?.name ||
-                                            'Unassigned'}
+                                        {course.instructor?.user
+                                            ? `${course.instructor.user.first_name || ''} ${course.instructor.user.last_name || ''}`.trim()
+                                            : course.instructor && 'first_name' in course.instructor
+                                            ? `${(course.instructor as any).first_name || ''} ${(course.instructor as any).last_name || ''}`.trim()
+                                            : 'Unassigned'}
                                     </p>
                                 </div>
                                 <div>

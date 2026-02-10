@@ -123,7 +123,9 @@ export default function CoursesPage() {
                         .filter((c) => c.instructor_id)
                         .map((c) => [
                             c.instructor_id as number,
-                            c.instructor?.name || '',
+                            c.instructor?.user
+                                ? `${c.instructor.user.first_name || ''} ${c.instructor.user.last_name || ''}`.trim()
+                                : '',
                         ])
                 ).entries()
             ),

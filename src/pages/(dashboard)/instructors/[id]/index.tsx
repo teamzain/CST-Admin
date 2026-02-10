@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { InstructorsRepository } from '@/repositories/instructors/repo';
 import {
     ArrowLeft,
     Eye,
@@ -10,8 +12,19 @@ import {
     Wallet,
     Star,
     Grid3x3,
+    Loader2,
+    MoreVertical,
+    Trash2,
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 // Import tab components
 import OverviewTab from '@/components/instructors/detail-tabs/OverviewTab';
@@ -22,18 +35,77 @@ import ReviewsTab from '@/components/instructors/detail-tabs/ReviewsTab';
 export default function InstructorDetailPage() {
     const router = useNavigate();
     const params = useParams();
+    const queryClient = useQueryClient();
     const [activeTab, setActiveTab] = useState('overview');
+    const [isDeleting, setIsDeleting] = useState(false);
 
-    // Mock instructor data
-    const instructor = {
-        id: params.id || '1',
-        userId: 'USR-9901',
-        name: 'Instructor Name',
-        email: 'instructor@example.com',
-        phone: '017145487791',
-        lastActivity: 'Nov 5, 2025',
-        avatar: null,
+    // Fetch instructor data from API
+    const {
+        data: instructor,
+        isLoading,
+        error,
+    } = useQuery({
+        queryKey: ['instructor', params.id],
+        queryFn: () => InstructorsRepository.getInstructorById(Number(params.id)),
+        enabled: !!params.id,
+    });
+
+    // Delete mutation
+    const deleteInstructor = async () => {
+        setIsDeleting(true);
+        try {
+            const response = await fetch(`http://localhost:3010/api/user/${instructor?.id}`, {
+                method: 'DELETE',
+                credentials: 'include',
+            });
+            if (!response.ok) throw new Error('Failed to delete instructor');
+            
+            // Invalidate queries and redirect
+            queryClient.invalidateQueries({ queryKey: ['instructors'] });
+            router('/instructors');
+        } catch (err) {
+            console.error('Error deleting instructor:', err);
+            alert('Failed to delete instructor');
+        } finally {
+            setIsDeleting(false);
+        }
     };
+
+    const handleDelete = () => {
+        if (confirm(`Are you sure you want to delete ${instructor?.first_name} ${instructor?.last_name}?`)) {
+            deleteInstructor();
+        }
+    };
+
+    // Display loading state
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+        );
+    }
+
+    // Display error state
+    if (error || !instructor) {
+        return (
+            <div className="min-h-screen bg-gray-50">
+                <div className="px-6 py-5">
+                    <button
+                        onClick={() => router('/instructors')}
+                        className="p-1 hover:bg-gray-100 rounded-md transition-colors mb-4"
+                    >
+                        <ArrowLeft className="w-5 h-5 text-gray-700" />
+                    </button>
+                    <div className="text-center py-12">
+                        <p className="text-gray-600 text-lg">
+                            {error ? 'Failed to load instructor details' : 'Instructor not found'}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -41,16 +113,38 @@ export default function InstructorDetailPage() {
             <div className="">
                 <div className="px-6 py-5">
                     {/* Back button and Title */}
-                    <div className="flex items-center gap-3 mb-3">
-                        <button
-                            onClick={() => router('/instructors')}
-                            className="p-1 hover:bg-gray-100 rounded-md transition-colors"
-                        >
-                            <ArrowLeft className="w-5 h-5 text-gray-700" />
-                        </button>
-                        <h1 className="text-xl font-semibold text-gray-900">
-                            {instructor.name}
-                        </h1>
+                    <div className="flex items-center gap-3 mb-3 justify-between">
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={() => router('/instructors')}
+                                className="p-1 hover:bg-gray-100 rounded-md transition-colors"
+                            >
+                                <ArrowLeft className="w-5 h-5 text-gray-700" />
+                            </button>
+                            <h1 className="text-xl font-semibold text-gray-900">
+                                {instructor.first_name} {instructor.last_name}
+                            </h1>
+                        </div>
+                        {/* Three-dot menu */}
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" className="h-8 w-8 p-0">
+                                    <span className="sr-only">Open menu</span>
+                                    <MoreVertical className="h-4 w-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                <DropdownMenuItem 
+                                    onClick={handleDelete}
+                                    disabled={isDeleting}
+                                    className="text-red-600"
+                                >
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    {isDeleting ? 'Deleting...' : 'Delete'}
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                     </div>
 
                     {/* User Info */}
@@ -58,13 +152,13 @@ export default function InstructorDetailPage() {
                         <span className="flex items-center gap-1.5">
                             User ID:{' '}
                             <span className="text-gray-900">
-                                {instructor.userId}
+                                {instructor.id}
                             </span>
                         </span>
                         <span className="flex items-center gap-1.5">
-                            Last Activity:{' '}
+                            Email:{' '}
                             <span className="text-gray-900">
-                                {instructor.lastActivity}
+                                {instructor.email}
                             </span>
                         </span>
                     </div>
@@ -123,15 +217,15 @@ export default function InstructorDetailPage() {
                         {/* Tab Content */}
                         <div className="p-6">
                             <TabsContent value="overview" className="m-0 mt-0">
-                                <OverviewTab instructorId={instructor.id} />
+                                <OverviewTab instructor={instructor} instructorId={String(instructor.id)} />
                             </TabsContent>
 
                             <TabsContent value="personal" className="m-0 mt-0">
-                                <PersonalTab instructorId={instructor.id} />
+                                <PersonalTab instructor={instructor} instructorId={String(instructor.id)} />
                             </TabsContent>
 
                             <TabsContent value="courses" className="m-0 mt-0">
-                                <CoursesTab instructorId={instructor.id} />
+                                <CoursesTab instructor={instructor} instructorId={String(instructor.id)} />
                             </TabsContent>
 
                             <TabsContent value="wallet" className="m-0 mt-0">
@@ -144,7 +238,7 @@ export default function InstructorDetailPage() {
                             </TabsContent>
 
                             <TabsContent value="reviews" className="m-0 mt-0">
-                                <ReviewsTab instructorId={instructor.id} />
+                                <ReviewsTab instructor={instructor} instructorId={String(instructor.id)} />
                             </TabsContent>
 
                             <TabsContent value="more" className="m-0 mt-0">

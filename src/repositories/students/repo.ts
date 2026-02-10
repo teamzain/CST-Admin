@@ -43,6 +43,9 @@ export class StudentsRepository {
         try {
             const params = new URLSearchParams();
 
+            // Filter by USER role to get students
+            params.append('role', 'USER');
+
             if (filters?.search) {
                 params.append('search', filters.search);
             }
@@ -66,8 +69,13 @@ export class StudentsRepository {
             const path = USER_ROUTES.STUDENTS.GET_ALL.url;
             const url = queryString ? `${path}?${queryString}` : path;
 
+            console.log('[StudentsRepository] Fetching students from:', url);
             const response = await userApi.get(url);
-            return response.data.data;
+            console.log('[StudentsRepository] Fetched students:', response.data);
+            
+            // Handle multiple response formats
+            const data = response.data?.data || response.data;
+            return Array.isArray(data) ? data : [];
         } catch (error: unknown) {
             console.error('Error fetching students:', error);
             toast.error('Failed to fetch students');

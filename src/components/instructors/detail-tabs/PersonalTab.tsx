@@ -2,22 +2,25 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ChevronDown } from 'lucide-react';
+import type { Instructor } from '@/repositories/instructors/types';
 
 interface PersonalTabProps {
+    instructor?: Instructor;
     instructorId: string;
 }
 
 const PersonalTab: React.FC<PersonalTabProps> = ({
+    instructor,
     instructorId: _instructorId,
 }) => {
     const personalInfo = {
-        fullName: 'Name',
-        email: 'name@gmail.com',
+        fullName: instructor ? `${instructor.first_name || ''} ${instructor.last_name || ''}`.trim() : 'Name',
+        email: instructor?.email || 'name@gmail.com',
         nationality: 'United States',
-        joiningDate: '00/00/0000',
+        joiningDate: instructor?.join_date ? new Date(instructor.join_date).toLocaleDateString('en-US') : '00/00/0000',
         dateOfBirth: '00/00/0000',
-        contactNo: '017145487791',
-        state: 'State Name',
+        contactNo: instructor?.phone || '017145487791',
+        state: instructor?.stateName || (typeof instructor?.state === 'object' && instructor?.state?.name) || (typeof instructor?.state === 'string' ? instructor?.state : '') || 'State Name',
     };
 
     const areasOfExpertise = [
@@ -109,6 +112,7 @@ const PersonalTab: React.FC<PersonalTabProps> = ({
                             placeholder="About the instructor"
                             className="min-h-[100px] resize-none bg-gray-50 border-gray-200"
                             disabled
+                            value={instructor?.bio || ''}
                         />
                         <button className="absolute top-3 right-3 text-gray-400 hover:text-gray-600">
                             <ChevronDown className="w-5 h-5" />
