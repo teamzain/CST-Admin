@@ -68,6 +68,7 @@ function transformInstructor(instructor: any): Instructor {
         avatar: instructor.avatar,
         bio: instructor.bio,
         link: instructor.link,
+        signature: primaryLicense.signature || instructor.signature,
         role: instructor.role,
         
         // License fields (from primary license or top-level)
@@ -79,7 +80,7 @@ function transformInstructor(instructor: any): Instructor {
         state: stateInfo,
         instructorLicenses: allLicenses,
         licenses: allLicenses,
-        assigned_courses: primaryLicense.assigned_courses || instructor.assigned_courses || [],
+        assigned_courses: allLicenses.flatMap((l: any) => l.courses || l.assigned_courses || []),
         
         // Summary from getById response
         summary: instructor.summary,

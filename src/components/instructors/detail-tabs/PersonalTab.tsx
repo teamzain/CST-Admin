@@ -1,7 +1,11 @@
+import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Trash2, Loader2 } from 'lucide-react';
+import { bunnyUploadService } from '@/api/bunny-upload';
+import { InstructorsRepository } from '@/repositories/instructors/repo';
 import type { Instructor } from '@/repositories/instructors/types';
 
 interface PersonalTabProps {
@@ -11,8 +15,37 @@ interface PersonalTabProps {
 
 const PersonalTab: React.FC<PersonalTabProps> = ({
     instructor,
-    instructorId: _instructorId,
+    instructorId,
 }) => {
+    const queryClient = useQueryClient();
+    const [isDeletingSignature, setIsDeletingSignature] = useState(false);
+
+    const handleDeleteSignature = async () => {
+        if (!instructor?.signature) return;
+        setIsDeletingSignature(true);
+        try {
+            // Extract the file path from the full URL for Bunny deletion
+            try {
+                const url = new URL(instructor.signature);
+                const filePath = url.pathname.startsWith('/') ? url.pathname.slice(1) : url.pathname;
+                await bunnyUploadService.deleteFile(filePath);
+            } catch {
+                // Continue even if Bunny delete fails (file may already be gone)
+                console.warn('Bunny file delete failed, continuing with DB update');
+            }
+
+            // Clear signature in DB via instructor update
+            await InstructorsRepository.updateInstructor(Number(instructorId), { signature: null });
+
+            // Refresh instructor data
+            queryClient.invalidateQueries({ queryKey: ['instructor', instructorId] });
+        } catch (error) {
+            console.error('Error deleting signature:', error);
+        } finally {
+            setIsDeletingSignature(false);
+        }
+    };
+
     // Resolve state name from multiple possible shapes
     const getStateName = (): string => {
         if (instructor?.stateName) return instructor.stateName;
@@ -132,6 +165,44 @@ const PersonalTab: React.FC<PersonalTabProps> = ({
                             <ChevronDown className="w-5 h-5" />
                         </button>
                     </div>
+                </div>
+            </Card>
+
+            {/* Signature */}
+            <Card className="p-6 bg-white">
+                <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-xl font-semibold">Signature</h2>
+                    {instructor?.signature && (
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={handleDeleteSignature}
+                            disabled={isDeletingSignature}
+                            className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                        >
+                            {isDeletingSignature ? (
+                                <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                            ) : (
+                                <Trash2 className="w-4 h-4 mr-1" />
+                            )}
+                            {isDeletingSignature ? 'Deleting...' : 'Delete'}
+                        </Button>
+                    )}
+                </div>
+                <div className="flex justify-center">
+                    {instructor?.signature ? (
+                        <div className="border-2 border-gray-200 rounded-lg p-4 bg-gray-50">
+                            <img
+                                src={instructor.signature}
+                                alt="Instructor Signature"
+                                className="max-h-32 object-contain"
+                            />
+                        </div>
+                    ) : (
+                        <div className="w-80 h-32 bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
+                            <p className="text-sm text-gray-400">No signature uploaded</p>
+                        </div>
+                    )}
                 </div>
             </Card>
 

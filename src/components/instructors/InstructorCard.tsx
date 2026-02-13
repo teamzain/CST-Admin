@@ -1,15 +1,23 @@
 import { Button } from '@/components/ui/button';
 import type { Instructor } from '@/repositories/instructors';
-import { MoreVertical } from 'lucide-react';
+import { MoreVertical, Trash2 } from 'lucide-react';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface InstructorCardProps {
     instructor: Instructor;
     onViewProfile: (id: number) => void;
+    onDelete?: (instructor: Instructor) => void;
 }
 
 const InstructorCard: React.FC<InstructorCardProps> = ({
     instructor,
     onViewProfile,
+    onDelete,
 }) => {
     // Get status badge styling
     const getStatusBadge = (status: string | undefined) => {
@@ -52,9 +60,22 @@ const InstructorCard: React.FC<InstructorCardProps> = ({
 
             {/* More Options - Top Right */}
             <div className="absolute top-4 right-4">
-                <button className="text-gray-400 hover:text-gray-600">
-                    <MoreVertical size={20} />
-                </button>
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <button className="text-gray-400 hover:text-gray-600">
+                            <MoreVertical size={20} />
+                        </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        <DropdownMenuItem
+                            className="text-red-600 focus:text-red-600"
+                            onClick={() => onDelete?.(instructor)}
+                        >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
             </div>
 
             {/* Avatar and Info */}

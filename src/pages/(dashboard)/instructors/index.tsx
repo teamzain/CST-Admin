@@ -4,21 +4,26 @@ import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { InstructorsFilters } from '@/components/instructors/instructors-filters';
 import { DateRangePicker } from '@/components/shared/date-range-picker';
+import { DeleteConfirmationDialog } from '@/components/shared/delete-confirmation-dialog';
 import InstructorCard from '@/components/instructors/InstructorCard';
-import type { InstructorFilters as InstructorFiltersType } from '@/repositories/instructors';
+import type { Instructor, InstructorFilters as InstructorFiltersType } from '@/repositories/instructors';
 import { InstructorsRepository } from '@/repositories/instructors';
 import { useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { userApi } from '@/api';
 import { Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function InstructorsPage() {
     const router = useNavigate();
+    const queryClient = useQueryClient();
     const [searchTerm, setSearchTerm] = useState('');
     const [stateFilter, setStateFilter] = useState<string>('all');
     const [statusFilter, setStatusFilter] = useState<string>('All Status');
     const [dateModalOpen, setDateModalOpen] = useState(false);
     const [joinDateFrom, setJoinDateFrom] = useState<string>('');
     const [joinDateTo, setJoinDateTo] = useState<string>('');
+    const [deleteTarget, setDeleteTarget] = useState<Instructor | null>(null);
 
     // Build filters object
     const filters: InstructorFiltersType = useMemo(() => {
@@ -51,6 +56,21 @@ export default function InstructorsPage() {
     // View profile handler
     const handleViewProfile = (id: number) => {
         router(`/instructors/${id}`);
+    };
+
+    // Delete handler
+    const handleDeleteConfirm = async () => {
+        if (!deleteTarget) return;
+        try {
+            await userApi.delete(`/${deleteTarget.id}`);
+            toast.success('Instructor deleted successfully');
+            queryClient.invalidateQueries({ queryKey: ['instructors'] });
+        } catch (error) {
+            console.error('Error deleting instructor:', error);
+            toast.error('Failed to delete instructor');
+        } finally {
+            setDeleteTarget(null);
+        }
     };
 
     return (
@@ -101,6 +121,7 @@ export default function InstructorsPage() {
                                 key={instructor.id}
                                 instructor={instructor}
                                 onViewProfile={handleViewProfile}
+                                onDelete={(inst) => setDeleteTarget(inst)}
                             />
                         ))}
                     </div>
@@ -123,6 +144,17 @@ export default function InstructorsPage() {
                     open={dateModalOpen}
                     onOpenChange={setDateModalOpen}
                     onApply={handleDateApply}
+                />
+
+                {/* Delete Confirmation */}
+                <DeleteConfirmationDialog
+                    isOpen={!!deleteTarget}
+                    onClose={() => setDeleteTarget(null)}
+                    onConfirm={handleDeleteConfirm}
+                    title="Delete Instructor"
+                    description={`Are you sure you want to delete this instructor? This action cannot be undone. Type the instructor's name to confirm.`}
+                    itemType="instructor"
+                    itemName={deleteTarget ? `${deleteTarget.first_name} ${deleteTarget.last_name}` : ''}
                 />
             </div>
         </div>

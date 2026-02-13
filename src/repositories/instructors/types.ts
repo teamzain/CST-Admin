@@ -18,6 +18,7 @@ export interface InstructorLicense {
     state_id: number;
     license_no: string;
     license_expiry: string | Date;
+    signature?: string | null;
     created_at?: string;
     updated_at?: string;
     state?: {
@@ -26,7 +27,8 @@ export interface InstructorLicense {
         code: string;
         [key: string]: any;
     };
-    assigned_courses?: number[];
+    courses?: any[];
+    assigned_courses?: any[];
 }
 
 export interface Instructor {
@@ -40,6 +42,7 @@ export interface Instructor {
     avatar?: string;
     bio?: string | null;
     link?: string | null;
+    signature?: string | null;
     auth_id?: number;
     role?: string;
     state_id?: number;
@@ -97,6 +100,7 @@ export interface UpdateInstructorInput {
     state_id?: number;
     license_no?: string;
     license_expiry?: string;
+    signature?: string | null;
     status?: InstructorStatus;
 }
 
