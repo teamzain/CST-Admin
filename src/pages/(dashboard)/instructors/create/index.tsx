@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { SignatureUpload } from '@/components/shared/signature-upload';
 import {
     Select,
     SelectContent,
@@ -37,6 +38,7 @@ export default function CreateInstructorPage() {
         stateId: '',
         licenseNo: '',
         licenseExpiry: '',
+        signature: null as string | null,
         userId: '', // Optional: if linking to existing user
     });
 
@@ -50,6 +52,7 @@ export default function CreateInstructorPage() {
                 state_id: parseInt(data.stateId),
                 license_no: data.licenseNo,
                 license_expiry: data.licenseExpiry,
+                signature: data.signature || undefined,
                 username: `${data.firstName.toLowerCase()}_${Date.now()}`,
             };
             return InstructorsRepository.createInstructor(payload);
@@ -220,6 +223,21 @@ export default function CreateInstructorPage() {
                                         onChange={handleChange}
                                     />
                                 </div>
+                            </div>
+
+                            {/* Signature Upload */}
+                            <div className="pt-4 border-t">
+                                <SignatureUpload
+                                    value={formData.signature || undefined}
+                                    onChange={(url) =>
+                                        setFormData({
+                                            ...formData,
+                                            signature: url,
+                                        })
+                                    }
+                                    label="Instructor Signature"
+                                    disabled={mutation.isPending}
+                                />
                             </div>
 
                         </CardContent>

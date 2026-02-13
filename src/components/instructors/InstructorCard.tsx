@@ -35,8 +35,8 @@ const InstructorCard: React.FC<InstructorCardProps> = ({
     // Stats from instructor data
     const stats = {
         courses: instructor.assigned_courses?.length || 0,
-        students: 500,
-        rating: 4.5,
+        students: '—',
+        rating: '—',
     };
 
     return (
@@ -99,7 +99,7 @@ const InstructorCard: React.FC<InstructorCardProps> = ({
                     </div>
                     <div className="flex-1 text-center border-r border-gray-200">
                         <div className="text-xl font-bold text-gray-900">
-                            {stats.students}+
+                            {stats.students}
                         </div>
                         <div className="text-xs text-gray-600">Students</div>
                     </div>

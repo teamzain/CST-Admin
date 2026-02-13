@@ -1,27 +1,24 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Loader2 } from 'lucide-react';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Button } from '../ui/button';
+import { SignatureUpload } from '../shared/signature-upload';
 import { platformSettingsRepository } from '@/repositories/platform-settings';
 import type { UpdatePlatformSettingsInput } from '@/repositories/platform-settings/types';
 
 interface FormData {
     companyName: string;
+    administratorName: string;
     address: string;
     email: string;
     phoneNo: string;
+    signature: string | null;
 }
 
 const GeneralBranding: React.FC = () => {
     const queryClient = useQueryClient();
-    const [formData, setFormData] = useState<FormData>({
-        companyName: '',
-        address: '',
-        email: '',
-        phoneNo: '',
-    });
 
     // Fetch current platform settings (or create if doesn't exist)
     const { data: settings, isLoading, error } = useQuery({
@@ -29,10 +26,9 @@ const GeneralBranding: React.FC = () => {
         queryFn: () => platformSettingsRepository.getOrCreateSettings(),
     });
 
-    // Update mutation - uses createOrUpdateSettings for safety
+    // Update mutation
     const updateMutation = useMutation({
         mutationFn: (data: UpdatePlatformSettingsInput) => {
-            // Use createOrUpdateSettings which handles both create and update scenarios
             return platformSettingsRepository.createOrUpdateSettings(data);
         },
         onSuccess: () => {
@@ -42,17 +38,30 @@ const GeneralBranding: React.FC = () => {
         },
     });
 
-    // Populate form when settings load
-    useEffect(() => {
+    const [formData, setFormData] = useState<FormData>({
+        companyName: '',
+        administratorName: '',
+        address: '',
+        email: '',
+        phoneNo: '',
+        signature: null,
+    });
+
+    // Sync form when settings change (replaces useEffect to avoid cascading renders)
+    const [prevSettings, setPrevSettings] = useState(settings);
+    if (settings !== prevSettings) {
+        setPrevSettings(settings);
         if (settings) {
             setFormData({
                 companyName: settings.company_name || '',
+                administratorName: settings.administrator_name || '',
                 address: settings.address || '',
                 email: settings.support_email || '',
                 phoneNo: settings.support_phone || '',
+                signature: settings.signature || null,
             });
         }
-    }, [settings]);
+    }
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -67,9 +76,11 @@ const GeneralBranding: React.FC = () => {
 
         const updateData: UpdatePlatformSettingsInput = {
             company_name: formData.companyName,
+            administrator_name: formData.administratorName || undefined,
             support_email: formData.email,
             support_phone: formData.phoneNo,
             address: formData.address,
+            signature: formData.signature || undefined,
         };
 
         updateMutation.mutate(updateData);
@@ -127,6 +138,19 @@ const GeneralBranding: React.FC = () => {
                             </div>
 
                             <div>
+                                <Label htmlFor="administratorName" className="mb-2 block">
+                                    Administrator Name
+                                </Label>
+                                <Input
+                                    id="administratorName"
+                                    name="administratorName"
+                                    placeholder="Administrator Name"
+                                    value={formData.administratorName}
+                                    onChange={handleChange}
+                                />
+                            </div>
+
+                            <div>
                                 <Label htmlFor="address" className="mb-2 block">
                                     Address <span className="text-red-500">*</span>
                                 </Label>
@@ -171,6 +195,20 @@ const GeneralBranding: React.FC = () => {
                                 />
                             </div>
 
+                            <div>
+                                <SignatureUpload
+                                    value={formData.signature || undefined}
+                                    onChange={(url) =>
+                                        setFormData({
+                                            ...formData,
+                                            signature: url,
+                                        })
+                                    }
+                                    label="Company Signature"
+                                    disabled={updateMutation.isPending}
+                                />
+                            </div>
+
                             <div className="flex justify-end pt-4 gap-3">
                                 <Button
                                     type="button"
@@ -179,9 +217,11 @@ const GeneralBranding: React.FC = () => {
                                         if (settings) {
                                             setFormData({
                                                 companyName: settings.company_name || '',
+                                                administratorName: settings.administrator_name || '',
                                                 address: settings.address || '',
                                                 email: settings.support_email || '',
                                                 phoneNo: settings.support_phone || '',
+                                                signature: settings.signature || null,
                                             });
                                         }
                                     }}

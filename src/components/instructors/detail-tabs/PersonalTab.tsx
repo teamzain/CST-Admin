@@ -13,23 +13,36 @@ const PersonalTab: React.FC<PersonalTabProps> = ({
     instructor,
     instructorId: _instructorId,
 }) => {
-    const personalInfo = {
-        fullName: instructor ? `${instructor.first_name || ''} ${instructor.last_name || ''}`.trim() : 'Name',
-        email: instructor?.email || 'name@gmail.com',
-        nationality: 'United States',
-        joiningDate: instructor?.join_date ? new Date(instructor.join_date).toLocaleDateString('en-US') : '00/00/0000',
-        dateOfBirth: '00/00/0000',
-        contactNo: instructor?.phone || '017145487791',
-        state: instructor?.stateName || (typeof instructor?.state === 'object' && instructor?.state?.name) || (typeof instructor?.state === 'string' ? instructor?.state : '') || 'State Name',
+    // Resolve state name from multiple possible shapes
+    const getStateName = (): string => {
+        if (instructor?.stateName) return instructor.stateName;
+        if (typeof instructor?.state === 'object' && instructor?.state?.name) return instructor.state.name;
+        if (typeof instructor?.state === 'string') return instructor.state;
+        // Fallback: check first license's state (API may return "licenses" or "instructorLicenses")
+        const licenseState = instructor?.instructorLicenses?.[0]?.state || instructor?.licenses?.[0]?.state;
+        if (licenseState?.name) return licenseState.name;
+        return '—';
     };
 
-    const areasOfExpertise = [
-        'Advance Protection',
-        'Tactical Skills',
-        'Planning',
-        'Advance Protection',
-        'Defensive skills',
-    ];
+    const formatDate = (value: string | Date | undefined | null): string => {
+        if (!value) return '—';
+        try {
+            const d = typeof value === 'string' ? new Date(value) : value;
+            return isNaN(d.getTime()) ? '—' : d.toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' });
+        } catch {
+            return '—';
+        }
+    };
+
+    const personalInfo = {
+        fullName: instructor ? `${instructor.first_name || ''} ${instructor.last_name || ''}`.trim() || '—' : '—',
+        email: instructor?.email || '—',
+        contactNo: instructor?.phone || '—',
+        state: getStateName(),
+        joiningDate: formatDate(instructor?.created_at || instructor?.join_date),
+        licenseNo: instructor?.license_no || instructor?.instructorLicenses?.[0]?.license_no || instructor?.licenses?.[0]?.license_no || '—',
+        licenseExpiry: formatDate(instructor?.license_expiry || instructor?.instructorLicenses?.[0]?.license_expiry || instructor?.licenses?.[0]?.license_expiry),
+    };
 
     return (
         <div className="space-y-6">
@@ -48,14 +61,7 @@ const PersonalTab: React.FC<PersonalTabProps> = ({
                             {personalInfo.fullName}
                         </p>
                     </div>
-                    <div>
-                        <label className="text-sm text-gray-600 block mb-2">
-                            Date of birth:
-                        </label>
-                        <p className="text-sm text-gray-900">
-                            {personalInfo.dateOfBirth}
-                        </p>
-                    </div>
+
                     <div>
                         <label className="text-sm text-gray-600 block mb-2">
                             Email Address:
@@ -74,18 +80,26 @@ const PersonalTab: React.FC<PersonalTabProps> = ({
                     </div>
                     <div>
                         <label className="text-sm text-gray-600 block mb-2">
-                            Nationality:
-                        </label>
-                        <p className="text-sm text-gray-900">
-                            {personalInfo.nationality}
-                        </p>
-                    </div>
-                    <div>
-                        <label className="text-sm text-gray-600 block mb-2">
                             State:
                         </label>
                         <p className="text-sm text-gray-900">
                             {personalInfo.state}
+                        </p>
+                    </div>
+                    <div>
+                        <label className="text-sm text-gray-600 block mb-2">
+                            License No:
+                        </label>
+                        <p className="text-sm text-gray-900">
+                            {personalInfo.licenseNo}
+                        </p>
+                    </div>
+                    <div>
+                        <label className="text-sm text-gray-600 block mb-2">
+                            License Expiry:
+                        </label>
+                        <p className="text-sm text-gray-900">
+                            {personalInfo.licenseExpiry}
                         </p>
                     </div>
                     <div>
@@ -159,14 +173,7 @@ const PersonalTab: React.FC<PersonalTabProps> = ({
                     </h2>
 
                     <div className="flex flex-wrap gap-2">
-                        {areasOfExpertise.map((skill, index) => (
-                            <span
-                                key={index}
-                                className="px-4 py-2 bg-gray-100 text-gray-700 text-sm rounded-full border border-gray-200"
-                            >
-                                {skill}
-                            </span>
-                        ))}
+                        <p className="text-sm text-gray-500">No data available</p>
                     </div>
                 </Card>
             </div>

@@ -10,6 +10,8 @@ export interface PlatformSettings {
     support_email: string;
     support_phone: string | null;
     address: string | null;
+    administrator_name: string | null;
+    signature: string | null;
     stripe_connected: boolean;
     stripe_account_id?: string | null;
     is_active?: boolean;
@@ -23,6 +25,8 @@ export interface CreatePlatformSettingsInput {
     support_email: string;
     support_phone?: string | null;
     address?: string | null;
+    administrator_name?: string | null;
+    signature?: string | null;
     stripe_connected?: boolean;
 }
 
@@ -32,6 +36,8 @@ export interface UpdatePlatformSettingsInput {
     support_email?: string;
     support_phone?: string | null;
     address?: string | null;
+    administrator_name?: string | null;
+    signature?: string | null;
     stripe_connected?: boolean;
     stripe_account_id?: string | null;
 }

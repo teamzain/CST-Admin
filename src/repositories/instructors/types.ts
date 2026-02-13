@@ -58,6 +58,13 @@ export interface Instructor {
     join_date?: string;
     assigned_courses?: any[]; // Array of course ids or course objects
     instructorLicenses?: InstructorLicense[];
+    licenses?: InstructorLicense[]; // Alias used by getById response
+    summary?: {
+        total_licenses: number;
+        total_courses: number;
+        total_students: number;
+        total_sessions: number;
+    };
     
     // Backward compatibility fields for dummy data and components
     name?: string;
