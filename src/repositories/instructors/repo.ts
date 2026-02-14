@@ -31,8 +31,9 @@ function getErrorMessage(error: unknown, defaultMessage: string): string {
  * Handles both getAllInstructors (with user_auth) and getInstructorById (with instructorLicenses)
  */
 function transformInstructor(instructor: any): Instructor {
-    // Extract primary license from instructorLicenses array
-    const primaryLicense = instructor.instructorLicenses?.[0] || {};
+    // The API may return "licenses" (getById) or "instructorLicenses" (getAll)
+    const allLicenses = instructor.licenses || instructor.instructorLicenses || [];
+    const primaryLicense = allLicenses[0] || {};
     
     // Handle status from user_auth or default to ACTIVE
     const userAuth = instructor.user_auth || {};
@@ -67,6 +68,7 @@ function transformInstructor(instructor: any): Instructor {
         avatar: instructor.avatar,
         bio: instructor.bio,
         link: instructor.link,
+        signature: primaryLicense.signature || instructor.signature,
         role: instructor.role,
         
         // License fields (from primary license or top-level)
@@ -76,8 +78,12 @@ function transformInstructor(instructor: any): Instructor {
         
         // Related data
         state: stateInfo,
-        instructorLicenses: instructor.instructorLicenses || [],
-        assigned_courses: primaryLicense.assigned_courses || instructor.assigned_courses || [],
+        instructorLicenses: allLicenses,
+        licenses: allLicenses,
+        assigned_courses: allLicenses.flatMap((l: any) => l.courses || l.assigned_courses || []),
+        
+        // Summary from getById response
+        summary: instructor.summary,
         
         // Status and timestamps
         status: status,

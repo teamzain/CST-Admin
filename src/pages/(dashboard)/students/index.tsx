@@ -96,12 +96,12 @@ export default function StudentsPage() {
         statusMutation.mutate({ id, status });
     };
 
-    const handleBulkAction = (action: string) => {
-        console.log(`Bulk action: ${action}`);
+    const handleBulkAction = (_action: string) => {
+        // TODO: implement bulk actions
     };
 
-    const handleDateApply = (startDate: string, endDate: string) => {
-        console.log('Date filter applied:', { startDate, endDate });
+    const handleDateApply = (_startDate: string, _endDate: string) => {
+        // TODO: implement date filtering
     };
 
     const columns = getStudentColumns(

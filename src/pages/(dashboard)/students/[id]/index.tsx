@@ -220,12 +220,14 @@ const StudentDetailsPage = () => {
                                                 </div>
                                                 <p className="text-sm text-gray-500">
                                                     Enrollment Date:{' '}
-                                                    {format(
-                                                        new Date(
-                                                            enrollment.started_at
-                                                        ),
-                                                        'MMM d, yyyy'
-                                                    )}
+                                                    {enrollment.started_at
+                                                        ? format(
+                                                              new Date(
+                                                                  enrollment.started_at
+                                                              ),
+                                                              'MMM d, yyyy'
+                                                          )
+                                                        : 'N/A'}
                                                 </p>
                                             </div>
                                         </div>

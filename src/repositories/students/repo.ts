@@ -37,6 +37,19 @@ function getErrorMessage(error: unknown, defaultMessage: string): string {
  */
 export class StudentsRepository {
     /**
+     * Normalise a raw student object from the API.
+     * Computes derived fields the UI depends on (enrolledCoursesCount, etc.)
+     */
+    private static normalise(raw: any): Student {
+        const enrollments: any[] = Array.isArray(raw.CourseEnrollment) ? raw.CourseEnrollment : [];
+        return {
+            ...raw,
+            enrolledCoursesCount: raw.enrolledCoursesCount ?? enrollments.length,
+            lastActivity: raw.lastActivity ?? raw.last_activity ?? null,
+        };
+    }
+
+    /**
      * Fetch all students with optional filters
      */
     static async getAllStudents(filters?: StudentFilters): Promise<Student[]> {
@@ -69,13 +82,12 @@ export class StudentsRepository {
             const path = USER_ROUTES.STUDENTS.GET_ALL.url;
             const url = queryString ? `${path}?${queryString}` : path;
 
-            console.log('[StudentsRepository] Fetching students from:', url);
             const response = await userApi.get(url);
-            console.log('[StudentsRepository] Fetched students:', response.data);
             
             // Handle multiple response formats
             const data = response.data?.data || response.data;
-            return Array.isArray(data) ? data : [];
+            const list: any[] = Array.isArray(data) ? data : [];
+            return list.map((s) => this.normalise(s));
         } catch (error: unknown) {
             console.error('Error fetching students:', error);
             toast.error('Failed to fetch students');
@@ -85,12 +97,14 @@ export class StudentsRepository {
 
     /**
      * Fetch single student by ID
+     * Backend: GET /api/user/:id
      */
     static async getStudentById(id: number): Promise<Student> {
         try {
-            const url = buildUrl(USER_ROUTES.STUDENTS.GET_BY_ID, { id });
+            const url = buildUrl(USER_ROUTES.GET_BY_ID, { id });
             const response = await userApi.get(url);
-            return response.data.data || response.data;
+            const raw = response.data.data || response.data;
+            return this.normalise(raw);
         } catch (error: unknown) {
             console.error('Error fetching student:', error);
             toast.error('Failed to fetch student');

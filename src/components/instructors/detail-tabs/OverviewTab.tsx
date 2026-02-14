@@ -1,5 +1,6 @@
 import type { Instructor } from '@/repositories/instructors/types';
 import { BookOpen, Star, Activity } from 'lucide-react';
+import { format, parseISO } from 'date-fns';
 
 interface OverviewTabProps {
     instructor?: Instructor;
@@ -10,6 +11,10 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
     instructor,
     instructorId: _instructorId,
 }) => {
+    const lastActivityDate = instructor?.updated_at
+        ? format(parseISO(instructor.updated_at), 'MMM d, yyyy')
+        : '—';
+
     return (
         <div className="space-y-4">
             {/* Stats Cards Row */}
@@ -23,7 +28,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
                                     Total Courses
                                 </p>
                                 <p className="text-2xl font-bold text-gray-900">
-                                    {instructor?.assigned_courses?.length || 0}
+                                    {instructor?.summary?.total_courses ?? instructor?.assigned_courses?.length ?? 0}
                                 </p>
                             </div>
                             <div className="p-2 bg-gray-50 rounded-lg">
@@ -40,7 +45,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
                                     Average Rating
                                 </p>
                                 <p className="text-2xl font-bold text-gray-900">
-                                    4.5
+                                    —
                                 </p>
                             </div>
                             <div className="p-2 bg-gray-50 rounded-lg">
@@ -57,7 +62,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
                                     Last Activity
                                 </p>
                                 <p className="text-base font-semibold text-gray-900">
-                                    Nov 5, 2025
+                                    {lastActivityDate}
                                 </p>
                             </div>
                             <div className="p-2 bg-gray-50 rounded-lg">

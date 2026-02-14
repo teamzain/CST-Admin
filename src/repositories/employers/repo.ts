@@ -113,17 +113,6 @@ function transformEmployer(employer: any): Employer {
         usedSeats: usedSeats,
     };
     
-    console.log('[transformEmployer] Transformed employer:', {
-        id: transformed.id,
-        company_name: transformed.company_name,
-        first_name: transformed.first_name,
-        email: transformed.email,
-        status: transformed.status,
-        seats_count: seatsArray.length,
-        total_seats: totalSeats,
-        used_seats: usedSeats,
-    });
-    
     return transformed;
 }
 
@@ -190,12 +179,10 @@ export class EmployersRepository {
             const path = USER_ROUTES.GET_ALL.url;
             const url = queryString ? `${path}?${queryString}` : path;
 
-            console.log('[EmployersRepository] Fetching employers from:', url);
             const response = await userApi.get(url);
             
             // Handle different response formats
             const data = response.data?.data || response.data || [];
-            console.log('[EmployersRepository] Fetched employers:', data);
             
             const employers = Array.isArray(data) ? data : [];
             return employers.map(transformEmployer);
@@ -212,11 +199,9 @@ export class EmployersRepository {
     static async getEmployerById(id: number): Promise<Employer> {
         try {
             const url = buildUrl(USER_ROUTES.EMPLOYER.GET_BY_ID, { id });
-            console.log('[EmployersRepository] Fetching employer by ID from:', url);
             const response = await userApi.get(url);
             
             const data = response.data?.data || response.data;
-            console.log('[EmployersRepository] Fetched employer:', data);
             
             return transformEmployer(data);
         } catch (error: unknown) {
@@ -231,14 +216,12 @@ export class EmployersRepository {
      */
     static async createEmployer(data: CreateEmployerInput): Promise<Employer> {
         try {
-            console.log('[EmployersRepository] Creating employer with data:', data);
             const response = await userApi.post(
                 USER_ROUTES.EMPLOYER.CREATE.url,
                 data
             );
             
             const result = response.data?.data || response.data;
-            console.log('[EmployersRepository] Employer created:', result);
             
             toast.success('Employer created successfully');
             return transformEmployer(result);
@@ -262,11 +245,9 @@ export class EmployersRepository {
     ): Promise<Employer> {
         try {
             const url = buildUrl(USER_ROUTES.EMPLOYER.UPDATE, { id });
-            console.log('[EmployersRepository] Updating employer:', url, data);
             const response = await userApi.patch(url, data);
             
             const result = response.data?.data || response.data;
-            console.log('[EmployersRepository] Employer updated:', result);
             
             toast.success('Employer updated successfully');
             return transformEmployer(result);
@@ -287,10 +268,8 @@ export class EmployersRepository {
     static async deleteEmployer(id: number): Promise<void> {
         try {
             const url = buildUrl(USER_ROUTES.DELETE, { id });
-            console.log('[EmployersRepository] Deleting employer:', url);
             await userApi.delete(url);
             
-            console.log('[EmployersRepository] Employer deleted');
             toast.success('Employer deleted successfully');
         } catch (error: unknown) {
             console.error('[EmployersRepository] Error deleting employer:', error);
@@ -349,17 +328,12 @@ export class EmployersRepository {
      */
     static async purchaseSeats(data: PurchaseSeatsInput): Promise<EmployerSeat> {
         try {
-            console.log(
-                '[EmployersRepository] Purchasing seats with data:',
-                data
-            );
             const response = await userApi.post(
                 USER_ROUTES.EMPLOYER.PURCHASE_SEATS.url,
                 data
             );
 
             const result = response.data?.data || response.data;
-            console.log('[EmployersRepository] Seats purchased:', result);
 
             toast.success('Seats purchased successfully');
             return result as EmployerSeat;

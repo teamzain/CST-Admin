@@ -63,19 +63,19 @@ const CoursesTab: React.FC<CoursesTabProps> = ({
                                     <td className="py-4 px-6">
                                         <span
                                             className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${
-                                                course.status === 'Active' || course.status === 'active'
+                                                course.is_active === true || course.is_active === 1 || course.status === 'Active' || course.status === 'active'
                                                     ? 'bg-green-50 text-green-700 border border-green-200'
                                                     : 'bg-gray-100 text-gray-700 border border-gray-200'
                                             }`}
                                         >
-                                            {course.status || 'Active'}
+                                            {course.is_active === true || course.is_active === 1 ? 'Active' : course.is_active === false || course.is_active === 0 ? 'Inactive' : course.status || 'Active'}
                                         </span>
                                     </td>
                                     <td className="py-4 px-6 text-sm text-gray-900">
-                                        {course.students_enrolled || course.studentsEnrolled || 0}
+                                        {course.counts?.enrollments ?? course.students_enrolled ?? course.studentsEnrolled ?? 0}
                                     </td>
                                     <td className="py-4 px-6 text-sm text-gray-900">
-                                        {course.updated_at ? new Date(course.updated_at).toLocaleDateString() : course.lastUpdate || '-'}
+                                        {course.updated_at ? new Date(course.updated_at).toLocaleDateString() : course.published_at ? new Date(course.published_at).toLocaleDateString() : '-'}
                                     </td>
                                     <td className="py-4 px-6">
                                         <button className="text-gray-400 hover:text-red-600 transition-colors">
