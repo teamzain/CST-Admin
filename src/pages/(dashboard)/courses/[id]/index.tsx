@@ -32,11 +32,6 @@ export default function CourseDetailsPage() {
         queryKey: ['course', id],
         queryFn: async () => {
             const courseData = await CoursesRepository.getById(Number(id));
-            console.log('FETCHED COURSE:', {
-                id: courseData.id,
-                instructor_id: courseData.instructor_id,
-                instructor: courseData.instructor,
-            });
             return courseData;
         },
         enabled: !!id,
@@ -78,10 +73,6 @@ export default function CourseDetailsPage() {
             if (!courseData.instructor_id && course.instructor?.id) {
                 courseData.instructor_id = course.instructor.id;
             }
-            console.log('FORMDATA INITIALIZED:', {
-                instructor_id: courseData.instructor_id,
-                instructor_from_api: course.instructor,
-            });
             setFormData(courseData);
         }
     }, [course, isEditing]);

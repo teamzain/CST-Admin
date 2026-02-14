@@ -118,7 +118,6 @@ export class PlatformSettingsRepository {
                 data
             );
             const result = response.data?.data || response.data;
-            console.log('Created platform settings:', result);
             toast.success('Platform settings created successfully');
             return result;
         } catch (error: unknown) {
@@ -150,7 +149,6 @@ export class PlatformSettingsRepository {
                 settings = response.data.data;
             }
             
-            console.log('Fetched platform settings:', settings);
             return settings;
         } catch (error: unknown) {
             console.error('Error fetching platform settings:', error);
@@ -168,7 +166,6 @@ export class PlatformSettingsRepository {
                 ADMIN_ROUTES.PLATFORM_SETTINGS.GET_CURRENT.url
             );
             const data = response.data?.data || response.data;
-            console.log('Fetched current platform settings:', data);
             return data;
         } catch (error: unknown) {
             console.error('Error fetching current platform settings:', error);
@@ -186,7 +183,6 @@ export class PlatformSettingsRepository {
             });
             const response = await adminApi.get(url);
             const data = response.data?.data || response.data;
-            console.log('Fetched platform settings by ID:', data);
             return data;
         } catch (error: unknown) {
             console.error('Error fetching platform settings:', error);
@@ -206,7 +202,6 @@ export class PlatformSettingsRepository {
             const url = buildUrl(ADMIN_ROUTES.PLATFORM_SETTINGS.UPDATE, { id });
             const response = await adminApi.patch(url, data);
             const result = response.data?.data || response.data;
-            console.log('Updated platform settings:', result);
             toast.success('Platform settings updated successfully');
             return result;
         } catch (error: unknown) {

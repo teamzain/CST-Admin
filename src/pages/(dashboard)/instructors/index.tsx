@@ -41,14 +41,12 @@ export default function InstructorsPage() {
         queryKey: ['instructors', filters],
         queryFn: async () => {
             const data = await InstructorsRepository.getAllInstructors(filters);
-            console.log('[InstructorsPage] Fetched instructors:', data);
             return data;
         },
     });
 
     // Date filter handler
     const handleDateApply = (startDate: string, endDate: string) => {
-        console.log('Date filter applied:', { startDate, endDate });
         setJoinDateFrom(startDate);
         setJoinDateTo(endDate);
     };

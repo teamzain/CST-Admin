@@ -86,7 +86,6 @@ export default function RangeSessionsPage() {
 
     // Convert API sessions to display format
     const sessions = useMemo(() => {
-        console.log('[RangeSessions] API returned', apiSessions.length, 'sessions:', apiSessions);
         return convertSessionsForDisplay(apiSessions);
     }, [apiSessions]);
 

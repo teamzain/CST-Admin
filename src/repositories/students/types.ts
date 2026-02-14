@@ -113,16 +113,21 @@ export interface Course {
 
 export interface CourseEnrollment {
     id: number;
-    user_id: number;
-    course_id: number;
+    user_id?: number;
+    course_id?: number;
     status: EnrollmentStatus;
     progress: number;
-    seat_time_min: number;
+    seat_time_min?: number;
     last_activity?: string | null;
-    started_at: string;
+    started_at?: string;
     completed_at?: string | null;
     course: Course;
+    studentProgress?: {
+        overall_progress?: number;
+        [key: string]: unknown;
+    } | null;
     lessonProgress?: LessonProgress[];
+    Certificate?: unknown[];
 }
 
 // ============================================================================

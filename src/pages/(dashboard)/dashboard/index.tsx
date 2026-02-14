@@ -96,7 +96,7 @@ export default function DashboardPage() {
         queryFn: () => EnrollmentsRepository.getAll({ limit: 200 }),
     });
 
-    const enrollments = enrollmentsData?.data ?? [];
+    const enrollments = useMemo(() => enrollmentsData?.data ?? [], [enrollmentsData]);
 
     // ── computed stats ──────────────────────────────────────────────────────
 
@@ -109,9 +109,9 @@ export default function DashboardPage() {
         return `${Math.round((completed / enrollments.length) * 100)}%`;
     }, [enrollments]);
 
-    const now = new Date();
-    const weekStart = startOfWeek(now, { weekStartsOn: 1 });
-    const weekEnd = endOfWeek(now, { weekStartsOn: 1 });
+    const now = useMemo(() => new Date(), []);
+    const weekStart = useMemo(() => startOfWeek(now, { weekStartsOn: 1 }), [now]);
+    const weekEnd = useMemo(() => endOfWeek(now, { weekStartsOn: 1 }), [now]);
 
     const sessionsThisWeek = useMemo(
         () =>
@@ -135,7 +135,7 @@ export default function DashboardPage() {
                 (isAfter(expiry, now) || expiry.getTime() === now.getTime())
             );
         });
-    }, [instructors]);
+    }, [instructors, now]);
 
     // Build "recent activity" from the most-recently-created students
     const recentActivity = useMemo(() => {
@@ -185,34 +185,45 @@ export default function DashboardPage() {
             monthMap.set(key, { enrollments: 0, completions: 0 });
         }
 
+        const ensureBucket = (key: string) => {
+            if (!monthMap.has(key)) {
+                monthMap.set(key, { enrollments: 0, completions: 0 });
+            }
+        };
+
         enrollments.forEach((e) => {
             const startedDate = safeParse(e.started_at);
             if (startedDate) {
                 const key = `${startedDate.getFullYear()}-${startedDate.getMonth()}`;
-                if (monthMap.has(key)) {
-                    monthMap.get(key)!.enrollments += 1;
-                }
+                ensureBucket(key);
+                monthMap.get(key)!.enrollments += 1;
             }
             if (e.status === 'COMPLETE' && e.completed_at) {
                 const completedDate = safeParse(e.completed_at);
                 if (completedDate) {
                     const key = `${completedDate.getFullYear()}-${completedDate.getMonth()}`;
-                    if (monthMap.has(key)) {
-                        monthMap.get(key)!.completions += 1;
-                    }
+                    ensureBucket(key);
+                    monthMap.get(key)!.completions += 1;
                 }
             }
         });
 
-        return Array.from(monthMap.entries()).map(([key, val]) => {
-            const [, monthIdx] = key.split('-');
-            return {
-                month: monthNames[Number(monthIdx)],
-                enrollments: val.enrollments,
-                completions: val.completions,
-            };
-        });
-    }, [enrollments]);
+        // Sort chronologically and build final array
+        return Array.from(monthMap.entries())
+            .sort(([a], [b]) => {
+                const [ay, am] = a.split('-').map(Number);
+                const [by, bm] = b.split('-').map(Number);
+                return ay !== by ? ay - by : am - bm;
+            })
+            .map(([key, val]) => {
+                const [, monthIdx] = key.split('-');
+                return {
+                    month: monthNames[Number(monthIdx)],
+                    enrollments: val.enrollments,
+                    completions: val.completions,
+                };
+            });
+    }, [enrollments, now]);
 
     // ── render ───────────────────────────────────────────────────────────────
 
@@ -302,8 +313,8 @@ export default function DashboardPage() {
                                             strokeDasharray="3 3"
                                             stroke="oklch(0.2 0 0)"
                                         />
-                                        <XAxis stroke="oklch(0.65 0 0)" />
-                                        <YAxis stroke="oklch(0.65 0 0)" />
+                                        <XAxis dataKey="month" stroke="#6b7280" />
+                                        <YAxis stroke="#6b7280" allowDecimals={false} />
                                         <Tooltip
                                             contentStyle={{
                                                 backgroundColor:
@@ -318,12 +329,16 @@ export default function DashboardPage() {
                                             dataKey="enrollments"
                                             stroke="oklch(0.55 0.2 280)"
                                             strokeWidth={2}
+                                            dot={{ r: 4 }}
+                                            activeDot={{ r: 6 }}
                                         />
                                         <Line
                                             type="monotone"
                                             dataKey="completions"
                                             stroke="oklch(0.6 0.15 200)"
                                             strokeWidth={2}
+                                            dot={{ r: 4 }}
+                                            activeDot={{ r: 6 }}
                                         />
                                     </LineChart>
                                 </ResponsiveContainer>
