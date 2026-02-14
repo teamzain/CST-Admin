@@ -27,6 +27,16 @@ export class CoursesRepository {
         return response as T;
     }
 
+    /** Normalise a raw course object coming from the API */
+    private static normaliseCourse(raw: any): Course {
+        return {
+            ...raw,
+            // Backend returns enrollments[] but the UI reads enrolled_students
+            enrolled_students:
+                raw.enrolled_students ?? (Array.isArray(raw.enrollments) ? raw.enrollments.length : 0),
+        };
+    }
+
     static async getAll(filters?: CourseFilters): Promise<Course[]> {
         const params = new URLSearchParams();
         if (filters?.search) params.append('search', filters.search);
@@ -37,12 +47,14 @@ export class CoursesRepository {
         if (filters?.state_id) params.append('state_id', String(filters.state_id));
 
         const { data } = await courseApi.get('/course', { params });
-        return this.extractData<Course[]>(data);
+        const courses = this.extractData<Course[]>(data);
+        return courses.map((c) => this.normaliseCourse(c));
     }
 
     static async getById(id: number): Promise<Course> {
         const { data } = await courseApi.get(`/course/${id}`);
-        return this.extractData<Course>(data);
+        const course = this.extractData<Course>(data);
+        return this.normaliseCourse(course);
     }
 
     static async create(input: CreateCourseInput): Promise<Course> {

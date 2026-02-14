@@ -54,18 +54,12 @@ export default function InstructorDetailPage() {
     const deleteInstructor = async () => {
         setIsDeleting(true);
         try {
-            const response = await fetch(`http://localhost:3010/api/user/${instructor?.id}`, {
-                method: 'DELETE',
-                credentials: 'include',
-            });
-            if (!response.ok) throw new Error('Failed to delete instructor');
-            
+            await InstructorsRepository.deleteInstructor(Number(instructor?.id));
             // Invalidate queries and redirect
             queryClient.invalidateQueries({ queryKey: ['instructors'] });
             router('/instructors');
         } catch (err) {
             console.error('Error deleting instructor:', err);
-            alert('Failed to delete instructor');
         } finally {
             setIsDeleting(false);
         }

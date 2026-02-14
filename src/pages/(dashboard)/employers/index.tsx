@@ -51,7 +51,6 @@ export default function EmployersPage() {
         queryKey: ['employers', filters],
         queryFn: async () => {
             const data = await EmployersRepository.getAllEmployers(filters);
-            console.log('[EmployersPage] Fetched employers:', data);
             return data;
         },
     });
