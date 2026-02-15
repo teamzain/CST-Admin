@@ -2,7 +2,7 @@
 
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import type { Course } from '@/repositories/courses';
 
@@ -61,45 +61,45 @@ export function ComplianceTab({ course, formData, isEditing, onInputChange }: Co
                 <div className="bg-muted/10 p-6 rounded-xl border border-border/50">
                     {isEditing ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="flex items-center gap-2">
-                                <Checkbox
+                            <div className="flex items-center justify-between p-3 border rounded-lg">
+                                <Label htmlFor="requires-exam" className="font-normal cursor-pointer">
+                                    Requires Final Exam
+                                </Label>
+                                <Switch
                                     id="requires-exam"
                                     checked={formData.requires_exam || false}
                                     onCheckedChange={(checked) => onInputChange('requires_exam', checked)}
                                 />
-                                <Label htmlFor="requires-exam" className="font-normal cursor-pointer">
-                                    Requires Final Exam
-                                </Label>
                             </div>
-                            <div className="flex items-center gap-2">
-                                <Checkbox
+                            <div className="flex items-center justify-between p-3 border rounded-lg">
+                                <Label htmlFor="requires-range" className="font-normal cursor-pointer">
+                                    Requires Range Training
+                                </Label>
+                                <Switch
                                     id="requires-range"
                                     checked={formData.requires_range || false}
                                     onCheckedChange={(checked) => onInputChange('requires_range', checked)}
                                 />
-                                <Label htmlFor="requires-range" className="font-normal cursor-pointer">
-                                    Requires Range Training
-                                </Label>
                             </div>
-                            <div className="flex items-center gap-2">
-                                <Checkbox
+                            <div className="flex items-center justify-between p-3 border rounded-lg">
+                                <Label htmlFor="attendance-required" className="font-normal cursor-pointer">
+                                    Attendance Tracking Required
+                                </Label>
+                                <Switch
                                     id="attendance-required"
                                     checked={formData.attendance_required || false}
                                     onCheckedChange={(checked) => onInputChange('attendance_required', checked)}
                                 />
-                                <Label htmlFor="attendance-required" className="font-normal cursor-pointer">
-                                    Attendance Tracking Required
-                                </Label>
                             </div>
-                            <div className="flex items-center gap-2">
-                                <Checkbox
+                            <div className="flex items-center justify-between p-3 border rounded-lg">
+                                <Label htmlFor="requires-id-verification" className="font-normal cursor-pointer">
+                                    Requires ID Verification
+                                </Label>
+                                <Switch
                                     id="requires-id-verification"
                                     checked={formData.requires_id_verification || false}
                                     onCheckedChange={(checked) => onInputChange('requires_id_verification', checked)}
                                 />
-                                <Label htmlFor="requires-id-verification" className="font-normal cursor-pointer">
-                                    Requires ID Verification
-                                </Label>
                             </div>
                         </div>
                     ) : (
@@ -143,25 +143,25 @@ export function ComplianceTab({ course, formData, isEditing, onInputChange }: Co
                     <div className="bg-muted/10 p-6 rounded-xl border border-border/50 space-y-4">
                         {isEditing ? (
                             <div className="space-y-4">
-                                <div className="flex items-center gap-2">
-                                    <Checkbox
+                                <div className="flex items-center justify-between p-3 border rounded-lg">
+                                    <Label htmlFor="is-refresher" className="font-normal cursor-pointer">
+                                        This is a Refresher Course
+                                    </Label>
+                                    <Switch
                                         id="is-refresher"
                                         checked={formData.is_refresher || false}
                                         onCheckedChange={(checked) => onInputChange('is_refresher', checked)}
                                     />
-                                    <Label htmlFor="is-refresher" className="font-normal cursor-pointer">
-                                        This is a Refresher Course
-                                    </Label>
                                 </div>
-                                <div className="flex items-center gap-2">
-                                    <Checkbox
+                                <div className="flex items-center justify-between p-3 border rounded-lg">
+                                    <Label htmlFor="attendance-enabled" className="font-normal cursor-pointer">
+                                        Enable Attendance Tracking
+                                    </Label>
+                                    <Switch
                                         id="attendance-enabled"
                                         checked={formData.attendance_enabled || false}
                                         onCheckedChange={(checked) => onInputChange('attendance_enabled', checked)}
                                     />
-                                    <Label htmlFor="attendance-enabled" className="font-normal cursor-pointer">
-                                        Enable Attendance Tracking
-                                    </Label>
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="required-hours">Required Hours for Completion</Label>

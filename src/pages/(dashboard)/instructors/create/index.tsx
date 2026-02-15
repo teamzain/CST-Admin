@@ -18,6 +18,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { DatePickerInput } from '@/components/shared/date-picker';
 import { ArrowLeft, Save } from 'lucide-react';
 
 export default function CreateInstructorPage() {
@@ -215,12 +216,10 @@ export default function CreateInstructorPage() {
                                     <Label htmlFor="licenseExpiry">
                                         License Expiry Date
                                     </Label>
-                                    <Input
-                                        id="licenseExpiry"
-                                        name="licenseExpiry"
-                                        type="date"
+                                    <DatePickerInput
                                         value={formData.licenseExpiry}
-                                        onChange={handleChange}
+                                        onChange={(date) => setFormData((prev: any) => ({ ...prev, licenseExpiry: date }))}
+                                        title="License Expiry Date"
                                     />
                                 </div>
                             </div>

@@ -10,7 +10,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import {
     Calendar,
@@ -625,8 +625,11 @@ export function GeneralInformationTab({
                                         className="bg-background border-border"
                                     />
                                 </div>
-                                <div className="flex items-center gap-2">
-                                    <Checkbox
+                                <div className="flex items-center justify-between p-4 border rounded-lg">
+                                    <Label htmlFor="price-negotiable" className="cursor-pointer">
+                                        Price Negotiable
+                                    </Label>
+                                    <Switch
                                         id="price-negotiable"
                                         checked={
                                             formData.is_price_negotiable ||
@@ -639,9 +642,6 @@ export function GeneralInformationTab({
                                             )
                                         }
                                     />
-                                    <Label htmlFor="price-negotiable">
-                                        Price Negotiable
-                                    </Label>
                                 </div>
                             </>
                         ) : (
@@ -686,15 +686,18 @@ export function GeneralInformationTab({
                 <h3 className="text-lg font-semibold">Course Status</h3>
                 <div className="bg-muted/10 p-6 rounded-xl border border-border/50">
                     {isEditing ? (
-                        <div className="flex items-center gap-2">
-                            <Checkbox
+                        <div className="flex items-center justify-between p-4 border rounded-lg">
+                            <div>
+                                <Label htmlFor="is-active" className="cursor-pointer">Publish Course</Label>
+                                <p className="text-sm text-muted-foreground mt-0.5">Make course visible to students</p>
+                            </div>
+                            <Switch
                                 id="is-active"
                                 checked={formData.is_active || false}
                                 onCheckedChange={(checked) =>
                                     onInputChange('is_active', checked)
                                 }
                             />
-                            <Label htmlFor="is-active">Publish Course</Label>
                         </div>
                     ) : (
                         <div>

@@ -2,8 +2,10 @@ import { APP_NAMES } from '@/utils/constants';
 import type { TAppConfig } from '@/utils/interfaces/app';
 
 export const IS_DEV: boolean =
+    import.meta.env.MODE === 'development' ||
     import.meta.env.VITE_MODE === 'development' ||
-    import.meta.env.VITE_MODE === 'dev';
+    import.meta.env.VITE_MODE === 'dev' ||
+    import.meta.env.DEV === true;
 
 const AppDevConfigs: Record<APP_NAMES, Omit<TAppConfig, 'CORS'>> = {
     [APP_NAMES.ADMIN]: {

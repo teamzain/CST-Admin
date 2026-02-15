@@ -13,6 +13,7 @@ import { LessonsRepository } from '@/repositories/lessons';
 import { Progress } from '@/components/ui/progress';
 import { bunnyUploadService } from '@/api/bunny-upload';
 import { useDropzone } from 'react-dropzone';
+import { Switch } from '@/components/ui/switch';
 
 export default function LessonDetailsPage() {
     const { id } = useParams();
@@ -274,14 +275,12 @@ export default function LessonDetailsPage() {
                                 </div>
                                 <div className="flex items-center justify-between p-4 border rounded-lg mt-6">
                                     <div className="space-y-0.5">
-                                        <Label>Enable Download</Label>
+                                        <label className="text-sm font-medium">Enable Download</label>
                                         <p className="text-xs text-muted-foreground">Allow students to download content</p>
                                     </div>
-                                    <input
-                                        type="checkbox"
+                                    <Switch
                                         checked={!!lessonData.enable_download}
-                                        onChange={(e) => setLessonData({ ...lessonData, enable_download: e.target.checked })}
-                                        className="w-4 h-4"
+                                        onCheckedChange={(checked) => setLessonData({ ...lessonData, enable_download: checked })}
                                     />
                                 </div>
                             </div>

@@ -3,7 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { ChevronDown, Trash2, Loader2 } from 'lucide-react';
+import { Trash2, Loader2, ExternalLink, Save, User } from 'lucide-react';
 import { bunnyUploadService } from '@/api/bunny-upload';
 import { InstructorsRepository } from '@/repositories/instructors/repo';
 import type { Instructor } from '@/repositories/instructors/types';
@@ -19,6 +19,21 @@ const PersonalTab: React.FC<PersonalTabProps> = ({
 }) => {
     const queryClient = useQueryClient();
     const [isDeletingSignature, setIsDeletingSignature] = useState(false);
+    const [bio, setBio] = useState(instructor?.bio || '');
+    const [isSavingBio, setIsSavingBio] = useState(false);
+    const bioChanged = bio !== (instructor?.bio || '');
+
+    const handleSaveBio = async () => {
+        setIsSavingBio(true);
+        try {
+            await InstructorsRepository.updateInstructor(Number(instructorId), { bio } as any);
+            queryClient.invalidateQueries({ queryKey: ['instructor', instructorId] });
+        } catch (error) {
+            console.error('Error saving bio:', error);
+        } finally {
+            setIsSavingBio(false);
+        }
+    };
 
     const handleDeleteSignature = async () => {
         if (!instructor?.signature) return;
@@ -85,6 +100,25 @@ const PersonalTab: React.FC<PersonalTabProps> = ({
                     Personal Information
                 </h2>
 
+                {/* Avatar + Name header */}
+                <div className="flex items-center gap-4 mb-6 pb-6 border-b border-gray-100">
+                    {instructor?.avatar ? (
+                        <img
+                            src={instructor.avatar}
+                            alt={personalInfo.fullName}
+                            className="w-16 h-16 rounded-full object-cover border-2 border-gray-200"
+                        />
+                    ) : (
+                        <div className="w-16 h-16 rounded-full bg-gray-100 border-2 border-gray-200 flex items-center justify-center">
+                            <User className="w-8 h-8 text-gray-400" />
+                        </div>
+                    )}
+                    <div>
+                        <p className="text-lg font-semibold text-gray-900">{personalInfo.fullName}</p>
+                        <p className="text-sm text-gray-500">{personalInfo.email}</p>
+                    </div>
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
                     <div>
                         <label className="text-sm text-gray-600 block mb-2">
@@ -143,28 +177,57 @@ const PersonalTab: React.FC<PersonalTabProps> = ({
                             {personalInfo.joiningDate}
                         </p>
                     </div>
+                    <div>
+                        <label className="text-sm text-gray-600 block mb-2">
+                            Website / Profile Link:
+                        </label>
+                        {instructor?.link ? (
+                            <a
+                                href={instructor.link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-sm text-primary hover:underline inline-flex items-center gap-1"
+                            >
+                                {instructor.link}
+                                <ExternalLink className="w-3.5 h-3.5" />
+                            </a>
+                        ) : (
+                            <p className="text-sm text-gray-900">—</p>
+                        )}
+                    </div>
                 </div>
             </Card>
 
             {/* Instructors Bio */}
             <Card className="p-6 bg-white">
-                <h2 className="text-xl font-semibold mb-6">Instructors Bio</h2>
+                <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-xl font-semibold">Instructor Bio</h2>
+                    {bioChanged && (
+                        <Button
+                            size="sm"
+                            onClick={handleSaveBio}
+                            disabled={isSavingBio}
+                        >
+                            {isSavingBio ? (
+                                <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                            ) : (
+                                <Save className="w-4 h-4 mr-1" />
+                            )}
+                            Save
+                        </Button>
+                    )}
+                </div>
 
                 <div>
                     <label className="text-sm text-gray-600 block mb-2">
                         Bio
                     </label>
-                    <div className="relative">
-                        <Textarea
-                            placeholder="About the instructor"
-                            className="min-h-[100px] resize-none bg-gray-50 border-gray-200"
-                            disabled
-                            value={instructor?.bio || ''}
-                        />
-                        <button className="absolute top-3 right-3 text-gray-400 hover:text-gray-600">
-                            <ChevronDown className="w-5 h-5" />
-                        </button>
-                    </div>
+                    <Textarea
+                        placeholder="About the instructor"
+                        className="min-h-[100px] resize-none bg-gray-50 border-gray-200"
+                        value={bio}
+                        onChange={(e) => setBio(e.target.value)}
+                    />
                 </div>
             </Card>
 

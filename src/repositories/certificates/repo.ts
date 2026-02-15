@@ -2,7 +2,6 @@ import { courseApi } from '@/api';
 import type {
     Certificate,
     GenerateCertificateResponse,
-    VerifyCertificateResponse,
 } from './types';
 
 interface ApiResponse<T> {
@@ -37,47 +36,57 @@ export class CertificatesRepository {
 
     /**
      * Generate certificate by enrollment ID
-     * POST /course/{enrollmentId}/certificates/generate
+     * POST /api/course/certificate/{enrollmentId}/certificates/generate
      */
     static async generateByEnrollment(
         enrollmentId: number
     ): Promise<GenerateCertificateResponse> {
         const { data } = await courseApi.post(
-            `/${enrollmentId}/certificates/generate`
+            `/certificate/${enrollmentId}/certificates/generate`
         );
         return data;
     }
 
     /**
      * Generate certificate by course ID + user ID
-     * POST /course/{courseId}/users/{userId}/certificates/generate
+     * POST /api/course/certificate/{courseId}/users/{userId}/certificates/generate
      */
     static async generateByCourseAndUser(
         courseId: number,
         userId: number
     ): Promise<GenerateCertificateResponse> {
         const { data } = await courseApi.post(
-            `/${courseId}/users/${userId}/certificates/generate`
+            `/certificate/${courseId}/users/${userId}/certificates/generate`
         );
         return data;
     }
 
     /**
      * Get all certificates for a course
-     * GET /course/{courseId}/certificates
+     * GET /api/course/certificate/{courseId}/certificates
      */
     static async getByCourse(courseId: number): Promise<Certificate[]> {
-        const { data } = await courseApi.get(`/${courseId}/certificates`);
+        const { data } = await courseApi.get(`/certificate/${courseId}/certificates`);
         const result = this.extractData<Certificate[]>(data);
         return Array.isArray(result) ? result : [];
     }
 
     /**
-     * Verify / retrieve certificate by UID
-     * GET /course/certificates/verify/{uid}
+     * Get certificate by ID
+     * GET /api/course/certificate/{certificateId}
      */
-    static async verify(uid: string): Promise<VerifyCertificateResponse> {
-        const { data } = await courseApi.get(`/certificates/verify/${uid}`);
-        return data;
+    static async getById(certificateId: string): Promise<Certificate> {
+        const { data } = await courseApi.get(`/certificate/${certificateId}`);
+        return this.extractData<Certificate>(data);
+    }
+
+    /**
+     * Get all certificates for a user
+     * GET /api/course/certificate/user/{userId}/certificates
+     */
+    static async getByUser(userId: number): Promise<Certificate[]> {
+        const { data } = await courseApi.get(`/certificate/user/${userId}/certificates`);
+        const result = this.extractData<Certificate[]>(data);
+        return Array.isArray(result) ? result : [];
     }
 }

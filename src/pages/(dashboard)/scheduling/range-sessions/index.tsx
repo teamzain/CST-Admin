@@ -24,6 +24,14 @@ interface SessionData {
     name: string;
     date: Date;
     duration?: string;
+    session_type?: 'LIVE' | 'PHYSICAL';
+    capacity?: number;
+    location?: string;
+    meeting_url?: string;
+    start_time?: string;
+    end_time?: string;
+    course_title?: string;
+    course_id?: number;
 }
 
 // Convert API session to calendar format
@@ -34,12 +42,18 @@ const convertSessionsForDisplay = (apiSessions: any[]): SessionData[] => {
         let sessionTime = '00:00';
 
         if (session.start_time) {
-            // If start_time is ISO date string like "2025-01-15T09:00:00"
-            if (session.start_time.includes('T')) {
-                sessionDate = parseISO(session.start_time);
-                sessionTime = format(sessionDate, 'HH:mm');
+            // Normalise space-separated datetime (e.g. "2025-01-15 09:00:00") to ISO
+            const normalised = session.start_time.replace(' ', 'T');
+
+            if (normalised.includes('T')) {
+                // ISO-like string: "2025-01-15T09:00:00"
+                const parsed = parseISO(normalised);
+                if (!isNaN(parsed.getTime())) {
+                    sessionDate = parsed;
+                    sessionTime = format(sessionDate, 'HH:mm');
+                }
             } else if (session.start_time.includes(':')) {
-                // If it's just time like "09:00"
+                // Just time like "09:00"
                 sessionTime = session.start_time;
             }
         }
@@ -48,11 +62,14 @@ const convertSessionsForDisplay = (apiSessions: any[]): SessionData[] => {
         let duration: string | undefined;
         if (session.start_time && session.end_time) {
             try {
-                const startDate = session.start_time.includes('T')
-                    ? parseISO(session.start_time)
+                const startStr = session.start_time.includes('T') ? session.start_time : session.start_time.replace(' ', 'T');
+                const endStr = session.end_time.includes('T') ? session.end_time : session.end_time.replace(' ', 'T');
+
+                const startDate = startStr.includes('T')
+                    ? parseISO(startStr)
                     : new Date(`2025-01-01T${session.start_time}`);
-                const endDate = session.end_time.includes('T')
-                    ? parseISO(session.end_time)
+                const endDate = endStr.includes('T')
+                    ? parseISO(endStr)
                     : new Date(`2025-01-01T${session.end_time}`);
                 const diffMs = endDate.getTime() - startDate.getTime();
                 const diffHours = Math.round(diffMs / (1000 * 60 * 60));
@@ -70,6 +87,14 @@ const convertSessionsForDisplay = (apiSessions: any[]): SessionData[] => {
             name: session.title || 'Session',
             date: sessionDate,
             duration,
+            session_type: session.session_type,
+            capacity: session.capacity,
+            location: session.location,
+            meeting_url: session.meeting_url,
+            start_time: session.start_time,
+            end_time: session.end_time,
+            course_title: session.course?.title || session.course_title,
+            course_id: session.course_id,
         };
     });
 };

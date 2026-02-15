@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Switch } from '@/components/ui/switch';
 import {
     Card,
     CardContent,
@@ -332,8 +332,14 @@ export default function StateFormPage() {
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            <div className="flex items-center space-x-2">
-                                <Checkbox
+                            <div className="flex items-center justify-between p-3 rounded-lg border border-gray-200">
+                                <Label
+                                    htmlFor="requires_range_training"
+                                    className="cursor-pointer"
+                                >
+                                    Requires Range Training
+                                </Label>
+                                <Switch
                                     id="requires_range_training"
                                     checked={formData.requires_range_training}
                                     onCheckedChange={() =>
@@ -342,15 +348,15 @@ export default function StateFormPage() {
                                         )
                                     }
                                 />
+                            </div>
+                            <div className="flex items-center justify-between p-3 rounded-lg border border-gray-200">
                                 <Label
-                                    htmlFor="requires_range_training"
+                                    htmlFor="requires_range_pass"
                                     className="cursor-pointer"
                                 >
-                                    Requires Range Training
+                                    Requires Range Pass
                                 </Label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                                <Checkbox
+                                <Switch
                                     id="requires_range_pass"
                                     checked={formData.requires_range_pass}
                                     onCheckedChange={() =>
@@ -359,12 +365,6 @@ export default function StateFormPage() {
                                         )
                                     }
                                 />
-                                <Label
-                                    htmlFor="requires_range_pass"
-                                    className="cursor-pointer"
-                                >
-                                    Requires Range Pass
-                                </Label>
                             </div>
                         </CardContent>
                     </Card>
@@ -422,16 +422,7 @@ export default function StateFormPage() {
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            <div className="flex items-center space-x-2 p-3 rounded-lg border border-gray-200">
-                                <Checkbox
-                                    id="is_seat_time_enabled"
-                                    checked={formData.is_seat_time_enabled}
-                                    onCheckedChange={() =>
-                                        handleCheckboxChange(
-                                            'is_seat_time_enabled'
-                                        )
-                                    }
-                                />
+                            <div className="flex items-center justify-between p-3 rounded-lg border border-gray-200">
                                 <div className="flex-1">
                                     <Label
                                         htmlFor="is_seat_time_enabled"
@@ -445,6 +436,15 @@ export default function StateFormPage() {
                                         minutes)
                                     </p>
                                 </div>
+                                <Switch
+                                    id="is_seat_time_enabled"
+                                    checked={formData.is_seat_time_enabled}
+                                    onCheckedChange={() =>
+                                        handleCheckboxChange(
+                                            'is_seat_time_enabled'
+                                        )
+                                    }
+                                />
                             </div>
 
                             <div>
@@ -483,20 +483,20 @@ export default function StateFormPage() {
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <div className="flex items-center space-x-2">
-                                <Checkbox
-                                    id="is_active"
-                                    checked={formData.is_active}
-                                    onCheckedChange={() =>
-                                        handleCheckboxChange('is_active')
-                                    }
-                                />
+                            <div className="flex items-center justify-between p-3 rounded-lg border border-gray-200">
                                 <Label
                                     htmlFor="is_active"
                                     className="cursor-pointer"
                                 >
                                     Active / Published
                                 </Label>
+                                <Switch
+                                    id="is_active"
+                                    checked={formData.is_active}
+                                    onCheckedChange={() =>
+                                        handleCheckboxChange('is_active')
+                                    }
+                                />
                             </div>
                         </CardContent>
                     </Card>

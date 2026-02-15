@@ -121,7 +121,7 @@ export const USER_ROUTES = {
     },
     UPDATE: {
         url: '/:id',
-        method: HTTP_METHOD.PUT,
+        method: HTTP_METHOD.PATCH,
         requiresAuth: true,
         description: 'Update user',
     },
@@ -200,12 +200,12 @@ export const USER_ROUTES = {
             requiresAuth: true,
             description: 'Create new instructor',
         },
-        // UPDATE: {
-        //     url: '/instructor/:id',
-        //     method: HTTP_METHOD.PATCH,
-        //     requiresAuth: true,
-        //     description: 'Update instructor',
-        // },
+        UPDATE: {
+            url: '/instructor/:id',
+            method: HTTP_METHOD.PATCH,
+            requiresAuth: true,
+            description: 'Update instructor',
+        },
         DELETE: {
             url: '/:id', // Use general User delete
             method: HTTP_METHOD.DELETE,
@@ -337,6 +337,146 @@ export const COURSE_ROUTES = {
             description: 'Delete module',
         },
     },
+    SESSIONS: {
+        GET_ALL: {
+            url: '/course/live-sessions',
+            method: HTTP_METHOD.GET,
+            requiresAuth: true,
+            description: 'Get all sessions across courses',
+        },
+        GET_BY_COURSE: {
+            url: '/course/:courseId/live-sessions',
+            method: HTTP_METHOD.GET,
+            requiresAuth: true,
+            description: 'Get sessions for a specific course',
+        },
+        GET_BY_ID: {
+            url: '/course/live-sessions/:sessionId',
+            method: HTTP_METHOD.GET,
+            requiresAuth: true,
+            description: 'Get session by ID',
+        },
+        CREATE: {
+            url: '/course/:courseId/live-sessions',
+            method: HTTP_METHOD.POST,
+            requiresAuth: true,
+            description: 'Create a new session',
+        },
+        UPDATE: {
+            url: '/course/live-sessions/:sessionId',
+            method: HTTP_METHOD.PATCH,
+            requiresAuth: true,
+            description: 'Update a session',
+        },
+        DELETE: {
+            url: '/course/live-sessions/:sessionId',
+            method: HTTP_METHOD.DELETE,
+            requiresAuth: true,
+            description: 'Delete a session',
+        },
+    },
+    LESSONS: {
+        GET_ALL: {
+            url: '/course/lessons/all',
+            method: HTTP_METHOD.GET,
+            requiresAuth: true,
+            description: 'Get all lessons across courses',
+        },
+        GET_BY_ID: {
+            url: '/course/lesson/:lessonId',
+            method: HTTP_METHOD.GET,
+            requiresAuth: true,
+            description: 'Get lesson by ID',
+        },
+        CREATE: {
+            url: '/course/:courseId/lessons',
+            method: HTTP_METHOD.POST,
+            requiresAuth: true,
+            description: 'Create a new lesson',
+        },
+        UPDATE: {
+            url: '/course/lesson/:lessonId',
+            method: HTTP_METHOD.PATCH,
+            requiresAuth: true,
+            description: 'Update a lesson',
+        },
+        DELETE: {
+            url: '/course/lesson/:lessonId',
+            method: HTTP_METHOD.DELETE,
+            requiresAuth: true,
+            description: 'Delete a lesson',
+        },
+        REPLACE_VIDEO: {
+            url: '/course/lesson/:lessonId/video',
+            method: HTTP_METHOD.PATCH,
+            requiresAuth: true,
+            description: 'Replace lesson video',
+        },
+    },
+    QUIZZES: {
+        GET_ALL: {
+            url: '/course/quizzes',
+            method: HTTP_METHOD.GET,
+            requiresAuth: true,
+            description: 'Get all quizzes',
+        },
+        GET_BY_ID: {
+            url: '/course/quiz/:quizId',
+            method: HTTP_METHOD.GET,
+            requiresAuth: true,
+            description: 'Get quiz by ID',
+        },
+        CREATE: {
+            url: '/course/:courseId/quizzes',
+            method: HTTP_METHOD.POST,
+            requiresAuth: true,
+            description: 'Create a new quiz',
+        },
+        UPDATE: {
+            url: '/course/quiz/:quizId',
+            method: HTTP_METHOD.PATCH,
+            requiresAuth: true,
+            description: 'Update a quiz',
+        },
+        DELETE: {
+            url: '/course/quiz/:quizId',
+            method: HTTP_METHOD.DELETE,
+            requiresAuth: true,
+            description: 'Delete a quiz',
+        },
+    },
+    QUESTIONS: {
+        GET_BY_QUIZ: {
+            url: '/course/quiz/:quizId/questions',
+            method: HTTP_METHOD.GET,
+            requiresAuth: true,
+            description: 'Get all questions for a quiz',
+        },
+        CREATE: {
+            url: '/course/quiz/:quizId/questions',
+            method: HTTP_METHOD.POST,
+            requiresAuth: true,
+            description: 'Create a new question',
+        },
+        UPDATE: {
+            url: '/course/question/:questionId',
+            method: HTTP_METHOD.PATCH,
+            requiresAuth: true,
+            description: 'Update a question',
+        },
+        DELETE: {
+            url: '/course/question/:questionId',
+            method: HTTP_METHOD.DELETE,
+            requiresAuth: true,
+            description: 'Delete a question',
+        },
+        BULK_IMPORT: {
+            url: '/course/quiz/:quizId/questions/bulk-import',
+            method: HTTP_METHOD.POST,
+            requiresAuth: true,
+            description: 'Bulk import questions from file',
+        },
+    },
 } as const satisfies ServiceRoutes;
 
 /**
@@ -351,10 +491,48 @@ export const ADMIN_ROUTES = {
             description: 'Get dashboard statistics',
         },
         ANALYTICS: {
-            url: '/analytics', // Note: Analytics endpoint not found in backend, placeholder kept
+            url: '/analytics',
             method: HTTP_METHOD.GET,
             requiresAuth: true,
             description: 'Get analytics data',
+        },
+    },
+    COUPONS: {
+        GET_ALL: {
+            url: '/coupons',
+            method: HTTP_METHOD.GET,
+            requiresAuth: true,
+            description: 'Get all coupons',
+        },
+        GET_BY_ID: {
+            url: '/coupons/:id',
+            method: HTTP_METHOD.GET,
+            requiresAuth: true,
+            description: 'Get coupon by ID',
+        },
+        CREATE: {
+            url: '/coupons',
+            method: HTTP_METHOD.POST,
+            requiresAuth: true,
+            description: 'Create a coupon',
+        },
+        UPDATE: {
+            url: '/coupons/:id',
+            method: HTTP_METHOD.PATCH,
+            requiresAuth: true,
+            description: 'Update coupon',
+        },
+        DELETE: {
+            url: '/coupons/:id',
+            method: HTTP_METHOD.DELETE,
+            requiresAuth: true,
+            description: 'Delete coupon',
+        },
+        APPLY: {
+            url: '/coupons/apply',
+            method: HTTP_METHOD.POST,
+            requiresAuth: true,
+            description: 'Apply coupon',
         },
     },
     USERS: {
@@ -435,35 +613,65 @@ export const ADMIN_ROUTES = {
  * Payment Service Routes
  */
 export const PAYMENT_ROUTES = {
+    CREATE_INTENT: {
+        url: '/create-intent',
+        method: HTTP_METHOD.POST,
+        requiresAuth: true,
+        description: 'Create payment intent',
+    },
     CREATE_CHECKOUT: {
         url: '/checkout',
         method: HTTP_METHOD.POST,
         requiresAuth: true,
         description: 'Create checkout session',
     },
-    VERIFY_PAYMENT: {
-        url: '/confirm',
+    VALIDATE_COUPON: {
+        url: '/validate-coupon',
         method: HTTP_METHOD.POST,
         requiresAuth: true,
-        description: 'Verify payment',
+        description: 'Validate a coupon code',
     },
-    GET_TRANSACTIONS: {
+    GET_ORDERS: {
         url: '/orders',
         method: HTTP_METHOD.GET,
         requiresAuth: true,
-        description: 'Get user transactions',
+        description: 'Get user order history',
     },
-    GET_TRANSACTION_BY_ID: {
+    GET_ORDER_BY_ID: {
         url: '/orders/:id',
         method: HTTP_METHOD.GET,
         requiresAuth: true,
-        description: 'Get transaction by ID',
+        description: 'Get specific order details',
+    },
+    GET_INTENT: {
+        url: '/intent/:id',
+        method: HTTP_METHOD.GET,
+        requiresAuth: true,
+        description: 'Get payment intent details',
+    },
+    CONFIRM: {
+        url: '/confirm',
+        method: HTTP_METHOD.POST,
+        requiresAuth: true,
+        description: 'Confirm payment success',
+    },
+    CANCEL: {
+        url: '/cancel/:paymentIntentId',
+        method: HTTP_METHOD.POST,
+        requiresAuth: true,
+        description: 'Cancel payment intent',
     },
     REFUND: {
         url: '/refund/:orderId',
         method: HTTP_METHOD.POST,
         requiresAuth: true,
-        description: 'Process refund',
+        description: 'Refund payment (Admin)',
+    },
+    STATISTICS: {
+        url: '/statistics',
+        method: HTTP_METHOD.GET,
+        requiresAuth: true,
+        description: 'Get payment statistics (Admin)',
     },
     WEBHOOK: {
         url: '/webhook',

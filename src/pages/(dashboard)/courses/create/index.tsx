@@ -21,7 +21,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Switch } from '@/components/ui/switch';
 import { useState, useEffect } from 'react';
 import {
     CoursesRepository,
@@ -516,8 +516,11 @@ export default function CreateCoursePage() {
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-2">
-                                <Checkbox
+                            <div className="flex items-center justify-between p-4 border rounded-lg">
+                                <Label htmlFor="is-refresher" className="cursor-pointer">
+                                    Is this a Refresher Course?
+                                </Label>
+                                <Switch
                                     id="is-refresher"
                                     checked={formData.is_refresher}
                                     onCheckedChange={(checked) =>
@@ -527,9 +530,6 @@ export default function CreateCoursePage() {
                                         )
                                     }
                                 />
-                                <Label htmlFor="is-refresher">
-                                    Is this a Refresher Course?
-                                </Label>
                             </div>
 
                             <div className="flex justify-end gap-4 pt-4">
@@ -631,8 +631,11 @@ export default function CreateCoursePage() {
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-2">
-                                <Checkbox
+                            <div className="flex items-center justify-between p-4 border rounded-lg">
+                                <Label htmlFor="price-negotiable" className="cursor-pointer">
+                                    Price is Negotiable
+                                </Label>
+                                <Switch
                                     id="price-negotiable"
                                     checked={formData.is_price_negotiable}
                                     onCheckedChange={(checked) =>
@@ -642,9 +645,6 @@ export default function CreateCoursePage() {
                                         )
                                     }
                                 />
-                                <Label htmlFor="price-negotiable">
-                                    Price is Negotiable
-                                </Label>
                             </div>
 
                             <div>
@@ -696,93 +696,81 @@ export default function CreateCoursePage() {
                                     Course Requirements
                                 </Label>
                                 <div className="space-y-3">
-                                    <div className="flex items-center gap-2">
-                                        <Checkbox
+                                    <div className="flex items-center justify-between p-3 border rounded-lg">
+                                        <Label htmlFor="requires-exam" className="cursor-pointer">
+                                            Requires Exam
+                                        </Label>
+                                        <Switch
                                             id="requires-exam"
                                             checked={formData.requires_exam}
                                             onCheckedChange={(checked) =>
-                                                handleInputChange(
-                                                    'requires_exam',
-                                                    checked
-                                                )
+                                                handleInputChange('requires_exam', checked)
                                             }
                                         />
-                                        <Label htmlFor="requires-exam">
-                                            Requires Exam
-                                        </Label>
                                     </div>
-                                    <div className="flex items-center gap-2">
-                                        <Checkbox
+                                    <div className="flex items-center justify-between p-3 border rounded-lg">
+                                        <Label htmlFor="requires-range" className="cursor-pointer">
+                                            Requires Range Training
+                                        </Label>
+                                        <Switch
                                             id="requires-range"
                                             checked={formData.requires_range}
                                             onCheckedChange={(checked) =>
-                                                handleInputChange(
-                                                    'requires_range',
-                                                    checked
-                                                )
+                                                handleInputChange('requires_range', checked)
                                             }
                                         />
-                                        <Label htmlFor="requires-range">
-                                            Requires Range Training
-                                        </Label>
                                     </div>
-                                    <div className="flex items-center gap-2">
-                                        <Checkbox
-                                            id="attendance-required"
-                                            checked={
-                                                formData.attendance_required
-                                            }
-                                            onCheckedChange={(checked) =>
-                                                handleInputChange(
-                                                    'attendance_required',
-                                                    checked
-                                                )
-                                            }
-                                        />
-                                        <Label htmlFor="attendance-required">
+                                    <div className="flex items-center justify-between p-3 border rounded-lg">
+                                        <Label htmlFor="attendance-required" className="cursor-pointer">
                                             Attendance Required
                                         </Label>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <Checkbox
-                                            id="attendance-enabled"
-                                            checked={
-                                                formData.attendance_enabled
-                                            }
+                                        <Switch
+                                            id="attendance-required"
+                                            checked={formData.attendance_required}
                                             onCheckedChange={(checked) =>
-                                                handleInputChange(
-                                                    'attendance_enabled',
-                                                    checked
-                                                )
+                                                handleInputChange('attendance_required', checked)
                                             }
                                         />
-                                        <Label htmlFor="attendance-enabled">
+                                    </div>
+                                    <div className="flex items-center justify-between p-3 border rounded-lg">
+                                        <Label htmlFor="attendance-enabled" className="cursor-pointer">
                                             Enable Attendance Tracking
                                         </Label>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <Checkbox
-                                            id="requires-id-verification"
-                                            checked={
-                                                formData.requires_id_verification
-                                            }
+                                        <Switch
+                                            id="attendance-enabled"
+                                            checked={formData.attendance_enabled}
                                             onCheckedChange={(checked) =>
-                                                handleInputChange(
-                                                    'requires_id_verification',
-                                                    checked
-                                                )
+                                                handleInputChange('attendance_enabled', checked)
                                             }
                                         />
-                                        <Label htmlFor="requires-id-verification">
+                                    </div>
+                                    <div className="flex items-center justify-between p-3 border rounded-lg">
+                                        <Label htmlFor="requires-id-verification" className="cursor-pointer">
                                             Requires ID Verification
                                         </Label>
+                                        <Switch
+                                            id="requires-id-verification"
+                                            checked={formData.requires_id_verification}
+                                            onCheckedChange={(checked) =>
+                                                handleInputChange('requires_id_verification', checked)
+                                            }
+                                        />
                                     </div>
                                 </div>
                             </div>
 
                             <div className="border-t border-border pt-6">
-                                <div className="flex items-center gap-2 mb-4">
-                                    <Checkbox
+                                <div className="flex items-center justify-between p-4 border rounded-lg mb-4">
+                                    <div>
+                                        <Label
+                                            htmlFor="is-active"
+                                            className="text-base font-semibold cursor-pointer"
+                                        >
+                                            Publish Course
+                                        </Label>
+                                        <p className="text-sm text-muted-foreground mt-0.5">Make it available to students</p>
+                                    </div>
+                                    <Switch
                                         id="is-active"
                                         checked={formData.is_active}
                                         onCheckedChange={(checked) =>
@@ -792,13 +780,6 @@ export default function CreateCoursePage() {
                                             )
                                         }
                                     />
-                                    <Label
-                                        htmlFor="is-active"
-                                        className="text-base font-semibold"
-                                    >
-                                        Publish Course (make it available to
-                                        students)
-                                    </Label>
                                 </div>
                                 <p className="text-sm text-muted-foreground">
                                     Unpublished courses will not be visible to

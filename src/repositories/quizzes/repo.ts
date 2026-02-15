@@ -1,5 +1,7 @@
 import { courseApi } from '@/api';
+import { COURSE_ROUTES, buildUrl } from '@/config/routes';
 import type { Quiz, CreateQuizInput, UpdateQuizInput } from './types';
+import { CoursesRepository } from '@/repositories/courses/repo';
 
 interface ApiResponse<T> {
     data?: T;
@@ -28,19 +30,41 @@ export class QuizzesRepository {
     }
 
     /**
-     * Get all quizzes with questions count
+     * Get all quizzes with questions count.
+     *
+     * NOTE: The backend's GET /course/quizzes endpoint has a route collision
+     * with GET /course/:id (ParseIntPipe rejects "quizzes").
+     * Workaround: fetch all courses, then aggregate per-course quizzes.
      */
     static async getAll(): Promise<Quiz[]> {
-        // Request questions to be included so we can show the count
-        const { data } = await courseApi.get('/quizzes?include=questions');
-        return this.extractData<Quiz[]>(data);
+        try {
+            // Try direct endpoint first (in case backend fixes the collision)
+            const { data } = await courseApi.get(`${COURSE_ROUTES.QUIZZES.GET_ALL.url}?include=questions`);
+            return this.extractData<Quiz[]>(data);
+        } catch (err: any) {
+            // If 400 (route collision), fall back to per-course aggregation
+            if (err?.response?.status === 400) {
+                const courses = await CoursesRepository.getAll();
+                const perCourse = await Promise.all(
+                    courses.map((c) => {
+                        const url = buildUrl(COURSE_ROUTES.QUIZZES.CREATE, { courseId: c.id });
+                        return courseApi.get(`${url}?include=questions`)
+                            .then((res) => this.extractData<Quiz[]>(res.data))
+                            .catch(() => [] as Quiz[]);
+                    })
+                );
+                return perCourse.flat();
+            }
+            throw err;
+        }
     }
 
     /**
      * Get a single quiz by ID
      */
     static async getById(quizId: number): Promise<Quiz> {
-        const { data } = await courseApi.get(`/quiz/${quizId}`);
+        const url = buildUrl(COURSE_ROUTES.QUIZZES.GET_BY_ID, { quizId });
+        const { data } = await courseApi.get(url);
         return this.extractData<Quiz>(data);
     }
 
@@ -48,7 +72,8 @@ export class QuizzesRepository {
      * Create a new quiz for a course
      */
     static async create(courseId: number, input: CreateQuizInput): Promise<Quiz> {
-        const { data } = await courseApi.post(`/${courseId}/quizzes`, input);
+        const url = buildUrl(COURSE_ROUTES.QUIZZES.CREATE, { courseId });
+        const { data } = await courseApi.post(url, input);
         return this.extractData<Quiz>(data);
     }
 
@@ -56,7 +81,8 @@ export class QuizzesRepository {
      * Update a quiz
      */
     static async update(quizId: number, input: UpdateQuizInput): Promise<Quiz> {
-        const { data } = await courseApi.patch(`/quiz/${quizId}`, input);
+        const url = buildUrl(COURSE_ROUTES.QUIZZES.UPDATE, { quizId });
+        const { data } = await courseApi.patch(url, input);
         return this.extractData<Quiz>(data);
     }
 
@@ -64,7 +90,8 @@ export class QuizzesRepository {
      * Delete a quiz
      */
     static async delete(quizId: number): Promise<void> {
-        await courseApi.delete(`/quiz/${quizId}`);
+        const url = buildUrl(COURSE_ROUTES.QUIZZES.DELETE, { quizId });
+        await courseApi.delete(url);
     }
 }
 

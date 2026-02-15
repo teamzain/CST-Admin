@@ -16,6 +16,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { DatePickerInput } from "@/components/shared/date-picker"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 interface Instructor {
@@ -133,13 +134,13 @@ export function InstructorModal({ open, onOpenChange, instructor, onSave }: Inst
 
             <div>
               <Label htmlFor="expiry">Expiry Date</Label>
-              <Input
-                id="expiry"
-                type="date"
-                value={formData.expiry}
-                onChange={(e) => setFormData({ ...formData, expiry: e.target.value })}
-                className="bg-input border-border mt-1"
-              />
+              <div className="mt-1">
+                <DatePickerInput
+                  value={formData.expiry}
+                  onChange={(date) => setFormData({ ...formData, expiry: date })}
+                  title="Expiry Date"
+                />
+              </div>
             </div>
           </div>
 

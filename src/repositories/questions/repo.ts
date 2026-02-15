@@ -1,4 +1,5 @@
 import { courseApi } from '@/api';
+import { COURSE_ROUTES, buildUrl } from '@/config/routes';
 import type { Question, CreateQuestionInput, UpdateQuestionInput } from './types';
 
 interface ApiResponse<T> {
@@ -31,7 +32,8 @@ export class QuestionsRepository {
      * Get all questions for a quiz
      */
     static async getByQuiz(quizId: number): Promise<Question[]> {
-        const { data } = await courseApi.get(`/quiz/${quizId}/questions`);
+        const url = buildUrl(COURSE_ROUTES.QUESTIONS.GET_BY_QUIZ, { quizId });
+        const { data } = await courseApi.get(url);
         return this.extractData<Question[]>(data);
     }
 
@@ -39,7 +41,8 @@ export class QuestionsRepository {
      * Create a new question for a quiz
      */
     static async create(quizId: number, input: CreateQuestionInput): Promise<Question> {
-        const { data } = await courseApi.post(`/quiz/${quizId}/questions`, input);
+        const url = buildUrl(COURSE_ROUTES.QUESTIONS.CREATE, { quizId });
+        const { data } = await courseApi.post(url, input);
         return this.extractData<Question>(data);
     }
 
@@ -47,7 +50,8 @@ export class QuestionsRepository {
      * Update a question
      */
     static async update(questionId: number, input: UpdateQuestionInput): Promise<Question> {
-        const { data } = await courseApi.patch(`/question/${questionId}`, input);
+        const url = buildUrl(COURSE_ROUTES.QUESTIONS.UPDATE, { questionId });
+        const { data } = await courseApi.patch(url, input);
         return this.extractData<Question>(data);
     }
 
@@ -55,7 +59,8 @@ export class QuestionsRepository {
      * Delete a question
      */
     static async delete(questionId: number): Promise<void> {
-        await courseApi.delete(`/question/${questionId}`);
+        const url = buildUrl(COURSE_ROUTES.QUESTIONS.DELETE, { questionId });
+        await courseApi.delete(url);
     }
 
     /**
@@ -64,7 +69,8 @@ export class QuestionsRepository {
     static async bulkImport(quizId: number, file: File): Promise<Question[]> {
         const formData = new FormData();
         formData.append('file', file);
-        const { data } = await courseApi.post(`/quiz/${quizId}/questions/bulk-import`, formData, {
+        const url = buildUrl(COURSE_ROUTES.QUESTIONS.BULK_IMPORT, { quizId });
+        const { data } = await courseApi.post(url, formData, {
             headers: {
                 'Content-Type': 'multipart/form-data',
             },
