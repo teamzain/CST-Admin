@@ -1,4 +1,6 @@
 import axios, { AxiosError } from 'axios';
+import { getBaseApiUrl } from '@/config';
+import { APP_NAMES } from '@/utils/constants';
 
 export interface UploadResponse {
     url: string;
@@ -7,10 +9,6 @@ export interface UploadResponse {
 }
 
 class BunnyUploadService {
-    private getBaseUrl() {
-        return import.meta.env.VITE_API_COURSE_URL || 'http://localhost:3012/api/course';
-    }
-
     private axiosInstance = axios.create();
 
     constructor() {
@@ -20,7 +18,7 @@ class BunnyUploadService {
     private setupInterceptors() {
         this.axiosInstance.interceptors.request.use((config) => {
             // Set base URL dynamically for each request
-            config.baseURL = this.getBaseUrl();
+            config.baseURL = getBaseApiUrl(APP_NAMES.COURSE);
 
             const token = localStorage.getItem('auth-token') || localStorage.getItem('token');
             if (token) {
@@ -86,7 +84,7 @@ class BunnyUploadService {
                 message: axiosError.message,
                 status: axiosError.response?.status,
                 statusText: axiosError.response?.statusText,
-                url: `${this.getBaseUrl()}/bunny-upload`,
+                url: `${getBaseApiUrl(APP_NAMES.COURSE)}/bunny-upload`,
                 file: file.name,
                 size: file.size,
             });
