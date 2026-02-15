@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import type { Instructor } from '@/repositories/instructors';
-import { MoreVertical, Trash2 } from 'lucide-react';
+import { MoreVertical, Trash2, Pencil } from 'lucide-react';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -12,12 +12,14 @@ interface InstructorCardProps {
     instructor: Instructor;
     onViewProfile: (id: number) => void;
     onDelete?: (instructor: Instructor) => void;
+    onEdit?: (instructor: Instructor) => void;
 }
 
 const InstructorCard: React.FC<InstructorCardProps> = ({
     instructor,
     onViewProfile,
     onDelete,
+    onEdit,
 }) => {
     // Get status badge styling
     const getStatusBadge = (status: string | undefined) => {
@@ -43,7 +45,7 @@ const InstructorCard: React.FC<InstructorCardProps> = ({
     // Stats from instructor data
     const stats = {
         courses: instructor.assigned_courses?.length || 0,
-        students: '—',
+        students: instructor.summary?.total_students ?? 0,
         rating: '—',
     };
 
@@ -67,6 +69,12 @@ const InstructorCard: React.FC<InstructorCardProps> = ({
                         </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
+                        <DropdownMenuItem
+                            onClick={() => onEdit?.(instructor)}
+                        >
+                            <Pencil className="mr-2 h-4 w-4" />
+                            Edit
+                        </DropdownMenuItem>
                         <DropdownMenuItem
                             className="text-red-600 focus:text-red-600"
                             onClick={() => onDelete?.(instructor)}

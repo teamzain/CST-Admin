@@ -21,7 +21,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useState, useEffect } from 'react';
 import {
     CoursesRepository,
@@ -516,11 +516,8 @@ export default function CreateCoursePage() {
                                 </div>
                             </div>
 
-                            <div className="flex items-center justify-between p-4 border rounded-lg">
-                                <Label htmlFor="is-refresher" className="cursor-pointer">
-                                    Is this a Refresher Course?
-                                </Label>
-                                <Switch
+                            <div className="flex items-center gap-2">
+                                <Checkbox
                                     id="is-refresher"
                                     checked={formData.is_refresher}
                                     onCheckedChange={(checked) =>
@@ -530,6 +527,9 @@ export default function CreateCoursePage() {
                                         )
                                     }
                                 />
+                                <Label htmlFor="is-refresher" className="cursor-pointer">
+                                    Is this a Refresher Course?
+                                </Label>
                             </div>
 
                             <div className="flex justify-end gap-4 pt-4">
@@ -631,11 +631,8 @@ export default function CreateCoursePage() {
                                 </div>
                             </div>
 
-                            <div className="flex items-center justify-between p-4 border rounded-lg">
-                                <Label htmlFor="price-negotiable" className="cursor-pointer">
-                                    Price is Negotiable
-                                </Label>
-                                <Switch
+                            <div className="flex items-center gap-2">
+                                <Checkbox
                                     id="price-negotiable"
                                     checked={formData.is_price_negotiable}
                                     onCheckedChange={(checked) =>
@@ -645,6 +642,27 @@ export default function CreateCoursePage() {
                                         )
                                     }
                                 />
+                                <Label htmlFor="price-negotiable" className="cursor-pointer">
+                                    Price is Negotiable
+                                </Label>
+                            </div>
+
+                            <div>
+                                <Label>Certificate Template</Label>
+                                <Input
+                                    value={formData.certificate_template || ''}
+                                    onChange={(e) =>
+                                        handleInputChange(
+                                            'certificate_template',
+                                            e.target.value || undefined
+                                        )
+                                    }
+                                    placeholder="e.g., template-name or URL"
+                                    className="bg-input border-border mt-2"
+                                />
+                                <p className="text-xs text-muted-foreground mt-1">
+                                    Certificate template identifier for course completion certificates
+                                </p>
                             </div>
 
                             <div>
@@ -696,81 +714,72 @@ export default function CreateCoursePage() {
                                     Course Requirements
                                 </Label>
                                 <div className="space-y-3">
-                                    <div className="flex items-center justify-between p-3 border rounded-lg">
-                                        <Label htmlFor="requires-exam" className="cursor-pointer">
-                                            Requires Exam
-                                        </Label>
-                                        <Switch
+                                    <div className="flex items-center gap-2">
+                                        <Checkbox
                                             id="requires-exam"
                                             checked={formData.requires_exam}
                                             onCheckedChange={(checked) =>
                                                 handleInputChange('requires_exam', checked)
                                             }
                                         />
-                                    </div>
-                                    <div className="flex items-center justify-between p-3 border rounded-lg">
-                                        <Label htmlFor="requires-range" className="cursor-pointer">
-                                            Requires Range Training
+                                        <Label htmlFor="requires-exam" className="cursor-pointer">
+                                            Requires Exam
                                         </Label>
-                                        <Switch
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Checkbox
                                             id="requires-range"
                                             checked={formData.requires_range}
                                             onCheckedChange={(checked) =>
                                                 handleInputChange('requires_range', checked)
                                             }
                                         />
-                                    </div>
-                                    <div className="flex items-center justify-between p-3 border rounded-lg">
-                                        <Label htmlFor="attendance-required" className="cursor-pointer">
-                                            Attendance Required
+                                        <Label htmlFor="requires-range" className="cursor-pointer">
+                                            Requires Range Training
                                         </Label>
-                                        <Switch
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Checkbox
                                             id="attendance-required"
                                             checked={formData.attendance_required}
                                             onCheckedChange={(checked) =>
                                                 handleInputChange('attendance_required', checked)
                                             }
                                         />
-                                    </div>
-                                    <div className="flex items-center justify-between p-3 border rounded-lg">
-                                        <Label htmlFor="attendance-enabled" className="cursor-pointer">
-                                            Enable Attendance Tracking
+                                        <Label htmlFor="attendance-required" className="cursor-pointer">
+                                            Attendance Required
                                         </Label>
-                                        <Switch
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Checkbox
                                             id="attendance-enabled"
                                             checked={formData.attendance_enabled}
                                             onCheckedChange={(checked) =>
                                                 handleInputChange('attendance_enabled', checked)
                                             }
                                         />
-                                    </div>
-                                    <div className="flex items-center justify-between p-3 border rounded-lg">
-                                        <Label htmlFor="requires-id-verification" className="cursor-pointer">
-                                            Requires ID Verification
+                                        <Label htmlFor="attendance-enabled" className="cursor-pointer">
+                                            Enable Attendance Tracking
                                         </Label>
-                                        <Switch
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Checkbox
                                             id="requires-id-verification"
                                             checked={formData.requires_id_verification}
                                             onCheckedChange={(checked) =>
                                                 handleInputChange('requires_id_verification', checked)
                                             }
                                         />
+                                        <Label htmlFor="requires-id-verification" className="cursor-pointer">
+                                            Requires ID Verification
+                                        </Label>
                                     </div>
                                 </div>
                             </div>
 
                             <div className="border-t border-border pt-6">
-                                <div className="flex items-center justify-between p-4 border rounded-lg mb-4">
-                                    <div>
-                                        <Label
-                                            htmlFor="is-active"
-                                            className="text-base font-semibold cursor-pointer"
-                                        >
-                                            Publish Course
-                                        </Label>
-                                        <p className="text-sm text-muted-foreground mt-0.5">Make it available to students</p>
-                                    </div>
-                                    <Switch
+                                <div className="flex items-center gap-2">
+                                    <Checkbox
                                         id="is-active"
                                         checked={formData.is_active}
                                         onCheckedChange={(checked) =>
@@ -780,6 +789,15 @@ export default function CreateCoursePage() {
                                             )
                                         }
                                     />
+                                    <div>
+                                        <Label
+                                            htmlFor="is-active"
+                                            className="text-base font-semibold cursor-pointer"
+                                        >
+                                            Publish Course
+                                        </Label>
+                                        <p className="text-sm text-muted-foreground mt-0.5">Make it available to students</p>
+                                    </div>
                                 </div>
                                 <p className="text-sm text-muted-foreground">
                                     Unpublished courses will not be visible to

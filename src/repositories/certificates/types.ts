@@ -9,6 +9,7 @@ export interface Certificate {
     certificate_url: string | null;
     issued_at: string;
     expires_at: string | null;
+    is_expired?: boolean;
     created_at: string;
     updated_at: string;
 

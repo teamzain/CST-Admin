@@ -66,7 +66,6 @@ export const SignatureUpload = ({
             const path = `signature/${filename}`;
 
             await bunnyUploadService.deleteFile(path);
-            onChange(null);
             toast.success('Signature deleted successfully');
         } catch (error) {
             console.error('Delete error:', error);
@@ -74,6 +73,8 @@ export const SignatureUpload = ({
                 error instanceof Error ? error.message : 'Failed to delete signature'
             );
         } finally {
+            // Always clear the signature from form, even if CDN delete fails
+            onChange(null);
             setIsLoading(false);
         }
     };

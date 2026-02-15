@@ -14,6 +14,7 @@ import StudentsPage from '@/pages/(dashboard)/students';
 import StudentDetailsPage from '@/pages/(dashboard)/students/[id]';
 import CreateInstructorPage from '@/pages/(dashboard)/instructors/create';
 import InstructorDetailsPage from '@/pages/(dashboard)/instructors/[id]';
+import EditInstructorPage from '@/pages/(dashboard)/instructors/[id]/edit';
 import AllQuizzesPage from '@/pages/(dashboard)/quizzes';
 import QuizDetailsPage from '@/pages/(dashboard)/quizzes/quiz-details';
 import AllLessonsPage from '@/pages/(dashboard)/lessons';
@@ -23,6 +24,7 @@ import SessionDetailsPage from '@/pages/(dashboard)/sessions/session-details';
 import SettingsPage from '@/pages/(dashboard)/settings';
 import CreateStudentPage from '@/pages/(dashboard)/students/create';
 import EditStudentPage from '@/pages/(dashboard)/students/[id]/edit';
+import CertificateViewPage from '@/pages/(dashboard)/certificates/[id]';
 import RangeSessionsPage from '@/pages/(dashboard)/scheduling/range-sessions';
 import LocationsPage from '@/pages/(dashboard)/scheduling/locations';
 import WaitListPage from '@/pages/(dashboard)/scheduling/wait-list';
@@ -69,6 +71,10 @@ export const dashboardRoutes: RouteObject[] = [
                     {
                         path: '/instructors/:id',
                         element: <InstructorDetailsPage />,
+                    },
+                    {
+                        path: '/instructors/:id/edit',
+                        element: <EditInstructorPage />,
                     },
                     {
                         path: '/instructors/create',
@@ -129,6 +135,10 @@ export const dashboardRoutes: RouteObject[] = [
                     {
                         path: '/scheduling/wait-list',
                         element: <WaitListPage />,
+                    },
+                    {
+                        path: '/certificates/:id',
+                        element: <CertificateViewPage />,
                     },
                     {
                         path: '/settings',

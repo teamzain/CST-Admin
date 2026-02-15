@@ -93,7 +93,7 @@ export default function DashboardPage() {
 
     const { data: enrollmentsData } = useQuery({
         queryKey: ['dashboard-enrollments'],
-        queryFn: () => EnrollmentsRepository.getAll({ limit: 200 }),
+        queryFn: () => EnrollmentsRepository.getAll({ limit: 1000 }),
     });
 
     const enrollments = useMemo(() => enrollmentsData?.data ?? [], [enrollmentsData]);
@@ -105,7 +105,9 @@ export default function DashboardPage() {
 
     const completionRate = useMemo(() => {
         if (enrollments.length === 0) return '—';
-        const completed = enrollments.filter((e) => e.status === 'COMPLETE').length;
+        const completed = enrollments.filter(
+            (e) => e.status === 'COMPLETE'
+        ).length;
         return `${Math.round((completed / enrollments.length) * 100)}%`;
     }, [enrollments]);
 
@@ -192,13 +194,13 @@ export default function DashboardPage() {
         };
 
         enrollments.forEach((e) => {
-            const startedDate = safeParse(e.started_at);
+            const startedDate = safeParse(e.started_at) || safeParse(e.created_at);
             if (startedDate) {
                 const key = `${startedDate.getFullYear()}-${startedDate.getMonth()}`;
                 ensureBucket(key);
                 monthMap.get(key)!.enrollments += 1;
             }
-            if (e.status === 'COMPLETE' && e.completed_at) {
+            if ((e.status === 'COMPLETE') && e.completed_at) {
                 const completedDate = safeParse(e.completed_at);
                 if (completedDate) {
                     const key = `${completedDate.getFullYear()}-${completedDate.getMonth()}`;

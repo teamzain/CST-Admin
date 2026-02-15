@@ -3,8 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Trash2, Loader2, ExternalLink, Save, User } from 'lucide-react';
-import { bunnyUploadService } from '@/api/bunny-upload';
+import { ExternalLink, Save, Loader2, User } from 'lucide-react';
 import { InstructorsRepository } from '@/repositories/instructors/repo';
 import type { Instructor } from '@/repositories/instructors/types';
 
@@ -18,7 +17,6 @@ const PersonalTab: React.FC<PersonalTabProps> = ({
     instructorId,
 }) => {
     const queryClient = useQueryClient();
-    const [isDeletingSignature, setIsDeletingSignature] = useState(false);
     const [bio, setBio] = useState(instructor?.bio || '');
     const [isSavingBio, setIsSavingBio] = useState(false);
     const bioChanged = bio !== (instructor?.bio || '');
@@ -32,32 +30,6 @@ const PersonalTab: React.FC<PersonalTabProps> = ({
             console.error('Error saving bio:', error);
         } finally {
             setIsSavingBio(false);
-        }
-    };
-
-    const handleDeleteSignature = async () => {
-        if (!instructor?.signature) return;
-        setIsDeletingSignature(true);
-        try {
-            // Extract the file path from the full URL for Bunny deletion
-            try {
-                const url = new URL(instructor.signature);
-                const filePath = url.pathname.startsWith('/') ? url.pathname.slice(1) : url.pathname;
-                await bunnyUploadService.deleteFile(filePath);
-            } catch {
-                // Continue even if Bunny delete fails (file may already be gone)
-                console.warn('Bunny file delete failed, continuing with DB update');
-            }
-
-            // Clear signature in DB via instructor update
-            await InstructorsRepository.updateInstructor(Number(instructorId), { signature: null });
-
-            // Refresh instructor data
-            queryClient.invalidateQueries({ queryKey: ['instructor', instructorId] });
-        } catch (error) {
-            console.error('Error deleting signature:', error);
-        } finally {
-            setIsDeletingSignature(false);
         }
     };
 
@@ -233,25 +205,7 @@ const PersonalTab: React.FC<PersonalTabProps> = ({
 
             {/* Signature */}
             <Card className="p-6 bg-white">
-                <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl font-semibold">Signature</h2>
-                    {instructor?.signature && (
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={handleDeleteSignature}
-                            disabled={isDeletingSignature}
-                            className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                        >
-                            {isDeletingSignature ? (
-                                <Loader2 className="w-4 h-4 mr-1 animate-spin" />
-                            ) : (
-                                <Trash2 className="w-4 h-4 mr-1" />
-                            )}
-                            {isDeletingSignature ? 'Deleting...' : 'Delete'}
-                        </Button>
-                    )}
-                </div>
+                <h2 className="text-xl font-semibold mb-6">Signature</h2>
                 <div className="flex justify-center">
                     {instructor?.signature ? (
                         <div className="border-2 border-gray-200 rounded-lg p-4 bg-gray-50">

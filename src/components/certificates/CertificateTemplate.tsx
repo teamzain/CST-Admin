@@ -383,17 +383,24 @@ const CertificateTemplate: React.FC<CertificateTemplateProps> = ({
                         }}
                     >
                         {/* Signature image or cursive name */}
-                        {instructor_signature ? (
-                            <img
-                                src={instructor_signature}
-                                alt={`${instructor_name} signature`}
-                                style={{
-                                    height: '48px',
-                                    objectFit: 'contain',
-                                    marginBottom: '4px',
-                                }}
-                            />
-                        ) : (
+                        <div style={{ height: '48px', marginBottom: '4px', display: 'flex', alignItems: 'center' }}>
+                            {instructor_signature?.trim() ? (
+                                <img
+                                    src={instructor_signature}
+                                    alt={`${instructor_name} signature`}
+                                    style={{
+                                        height: '48px',
+                                        maxWidth: '160px',
+                                        objectFit: 'contain',
+                                    }}
+                                    onError={(e) => {
+                                        const target = e.target as HTMLImageElement;
+                                        target.style.display = 'none';
+                                        const fallback = target.nextElementSibling as HTMLElement;
+                                        if (fallback) fallback.style.display = 'block';
+                                    }}
+                                />
+                            ) : null}
                             <span
                                 style={{
                                     fontFamily:
@@ -401,12 +408,12 @@ const CertificateTemplate: React.FC<CertificateTemplateProps> = ({
                                     fontSize: '28px',
                                     color: '#1a3160',
                                     lineHeight: 1.2,
-                                    marginBottom: '4px',
+                                    display: instructor_signature?.trim() ? 'none' : 'block',
                                 }}
                             >
                                 {instructor_name || 'Instructor'}
                             </span>
-                        )}
+                        </div>
                         {/* Gold line under signature */}
                         <div
                             style={{
@@ -447,37 +454,42 @@ const CertificateTemplate: React.FC<CertificateTemplateProps> = ({
                             minWidth: '100px',
                         }}
                     >
-                        {platform_logo ? (
+                        {platform_logo || '/logo.png' ? (
                             <img
-                                src={platform_logo}
+                                src={platform_logo || '/logo.png'}
                                 alt={platform_name}
                                 style={{
                                     height: '80px',
                                     width: '80px',
                                     objectFit: 'contain',
                                 }}
-                            />
-                        ) : (
-                            <div
-                                style={{
-                                    width: '80px',
-                                    height: '80px',
-                                    borderRadius: '50%',
-                                    backgroundColor: '#0f1f3e',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    color: '#daa520',
-                                    fontSize: '12px',
-                                    fontWeight: 700,
-                                    textAlign: 'center',
-                                    lineHeight: 1.2,
-                                    padding: '8px',
+                                onError={(e) => {
+                                    const target = e.target as HTMLImageElement;
+                                    target.style.display = 'none';
+                                    const fallback = target.nextElementSibling as HTMLElement;
+                                    if (fallback) fallback.style.display = 'flex';
                                 }}
-                            >
-                                {platform_name}
-                            </div>
-                        )}
+                            />
+                        ) : null}
+                        <div
+                            style={{
+                                width: '80px',
+                                height: '80px',
+                                borderRadius: '50%',
+                                backgroundColor: '#0f1f3e',
+                                display: 'none',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                color: '#daa520',
+                                fontSize: '12px',
+                                fontWeight: 700,
+                                textAlign: 'center',
+                                lineHeight: 1.2,
+                                padding: '8px',
+                            }}
+                        >
+                            {platform_name}
+                        </div>
                     </div>
 
                     {/* Right signature - Administrator */}
@@ -490,17 +502,24 @@ const CertificateTemplate: React.FC<CertificateTemplateProps> = ({
                         }}
                     >
                         {/* Signature image or cursive name */}
-                        {platform_signature ? (
-                            <img
-                                src={platform_signature}
-                                alt={`${administrator_name} signature`}
-                                style={{
-                                    height: '48px',
-                                    objectFit: 'contain',
-                                    marginBottom: '4px',
-                                }}
-                            />
-                        ) : (
+                        <div style={{ height: '48px', marginBottom: '4px', display: 'flex', alignItems: 'center' }}>
+                            {platform_signature?.trim() ? (
+                                <img
+                                    src={platform_signature}
+                                    alt="Company signature"
+                                    style={{
+                                        height: '48px',
+                                        maxWidth: '160px',
+                                        objectFit: 'contain',
+                                    }}
+                                    onError={(e) => {
+                                        const target = e.target as HTMLImageElement;
+                                        target.style.display = 'none';
+                                        const fallback = target.nextElementSibling as HTMLElement;
+                                        if (fallback) fallback.style.display = 'block';
+                                    }}
+                                />
+                            ) : null}
                             <span
                                 style={{
                                     fontFamily:
@@ -508,12 +527,12 @@ const CertificateTemplate: React.FC<CertificateTemplateProps> = ({
                                     fontSize: '28px',
                                     color: '#1a3160',
                                     lineHeight: 1.2,
-                                    marginBottom: '4px',
+                                    display: platform_signature?.trim() ? 'none' : 'block',
                                 }}
                             >
-                                {administrator_name || 'Administrator'}
+                                {administrator_name || 'Company'}
                             </span>
-                        )}
+                        </div>
                         {/* Gold line under signature */}
                         <div
                             style={{
@@ -531,7 +550,7 @@ const CertificateTemplate: React.FC<CertificateTemplateProps> = ({
                                 letterSpacing: '0.5px',
                             }}
                         >
-                            {administrator_name || 'Administrator'}
+                            {administrator_name?.toUpperCase() || 'AUTHORIZED'}
                         </span>
                         <span
                             style={{
@@ -540,7 +559,7 @@ const CertificateTemplate: React.FC<CertificateTemplateProps> = ({
                                 marginTop: '1px',
                             }}
                         >
-                            Corporate Administrator
+                            Company Authorized Signatory
                         </span>
                     </div>
                 </div>

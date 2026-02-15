@@ -120,6 +120,7 @@ export default function InstructorsPage() {
                                 instructor={instructor}
                                 onViewProfile={handleViewProfile}
                                 onDelete={(inst) => setDeleteTarget(inst)}
+                                onEdit={(inst) => router(`/instructors/${inst.id}/edit`)}
                             />
                         ))}
                     </div>

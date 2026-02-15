@@ -1,6 +1,8 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { StudentsRepository } from '@/repositories/students/repo';
+import { CertificatesRepository } from '@/repositories/certificates';
+import type { Certificate } from '@/repositories/certificates/types';
 import { format } from 'date-fns';
 import {
     ArrowLeft,
@@ -10,12 +12,19 @@ import {
     Circle,
     Eye,
     Loader2,
+    Download,
+    FileText,
+    Award,
 } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 const StudentDetailsPage = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
+    const queryClient = useQueryClient();
     const [activeTab, setActiveTab] = useState('progress');
     const [expandedCourses, setExpandedCourses] = useState<{
         [key: string]: boolean;
@@ -29,6 +38,33 @@ const StudentDetailsPage = () => {
         queryKey: ['student', id],
         queryFn: () => StudentsRepository.getStudentById(Number(id)),
         enabled: !!id,
+    });
+
+    // Fetch certificates for this student
+    const { data: certificates = [], isLoading: isLoadingCerts } = useQuery({
+        queryKey: ['student-certificates', id],
+        queryFn: () => CertificatesRepository.getByUser(Number(id)),
+        enabled: !!id,
+    });
+
+    // Generate certificate mutation
+    const generateCertMutation = useMutation({
+        mutationFn: (enrollmentId: number) =>
+            CertificatesRepository.generateByEnrollment(enrollmentId),
+        onSuccess: (data: any) => {
+            queryClient.invalidateQueries({ queryKey: ['student-certificates', id] });
+            toast.success('Certificate generated successfully');
+            // Auto-navigate to the certificate after a short delay
+            if (data?.certificate?.certificate_uid) {
+                setTimeout(() => {
+                    navigate(`/certificates/${data.certificate.certificate_uid}`);
+                }, 500);
+            }
+        },
+        onError: (error: any) => {
+            const msg = error?.response?.data?.message || error?.message || 'Failed to generate certificate';
+            toast.error(msg);
+        },
     });
 
     const toggleCourse = (courseId: number) => {
@@ -506,15 +542,172 @@ const StudentDetailsPage = () => {
                 )}
 
                 {activeTab === 'certificates' && (
-                    <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-                        <div className="text-6xl mb-4">🏆</div>
-                        <h3 className="text-xl font-semibold mb-2">
-                            No Certificates Yet
-                        </h3>
-                        <p className="text-gray-500">
-                            Certificates will appear here once the student
-                            completes their courses.
-                        </p>
+                    <div className="space-y-6">
+                        {/* Existing Certificates */}
+                        {isLoadingCerts ? (
+                            <div className="flex items-center justify-center py-12">
+                                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                            </div>
+                        ) : certificates.length > 0 ? (
+                            <>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {certificates.map((cert: Certificate) => (
+                                        <div
+                                            key={cert.id}
+                                            className="bg-white rounded-lg border border-gray-200 p-5 hover:shadow-md transition-shadow"
+                                        >
+                                            <div className="flex items-start gap-4">
+                                                <div className="w-12 h-12 rounded-lg bg-yellow-50 border border-yellow-200 flex items-center justify-center shrink-0">
+                                                    <Award className="w-6 h-6 text-yellow-600" />
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <h3 className="font-semibold text-gray-900 truncate">
+                                                        {cert.course_title}
+                                                    </h3>
+                                                    <p className="text-sm text-gray-500 mt-0.5">
+                                                        {cert.training_type?.replace('_', ' ')} • {cert.duration_hours}h
+                                                    </p>
+                                                    <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-xs text-gray-500">
+                                                        <span>
+                                                            Cert #: <span className="font-medium text-gray-700">{cert.certificate_number || cert.certificate_uid?.slice(0, 8)}</span>
+                                                        </span>
+                                                        <span>
+                                                            Issued: <span className="font-medium text-gray-700">
+                                                                {cert.issued_at ? format(new Date(cert.issued_at), 'MMM d, yyyy') : 'N/A'}
+                                                            </span>
+                                                        </span>
+                                                        {cert.expires_at && (
+                                                            <span>
+                                                                Expires: <span className="font-medium text-gray-700">
+                                                                    {format(new Date(cert.expires_at), 'MMM d, yyyy')}
+                                                                </span>
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1 text-xs text-gray-500">
+                                                        {cert.instructor_name && (
+                                                            <span>Instructor: <span className="font-medium text-gray-700">{cert.instructor_name}</span></span>
+                                                        )}
+                                                        <span>State: <span className="font-medium text-gray-700">{cert.state_name || cert.issued_state_code}</span></span>
+                                                        {cert.seat_time_hours > 0 && (
+                                                            <span>Seat Time: <span className="font-medium text-gray-700">{cert.seat_time_hours}h</span></span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-2 mt-4 pt-3 border-t border-gray-100">
+                                                <Badge className="bg-green-100 text-green-700 border-green-200">
+                                                    Issued
+                                                </Badge>
+                                                <div className="ml-auto flex gap-2">
+                                                    {cert.certificate_url && (
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            className="gap-1.5 text-xs"
+                                                            onClick={() => window.open(cert.certificate_url!, '_blank')}
+                                                        >
+                                                            <Download className="w-3.5 h-3.5" />
+                                                            Download
+                                                        </Button>
+                                                    )}
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        className="gap-1.5 text-xs"
+                                                        onClick={() => navigate(`/certificates/${cert.certificate_uid || cert.id}`)}
+                                                    >
+                                                        <Eye className="w-3.5 h-3.5" />
+                                                        View
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </>
+                        ) : null}
+
+                        {/* Completed courses without certificates — offer generation */}
+                        {(() => {
+                            const certCourseIds = new Set(certificates.map((c: Certificate) => c.course_id));
+                            const completedWithoutCert = enrollments.filter(
+                                (e) =>
+                                    (e.status as string === 'COMPLETE') &&
+                                    !certCourseIds.has(e.course_id ?? e.course?.id)
+                            );
+
+                            if (completedWithoutCert.length > 0) {
+                                return (
+                                    <div>
+                                        <h3 className="text-sm font-medium text-gray-700 mb-3">
+                                            Completed Courses — Certificate Available
+                                        </h3>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            {completedWithoutCert.map((enrollment) => (
+                                                <div
+                                                    key={enrollment.id}
+                                                    className="bg-white rounded-lg border border-dashed border-yellow-300 p-5"
+                                                >
+                                                    <div className="flex items-start gap-4">
+                                                        <div className="w-12 h-12 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-center shrink-0">
+                                                            <FileText className="w-6 h-6 text-gray-400" />
+                                                        </div>
+                                                        <div className="flex-1">
+                                                            <h3 className="font-semibold text-gray-900">
+                                                                {enrollment.course.title}
+                                                            </h3>
+                                                            <p className="text-sm text-gray-500 mt-0.5">
+                                                                Completed {enrollment.completed_at
+                                                                    ? format(new Date(enrollment.completed_at), 'MMM d, yyyy')
+                                                                    : ''
+                                                                }
+                                                            </p>
+                                                            <p className="text-xs text-gray-400 mt-1">
+                                                                Progress: {Math.round(enrollment.progress)}% • {enrollment.seat_time_min || 0} mins tracked
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="mt-4 pt-3 border-t border-gray-100">
+                                                        <Button
+                                                            size="sm"
+                                                            className="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-medium gap-2"
+                                                            disabled={generateCertMutation.isPending}
+                                                            onClick={() => generateCertMutation.mutate(enrollment.id)}
+                                                        >
+                                                            {generateCertMutation.isPending ? (
+                                                                <Loader2 className="w-4 h-4 animate-spin" />
+                                                            ) : (
+                                                                <Award className="w-4 h-4" />
+                                                            )}
+                                                            Generate Certificate
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                );
+                            }
+                            return null;
+                        })()}
+
+                        {/* If no certificates and no completed courses */}
+                        {certificates.length === 0 &&
+                            !enrollments.some(
+                                (e) => e.status as string === 'COMPLETE'
+                            ) && (
+                                <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
+                                    <div className="text-6xl mb-4">🏆</div>
+                                    <h3 className="text-xl font-semibold mb-2">
+                                        No Certificates Yet
+                                    </h3>
+                                    <p className="text-gray-500">
+                                        Certificates will appear here once the student
+                                        completes their courses.
+                                    </p>
+                                </div>
+                            )}
                     </div>
                 )}
 

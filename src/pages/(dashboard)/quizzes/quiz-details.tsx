@@ -8,7 +8,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -419,26 +418,26 @@ export default function QuizDetailsPage() {
                             </div>
 
                             <div className="space-y-4 pt-4 border-t">
-                                <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <Checkbox
+                                        checked={quizSettings.is_final}
+                                        onCheckedChange={(c) => setQuizSettings({ ...quizSettings, is_final: c as boolean })}
+                                    />
                                     <div className="space-y-0.5">
                                         <Label className="text-base">Final Quiz</Label>
                                         <p className="text-xs text-muted-foreground">Mark this as the final course exam</p>
                                     </div>
-                                    <Switch
-                                        checked={quizSettings.is_final}
-                                        onCheckedChange={(c) => setQuizSettings({ ...quizSettings, is_final: c as boolean })}
-                                    />
                                 </div>
 
-                                <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <Checkbox
+                                        checked={quizSettings.randomize_questions}
+                                        onCheckedChange={(c) => setQuizSettings({ ...quizSettings, randomize_questions: c as boolean })}
+                                    />
                                     <div className="space-y-0.5">
                                         <Label className="text-base">Randomize Questions</Label>
                                         <p className="text-xs text-muted-foreground">Shuffle questions for each student</p>
                                     </div>
-                                    <Switch
-                                        checked={quizSettings.randomize_questions}
-                                        onCheckedChange={(c) => setQuizSettings({ ...quizSettings, randomize_questions: c as boolean })}
-                                    />
                                 </div>
                             </div>
 

@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Save, ChevronLeft, MapPin, Link as LinkIcon, Loader2 } from 'lucide-react';
+import { DateTimePickerInput } from '@/components/shared/date-picker';
 import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SessionsRepository, type Session } from '@/repositories/sessions';
@@ -159,18 +160,18 @@ export default function SessionDetailsPage() {
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <Label>Start Time</Label>
-                                    <Input
-                                        type="datetime-local"
+                                    <DateTimePickerInput
                                         value={sessionData.start_time}
-                                        onChange={(e) => setSessionData({ ...sessionData, start_time: e.target.value })}
+                                        onChange={(val) => setSessionData({ ...sessionData, start_time: val })}
+                                        placeholder="Select start date & time"
                                     />
                                 </div>
                                 <div className="space-y-2">
                                     <Label>End Time</Label>
-                                    <Input
-                                        type="datetime-local"
+                                    <DateTimePickerInput
                                         value={sessionData.end_time}
-                                        onChange={(e) => setSessionData({ ...sessionData, end_time: e.target.value })}
+                                        onChange={(val) => setSessionData({ ...sessionData, end_time: val })}
+                                        placeholder="Select end date & time"
                                     />
                                 </div>
                             </div>

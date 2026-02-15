@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MapPin } from 'lucide-react';
+import { DateTimePickerInput } from '@/components/shared/date-picker';
 import { toast } from 'sonner';
 import { convertFromISO8601 } from '@/lib/utils';
 import type { Session } from './module-item';
@@ -148,26 +149,24 @@ export function SessionModal({ isOpen, onClose, onSave, session }: SessionModalP
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <Label htmlFor="start-time">Start Time *</Label>
-                                <Input
-                                    id="start-time"
-                                    type="datetime-local"
-                                    value={formData.start_time}
-                                    onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
-                                    required
-                                    className="bg-background border-border mt-2"
-                                />
+                                <div className="mt-2">
+                                    <DateTimePickerInput
+                                        value={formData.start_time}
+                                        onChange={(val) => setFormData({ ...formData, start_time: val })}
+                                        placeholder="Select start date & time"
+                                    />
+                                </div>
                             </div>
 
                             <div className="space-y-2">
                                 <Label htmlFor="end-time">End Time *</Label>
-                                <Input
-                                    id="end-time"
-                                    type="datetime-local"
-                                    value={formData.end_time}
-                                    onChange={(e) => setFormData({ ...formData, end_time: e.target.value })}
-                                    required
-                                    className="bg-background border-border mt-2"
-                                />
+                                <div className="mt-2">
+                                    <DateTimePickerInput
+                                        value={formData.end_time}
+                                        onChange={(val) => setFormData({ ...formData, end_time: val })}
+                                        placeholder="Select end date & time"
+                                    />
+                                </div>
                             </div>
                         </div>
                     </div>
