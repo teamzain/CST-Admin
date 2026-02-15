@@ -36,19 +36,19 @@ export const AUTH_ROUTES = {
         description: 'User logout endpoint',
     },
     REGISTER: {
-        url: '/register',
+        url: '/signup',
         method: HTTP_METHOD.POST,
         requiresAuth: false,
         description: 'User registration endpoint',
     },
     REFRESH_TOKEN: {
-        url: '/refresh',
+        url: '/refresh-token',
         method: HTTP_METHOD.POST,
         requiresAuth: false,
         description: 'Refresh access token',
     },
     GET_CURRENT_USER: {
-        url: '/me',
+        url: '/me', // Note: This endpoint is in UserService
         method: HTTP_METHOD.GET,
         requiresAuth: true,
         description: 'Get current authenticated user',
@@ -66,16 +66,28 @@ export const AUTH_ROUTES = {
         description: 'Reset password with token',
     },
     VERIFY_EMAIL: {
-        url: '/verify-email',
-        method: HTTP_METHOD.POST,
+        url: '/verify-cred',
+        method: HTTP_METHOD.PUT,
         requiresAuth: false,
         description: 'Verify email address',
     },
     CHANGE_PASSWORD: {
         url: '/change-password',
-        method: HTTP_METHOD.POST,
+        method: HTTP_METHOD.PUT,
         requiresAuth: true,
         description: 'Change user password',
+    },
+    RESEND_OTP: {
+        url: '/resend-otp',
+        method: HTTP_METHOD.POST,
+        requiresAuth: false,
+        description: 'Resend OTP to user',
+    },
+    GOOGLE_LOGIN: {
+        url: '/o-auth/google',
+        method: HTTP_METHOD.POST,
+        requiresAuth: false,
+        description: 'Google OAuth login',
     },
 } as const satisfies ServiceRoutes;
 
@@ -94,6 +106,12 @@ export const USER_ROUTES = {
         method: HTTP_METHOD.GET,
         requiresAuth: true,
         description: 'Get user by ID',
+    },
+    GET_PROFILE: {
+        url: '/me',
+        method: HTTP_METHOD.GET,
+        requiresAuth: true,
+        description: 'Get current user profile',
     },
     CREATE: {
         url: '/',
@@ -114,14 +132,14 @@ export const USER_ROUTES = {
         description: 'Delete user',
     },
     UPDATE_PROFILE: {
-        url: '/profile',
+        url: '/me',
         method: HTTP_METHOD.PATCH,
         requiresAuth: true,
         description: 'Update user profile',
     },
     STUDENTS: {
         GET_ALL: {
-            url: '/',
+            url: '/student',
             method: HTTP_METHOD.GET,
             requiresAuth: true,
             description: 'Get all students',
@@ -133,7 +151,7 @@ export const USER_ROUTES = {
             description: 'Get student by ID',
         },
         GET_ENROLLMENTS: {
-            url: '/student/:id/enrollments',
+            url: '/users/:id/enrollments',
             method: HTTP_METHOD.GET,
             requiresAuth: true,
             description: 'Get student enrollments',
@@ -182,17 +200,17 @@ export const USER_ROUTES = {
             requiresAuth: true,
             description: 'Create new instructor',
         },
-        UPDATE: {
-            url: '/instructor/:id',
-            method: HTTP_METHOD.PATCH,
-            requiresAuth: true,
-            description: 'Update instructor',
-        },
+        // UPDATE: {
+        //     url: '/instructor/:id',
+        //     method: HTTP_METHOD.PATCH,
+        //     requiresAuth: true,
+        //     description: 'Update instructor',
+        // },
         DELETE: {
-            url: '/instructor/:id',
+            url: '/:id', // Use general User delete
             method: HTTP_METHOD.DELETE,
             requiresAuth: true,
-            description: 'Delete instructor',
+            description: 'Delete instructor (User)',
         },
     },
     EMPLOYER: {
@@ -273,7 +291,13 @@ export const COURSE_ROUTES = {
         url: '/course/:id/enroll',
         method: HTTP_METHOD.POST,
         requiresAuth: true,
-        description: 'Enroll in course',
+        description: 'Enroll in course (Admin/Instructor)',
+    },
+    SELF_ENROLL: {
+        url: '/course/:id/self-enroll',
+        method: HTTP_METHOD.POST,
+        requiresAuth: true,
+        description: 'Self-enroll in course',
     },
     GET_ENROLLED: {
         url: '/course/my/enrollments',
@@ -321,13 +345,13 @@ export const COURSE_ROUTES = {
 export const ADMIN_ROUTES = {
     DASHBOARD: {
         STATS: {
-            url: '/admin/dashboard/stats',
+            url: '/statistics',
             method: HTTP_METHOD.GET,
             requiresAuth: true,
             description: 'Get dashboard statistics',
         },
         ANALYTICS: {
-            url: '/admin/dashboard/analytics',
+            url: '/analytics', // Note: Analytics endpoint not found in backend, placeholder kept
             method: HTTP_METHOD.GET,
             requiresAuth: true,
             description: 'Get analytics data',
@@ -335,7 +359,7 @@ export const ADMIN_ROUTES = {
     },
     USERS: {
         GET_ALL: {
-            url: '/admin/users',
+            url: '/',
             method: HTTP_METHOD.GET,
             requiresAuth: true,
             description: 'Get all users (admin)',
@@ -361,17 +385,17 @@ export const ADMIN_ROUTES = {
     },
     COURSES: {
         APPROVE: {
-            url: '/admin/courses/:id/approve',
-            method: HTTP_METHOD.POST,
+            url: '/course/publish/:id',
+            method: HTTP_METHOD.PATCH,
             requiresAuth: true,
-            description: 'Approve course',
+            description: 'Approve course (Publish)',
         },
-        REJECT: {
-            url: '/admin/courses/:id/reject',
-            method: HTTP_METHOD.POST,
-            requiresAuth: true,
-            description: 'Reject course',
-        },
+        // REJECT: {
+        //     url: '/admin/courses/:id/reject',
+        //     method: HTTP_METHOD.POST,
+        //     requiresAuth: true,
+        //     description: 'Reject course',
+        // },
     },
     PLATFORM_SETTINGS: {
         CREATE: {
@@ -412,37 +436,37 @@ export const ADMIN_ROUTES = {
  */
 export const PAYMENT_ROUTES = {
     CREATE_CHECKOUT: {
-        url: '/payments/checkout',
+        url: '/checkout',
         method: HTTP_METHOD.POST,
         requiresAuth: true,
         description: 'Create checkout session',
     },
     VERIFY_PAYMENT: {
-        url: '/payments/verify',
+        url: '/confirm',
         method: HTTP_METHOD.POST,
         requiresAuth: true,
         description: 'Verify payment',
     },
     GET_TRANSACTIONS: {
-        url: '/payments/transactions',
+        url: '/orders',
         method: HTTP_METHOD.GET,
         requiresAuth: true,
         description: 'Get user transactions',
     },
     GET_TRANSACTION_BY_ID: {
-        url: '/payments/transactions/:id',
+        url: '/orders/:id',
         method: HTTP_METHOD.GET,
         requiresAuth: true,
         description: 'Get transaction by ID',
     },
     REFUND: {
-        url: '/payments/refund',
+        url: '/refund/:orderId',
         method: HTTP_METHOD.POST,
         requiresAuth: true,
         description: 'Process refund',
     },
     WEBHOOK: {
-        url: '/payments/webhook',
+        url: '/webhook',
         method: HTTP_METHOD.POST,
         requiresAuth: false,
         description: 'Payment webhook endpoint',
