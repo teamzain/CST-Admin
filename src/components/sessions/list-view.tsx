@@ -3,6 +3,8 @@ import {
     getSessionColor,
 } from '@/pages/(dashboard)/scheduling/data';
 import { format } from 'date-fns';
+import { MapPin, Video, Users, Clock } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 interface ListViewProps {
     sessions: Session[];
@@ -32,6 +34,19 @@ export const ListView = ({ sessions, startDate, endDate }: ListViewProps) => {
         {} as Record<string, { day: string; date: string; sessions: Session[] }>
     );
 
+    const formatTime = (timeStr?: string) => {
+        if (!timeStr) return '—';
+        try {
+            const normalised = timeStr.replace(' ', 'T');
+            if (normalised.includes('T')) {
+                return format(new Date(normalised), 'hh:mm a');
+            }
+            return timeStr;
+        } catch {
+            return timeStr;
+        }
+    };
+
     return (
         <div className="space-y-6 ">
             {Object.entries(groupedSessions).map(
@@ -46,25 +61,82 @@ export const ListView = ({ sessions, startDate, endDate }: ListViewProps) => {
                             </span>
                         </div>
 
-                        <div className="space-y-1">
+                        <div className="space-y-2">
                             {daySessions.map((session, idx) => (
                                 <div
                                     key={session.id}
-                                    className="flex items-center gap-4 p-3 rounded-lg hover:bg-primary transition-colors bg-muted"
+                                    className="flex items-start gap-4 p-4 rounded-lg border border-border bg-card hover:bg-accent/50 transition-colors"
                                 >
-                                    <div className="text-sm font-medium text-muted-foreground min-w-12">
-                                        {session.time}
-                                    </div>
-                                    <div
-                                        className={`px-3 py-1 rounded text-sm font-medium ${getSessionColor(idx)}`}
-                                    >
-                                        {session.name}
+                                    {/* Color strip */}
+                                    <div className={`w-1 self-stretch rounded-full shrink-0 ${getSessionColor(idx).split(' ')[0]}`} />
+
+                                    {/* Main content */}
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <span className="font-semibold text-foreground truncate">
+                                                {session.name}
+                                            </span>
+                                            <Badge variant={session.session_type === 'PHYSICAL' ? 'default' : 'secondary'} className="shrink-0 text-xs">
+                                                {session.session_type === 'PHYSICAL' ? (
+                                                    <><MapPin className="w-3 h-3 mr-1" /> In-Person</>
+                                                ) : (
+                                                    <><Video className="w-3 h-3 mr-1" /> Online</>
+                                                )}
+                                            </Badge>
+                                        </div>
+
+                                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
+                                            <span className="flex items-center gap-1">
+                                                <Clock className="w-3.5 h-3.5" />
+                                                {formatTime(session.start_time)} — {formatTime(session.end_time)}
+                                                {session.duration && <span className="text-xs">({session.duration})</span>}
+                                            </span>
+
+                                            {session.capacity != null && (
+                                                <span className="flex items-center gap-1">
+                                                    <Users className="w-3.5 h-3.5" />
+                                                    {session.capacity} seats
+                                                </span>
+                                            )}
+
+                                            {session.session_type === 'PHYSICAL' && session.location && (
+                                                <span className="flex items-center gap-1">
+                                                    <MapPin className="w-3.5 h-3.5" />
+                                                    {session.location}
+                                                </span>
+                                            )}
+
+                                            {session.session_type === 'LIVE' && session.meeting_url && (
+                                                <a
+                                                    href={session.meeting_url}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="flex items-center gap-1 text-primary hover:underline"
+                                                >
+                                                    <Video className="w-3.5 h-3.5" />
+                                                    Join Meeting
+                                                </a>
+                                            )}
+                                        </div>
+
+                                        {session.course_title && (
+                                            <p className="text-xs text-muted-foreground mt-1.5">
+                                                Course: <span className="font-medium">{session.course_title}</span>
+                                            </p>
+                                        )}
                                     </div>
                                 </div>
                             ))}
                         </div>
                     </div>
                 )
+            )}
+
+            {Object.keys(groupedSessions).length === 0 && (
+                <div className="text-center py-12 text-muted-foreground">
+                    <p className="text-lg font-medium">No sessions found</p>
+                    <p className="text-sm mt-1">No sessions scheduled for this period.</p>
+                </div>
             )}
         </div>
     );

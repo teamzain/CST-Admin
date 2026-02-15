@@ -4,6 +4,15 @@ export interface Session {
     name: string;
     date: Date;
     duration?: string;
+    // Full details from API
+    session_type?: 'LIVE' | 'PHYSICAL';
+    capacity?: number;
+    location?: string;
+    meeting_url?: string;
+    start_time?: string;
+    end_time?: string;
+    course_title?: string;
+    course_id?: number;
 }
 
 export const generateSessionsData = (): Session[] => {

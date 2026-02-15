@@ -59,11 +59,11 @@ export class AuthRepository {
     }
 
     async verifyEmail(token: string): Promise<void> {
-        await authApi.post(AUTH_ROUTES.VERIFY_EMAIL.url, { token });
+        await authApi.put(AUTH_ROUTES.VERIFY_EMAIL.url, { token });
     }
 
     async changePassword(request: ChangePasswordRequest): Promise<void> {
-        await authApi.post(AUTH_ROUTES.CHANGE_PASSWORD.url, request);
+        await authApi.put(AUTH_ROUTES.CHANGE_PASSWORD.url, request);
     }
 }
 

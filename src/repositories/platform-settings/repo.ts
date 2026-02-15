@@ -140,13 +140,22 @@ export class PlatformSettingsRepository {
                 ADMIN_ROUTES.PLATFORM_SETTINGS.GET_ALL.url
             );
             
-            // Handle different response formats
+            // Handle different response formats from backend
             let settings: PlatformSettings[] = [];
+            const payload = response.data;
             
-            if (Array.isArray(response.data)) {
-                settings = response.data;
-            } else if (response.data?.data && Array.isArray(response.data.data)) {
-                settings = response.data.data;
+            if (Array.isArray(payload)) {
+                // Direct array: [{ id, company_name, ... }]
+                settings = payload;
+            } else if (payload?.data && Array.isArray(payload.data)) {
+                // Wrapped array: { data: [{ id, company_name, ... }] }
+                settings = payload.data;
+            } else if (payload?.data && typeof payload.data === 'object' && payload.data.id) {
+                // Wrapped single object: { data: { id, company_name, ... } }
+                settings = [payload.data];
+            } else if (payload && typeof payload === 'object' && payload.id) {
+                // Direct single object: { id, company_name, ... }
+                settings = [payload];
             }
             
             return settings;

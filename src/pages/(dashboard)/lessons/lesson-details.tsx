@@ -13,6 +13,7 @@ import { LessonsRepository } from '@/repositories/lessons';
 import { Progress } from '@/components/ui/progress';
 import { bunnyUploadService } from '@/api/bunny-upload';
 import { useDropzone } from 'react-dropzone';
+import { Checkbox } from '@/components/ui/checkbox';
 
 export default function LessonDetailsPage() {
     const { id } = useParams();
@@ -272,17 +273,15 @@ export default function LessonDetailsPage() {
                                         onChange={(e) => setLessonData({ ...lessonData, duration_min: parseInt(e.target.value) || 0 })}
                                     />
                                 </div>
-                                <div className="flex items-center justify-between p-4 border rounded-lg mt-6">
+                                <div className="flex items-center gap-2 mt-6">
+                                    <Checkbox
+                                        checked={!!lessonData.enable_download}
+                                        onCheckedChange={(checked) => setLessonData({ ...lessonData, enable_download: checked as boolean })}
+                                    />
                                     <div className="space-y-0.5">
-                                        <Label>Enable Download</Label>
+                                        <label className="text-sm font-medium">Enable Download</label>
                                         <p className="text-xs text-muted-foreground">Allow students to download content</p>
                                     </div>
-                                    <input
-                                        type="checkbox"
-                                        checked={!!lessonData.enable_download}
-                                        onChange={(e) => setLessonData({ ...lessonData, enable_download: e.target.checked })}
-                                        className="w-4 h-4"
-                                    />
                                 </div>
                             </div>
                         </CardContent>

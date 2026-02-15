@@ -362,26 +362,26 @@ export function QuizModal({ isOpen, onClose, onSave, quiz, moduleId: _moduleId }
                                 </div>
 
                                 <div className="space-y-4 pt-4 border-t">
-                                    <div className="flex items-center justify-between">
-                                        <div className="space-y-0.5">
-                                            <Label className="text-base">Final Quiz</Label>
-                                            <p className="text-xs text-muted-foreground">Mark this as the final course exam</p>
-                                        </div>
+                                    <div className="flex items-center gap-2">
                                         <Checkbox
                                             checked={quizSettings.is_final}
                                             onCheckedChange={(c) => setQuizSettings({ ...quizSettings, is_final: c as boolean })}
                                         />
+                                        <div className="space-y-0.5">
+                                            <Label className="text-base">Final Quiz</Label>
+                                            <p className="text-xs text-muted-foreground">Mark this as the final course exam</p>
+                                        </div>
                                     </div>
 
-                                    <div className="flex items-center justify-between">
-                                        <div className="space-y-0.5">
-                                            <Label className="text-base">Randomize Questions</Label>
-                                            <p className="text-xs text-muted-foreground">Questions are picked randomly for each attempt</p>
-                                        </div>
+                                    <div className="flex items-center gap-2">
                                         <Checkbox
                                             checked={quizSettings.randomize_questions}
                                             onCheckedChange={(c) => setQuizSettings({ ...quizSettings, randomize_questions: c as boolean })}
                                         />
+                                        <div className="space-y-0.5">
+                                            <Label className="text-base">Randomize Questions</Label>
+                                            <p className="text-xs text-muted-foreground">Questions are picked randomly for each attempt</p>
+                                        </div>
                                     </div>
                                 </div>
 

@@ -3,8 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { ChevronDown, Trash2, Loader2 } from 'lucide-react';
-import { bunnyUploadService } from '@/api/bunny-upload';
+import { ExternalLink, Save, Loader2, User } from 'lucide-react';
 import { InstructorsRepository } from '@/repositories/instructors/repo';
 import type { Instructor } from '@/repositories/instructors/types';
 
@@ -18,31 +17,19 @@ const PersonalTab: React.FC<PersonalTabProps> = ({
     instructorId,
 }) => {
     const queryClient = useQueryClient();
-    const [isDeletingSignature, setIsDeletingSignature] = useState(false);
+    const [bio, setBio] = useState(instructor?.bio || '');
+    const [isSavingBio, setIsSavingBio] = useState(false);
+    const bioChanged = bio !== (instructor?.bio || '');
 
-    const handleDeleteSignature = async () => {
-        if (!instructor?.signature) return;
-        setIsDeletingSignature(true);
+    const handleSaveBio = async () => {
+        setIsSavingBio(true);
         try {
-            // Extract the file path from the full URL for Bunny deletion
-            try {
-                const url = new URL(instructor.signature);
-                const filePath = url.pathname.startsWith('/') ? url.pathname.slice(1) : url.pathname;
-                await bunnyUploadService.deleteFile(filePath);
-            } catch {
-                // Continue even if Bunny delete fails (file may already be gone)
-                console.warn('Bunny file delete failed, continuing with DB update');
-            }
-
-            // Clear signature in DB via instructor update
-            await InstructorsRepository.updateInstructor(Number(instructorId), { signature: null });
-
-            // Refresh instructor data
+            await InstructorsRepository.updateInstructor(Number(instructorId), { bio } as any);
             queryClient.invalidateQueries({ queryKey: ['instructor', instructorId] });
         } catch (error) {
-            console.error('Error deleting signature:', error);
+            console.error('Error saving bio:', error);
         } finally {
-            setIsDeletingSignature(false);
+            setIsSavingBio(false);
         }
     };
 
@@ -84,6 +71,25 @@ const PersonalTab: React.FC<PersonalTabProps> = ({
                 <h2 className="text-xl font-semibold mb-6">
                     Personal Information
                 </h2>
+
+                {/* Avatar + Name header */}
+                <div className="flex items-center gap-4 mb-6 pb-6 border-b border-gray-100">
+                    {instructor?.avatar ? (
+                        <img
+                            src={instructor.avatar}
+                            alt={personalInfo.fullName}
+                            className="w-16 h-16 rounded-full object-cover border-2 border-gray-200"
+                        />
+                    ) : (
+                        <div className="w-16 h-16 rounded-full bg-gray-100 border-2 border-gray-200 flex items-center justify-center">
+                            <User className="w-8 h-8 text-gray-400" />
+                        </div>
+                    )}
+                    <div>
+                        <p className="text-lg font-semibold text-gray-900">{personalInfo.fullName}</p>
+                        <p className="text-sm text-gray-500">{personalInfo.email}</p>
+                    </div>
+                </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
                     <div>
@@ -143,52 +149,63 @@ const PersonalTab: React.FC<PersonalTabProps> = ({
                             {personalInfo.joiningDate}
                         </p>
                     </div>
+                    <div>
+                        <label className="text-sm text-gray-600 block mb-2">
+                            Website / Profile Link:
+                        </label>
+                        {instructor?.link ? (
+                            <a
+                                href={instructor.link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-sm text-primary hover:underline inline-flex items-center gap-1"
+                            >
+                                {instructor.link}
+                                <ExternalLink className="w-3.5 h-3.5" />
+                            </a>
+                        ) : (
+                            <p className="text-sm text-gray-900">—</p>
+                        )}
+                    </div>
                 </div>
             </Card>
 
             {/* Instructors Bio */}
             <Card className="p-6 bg-white">
-                <h2 className="text-xl font-semibold mb-6">Instructors Bio</h2>
+                <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-xl font-semibold">Instructor Bio</h2>
+                    {bioChanged && (
+                        <Button
+                            size="sm"
+                            onClick={handleSaveBio}
+                            disabled={isSavingBio}
+                        >
+                            {isSavingBio ? (
+                                <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                            ) : (
+                                <Save className="w-4 h-4 mr-1" />
+                            )}
+                            Save
+                        </Button>
+                    )}
+                </div>
 
                 <div>
                     <label className="text-sm text-gray-600 block mb-2">
                         Bio
                     </label>
-                    <div className="relative">
-                        <Textarea
-                            placeholder="About the instructor"
-                            className="min-h-[100px] resize-none bg-gray-50 border-gray-200"
-                            disabled
-                            value={instructor?.bio || ''}
-                        />
-                        <button className="absolute top-3 right-3 text-gray-400 hover:text-gray-600">
-                            <ChevronDown className="w-5 h-5" />
-                        </button>
-                    </div>
+                    <Textarea
+                        placeholder="About the instructor"
+                        className="min-h-[100px] resize-none bg-gray-50 border-gray-200"
+                        value={bio}
+                        onChange={(e) => setBio(e.target.value)}
+                    />
                 </div>
             </Card>
 
             {/* Signature */}
             <Card className="p-6 bg-white">
-                <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl font-semibold">Signature</h2>
-                    {instructor?.signature && (
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={handleDeleteSignature}
-                            disabled={isDeletingSignature}
-                            className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                        >
-                            {isDeletingSignature ? (
-                                <Loader2 className="w-4 h-4 mr-1 animate-spin" />
-                            ) : (
-                                <Trash2 className="w-4 h-4 mr-1" />
-                            )}
-                            {isDeletingSignature ? 'Deleting...' : 'Delete'}
-                        </Button>
-                    )}
-                </div>
+                <h2 className="text-xl font-semibold mb-6">Signature</h2>
                 <div className="flex justify-center">
                     {instructor?.signature ? (
                         <div className="border-2 border-gray-200 rounded-lg p-4 bg-gray-50">

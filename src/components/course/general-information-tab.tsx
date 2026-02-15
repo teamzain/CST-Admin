@@ -639,7 +639,7 @@ export function GeneralInformationTab({
                                             )
                                         }
                                     />
-                                    <Label htmlFor="price-negotiable">
+                                    <Label htmlFor="price-negotiable" className="cursor-pointer">
                                         Price Negotiable
                                     </Label>
                                 </div>
@@ -694,7 +694,10 @@ export function GeneralInformationTab({
                                     onInputChange('is_active', checked)
                                 }
                             />
-                            <Label htmlFor="is-active">Publish Course</Label>
+                            <div>
+                                <Label htmlFor="is-active" className="cursor-pointer">Publish Course</Label>
+                                <p className="text-sm text-muted-foreground mt-0.5">Make course visible to students</p>
+                            </div>
                         </div>
                     ) : (
                         <div>

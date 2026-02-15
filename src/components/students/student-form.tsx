@@ -5,9 +5,11 @@ import {
     updateStudentSchema,
     type CreateStudentSchema,
 } from '@/repositories/students/schema';
+import { StudentStatus } from '@/repositories/students/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import {
     Select,
     SelectContent,
@@ -18,6 +20,7 @@ import {
 import { StatesRepository } from '@/repositories/states/repo';
 import { useQuery } from '@tanstack/react-query';
 import { Loader2 } from 'lucide-react';
+import { DatePickerInput } from '@/components/shared/date-picker';
 
 interface StudentFormProps {
     initialData?: Partial<CreateStudentSchema>;
@@ -44,6 +47,7 @@ export function StudentForm({
         handleSubmit,
         setValue,
         watch,
+        getValues,
         formState: { errors },
     } = useForm({
         resolver: zodResolver(schema),
@@ -55,19 +59,26 @@ export function StudentForm({
             password: '',
             phone: '',
             state_id: undefined,
+            enrollment_date: '',
+            avatar: '',
+            bio: '',
+            ...(isEdit ? { status: undefined } : {}),
         },
     });
 
     const selectedStateId = watch('state_id');
 
     const handleFormSubmit = (data: any) => {
+        const cleaned = { ...data };
         // Filter out empty password if in edit mode
-        if (isEdit && !data.password) {
-            const { password, ...rest } = data;
-            onSubmit(rest);
-        } else {
-            onSubmit(data);
+        if (isEdit && !cleaned.password) {
+            delete cleaned.password;
         }
+        // Filter out empty optional string fields
+        if (!cleaned.avatar) delete cleaned.avatar;
+        if (!cleaned.bio) delete cleaned.bio;
+        if (!cleaned.enrollment_date) delete cleaned.enrollment_date;
+        onSubmit(cleaned);
     };
 
     return (
@@ -204,6 +215,72 @@ export function StudentForm({
                         </p>
                     )}
                 </div>
+
+                {/* Enrollment Date */}
+                <div className="space-y-2">
+                    <Label htmlFor="enrollment_date">Enrollment Date</Label>
+                    <DatePickerInput
+                        value={watch('enrollment_date') || ''}
+                        onChange={(date) => setValue('enrollment_date', date)}
+                        title="Enrollment Date"
+                    />
+                </div>
+
+                {/* Avatar URL */}
+                <div className="space-y-2">
+                    <Label htmlFor="avatar">Avatar URL</Label>
+                    <Input
+                        id="avatar"
+                        placeholder="https://example.com/avatar.jpg"
+                        {...register('avatar')}
+                        className={errors.avatar ? 'border-red-500' : ''}
+                    />
+                    {errors.avatar && (
+                        <p className="text-red-500 text-xs">
+                            {errors.avatar.message as string}
+                        </p>
+                    )}
+                </div>
+
+                {/* Status - Only for Edit */}
+                {isEdit && (
+                    <div className="space-y-2">
+                        <Label htmlFor="status">Status</Label>
+                        <Select
+                            onValueChange={(value) => {
+                                const formData = getValues();
+                                (formData as any).status = value;
+                            }}
+                            value={(watch() as any).status as string | undefined}
+                        >
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value={StudentStatus.ACTIVE}>Active</SelectItem>
+                                <SelectItem value={StudentStatus.INACTIVE}>Inactive</SelectItem>
+                                <SelectItem value={StudentStatus.SUSPENDED}>Suspended</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                )}
+            </div>
+
+            {/* Bio - Full Width */}
+            <div className="space-y-2">
+                <Label htmlFor="bio">Bio</Label>
+                <Textarea
+                    id="bio"
+                    placeholder="Enter student bio..."
+                    {...register('bio')}
+                    className={errors.bio ? 'border-red-500' : ''}
+                    rows={3}
+                />
+                {errors.bio && (
+                    <p className="text-red-500 text-xs">
+                        {errors.bio.message as string}
+                    </p>
+                )}
             </div>
 
             <div className="flex justify-end gap-4 pt-4">

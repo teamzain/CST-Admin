@@ -98,7 +98,7 @@ export class EnrollmentsRepository {
      * POST /api/course/{courseId}/enroll  body: { userId }
      */
     static async enroll(courseId: number, input: EnrollUserInput): Promise<Enrollment> {
-        const { data } = await courseApi.post(`/${courseId}/enroll`, input);
+        const { data } = await courseApi.post(`/course/${courseId}/enroll`, input);
         return this.normaliseEnrollment(this.extractData<Enrollment>(data));
     }
 
@@ -121,7 +121,7 @@ export class EnrollmentsRepository {
         if (filters?.sortBy) params.append('sortBy', filters.sortBy);
         if (filters?.sortOrder) params.append('sortOrder', filters.sortOrder);
 
-        const { data } = await courseApi.get('/enrollments/all', { params });
+        const { data } = await courseApi.get('/course/enrollments/all', { params });
         return this.toPaginated(data);
     }
 
@@ -142,7 +142,7 @@ export class EnrollmentsRepository {
         if (filters?.sortBy) params.append('sortBy', filters.sortBy);
         if (filters?.sortOrder) params.append('sortOrder', filters.sortOrder);
 
-        const { data } = await courseApi.get(`/${courseId}/enrollments`, { params });
+        const { data } = await courseApi.get(`/course/${courseId}/enrollments`, { params });
         return this.toPaginated(data);
     }
 
@@ -151,7 +151,7 @@ export class EnrollmentsRepository {
      * GET /api/course/{courseId}/enrollments/stats
      */
     static async getStatsByCourse(courseId: number): Promise<EnrollmentStats> {
-        const { data } = await courseApi.get(`/${courseId}/enrollments/stats`);
+        const { data } = await courseApi.get(`/course/${courseId}/enrollments/stats`);
         return (data?.data ?? data) as EnrollmentStats;
     }
 
@@ -160,7 +160,7 @@ export class EnrollmentsRepository {
      * GET /api/course/enrollments/{enrollmentId}
      */
     static async getById(enrollmentId: number): Promise<Enrollment> {
-        const { data } = await courseApi.get(`/enrollments/${enrollmentId}`);
+        const { data } = await courseApi.get(`/course/enrollments/${enrollmentId}`);
         return this.normaliseEnrollment(this.extractData<Enrollment>(data));
     }
 
@@ -177,7 +177,7 @@ export class EnrollmentsRepository {
         if (filters?.limit) params.append('limit', String(filters.limit));
         if (filters?.status) params.append('status', filters.status);
 
-        const { data } = await courseApi.get(`/users/${userId}/enrollments`, { params });
+        const { data } = await courseApi.get(`/course/users/${userId}/enrollments`, { params });
         return this.toPaginated(data);
     }
 
@@ -188,7 +188,7 @@ export class EnrollmentsRepository {
      * PATCH /api/course/enrollments/{enrollmentId}  body: { status?, session_id?, progress? }
      */
     static async update(enrollmentId: number, input: UpdateEnrollmentInput): Promise<Enrollment> {
-        const { data } = await courseApi.patch(`/enrollments/${enrollmentId}`, input);
+        const { data } = await courseApi.patch(`/course/enrollments/${enrollmentId}`, input);
         return this.normaliseEnrollment(this.extractData<Enrollment>(data));
     }
 
@@ -199,7 +199,7 @@ export class EnrollmentsRepository {
      * DELETE /api/course/enrollments/{enrollmentId}
      */
     static async delete(enrollmentId: number): Promise<void> {
-        await courseApi.delete(`/enrollments/${enrollmentId}`);
+        await courseApi.delete(`/course/enrollments/${enrollmentId}`);
     }
 
     /**
@@ -207,6 +207,6 @@ export class EnrollmentsRepository {
      * DELETE /api/course/{courseId}/enrollments/{userId}
      */
     static async deleteByCourseAndUser(courseId: number, userId: number): Promise<void> {
-        await courseApi.delete(`/${courseId}/enrollments/${userId}`);
+        await courseApi.delete(`/course/${courseId}/enrollments/${userId}`);
     }
 }

@@ -332,7 +332,7 @@ export default function StateFormPage() {
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            <div className="flex items-center space-x-2">
+                            <div className="flex items-center gap-2 p-3 rounded-lg border border-gray-200">
                                 <Checkbox
                                     id="requires_range_training"
                                     checked={formData.requires_range_training}
@@ -349,7 +349,7 @@ export default function StateFormPage() {
                                     Requires Range Training
                                 </Label>
                             </div>
-                            <div className="flex items-center space-x-2">
+                            <div className="flex items-center gap-2 p-3 rounded-lg border border-gray-200">
                                 <Checkbox
                                     id="requires_range_pass"
                                     checked={formData.requires_range_pass}
@@ -422,7 +422,7 @@ export default function StateFormPage() {
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            <div className="flex items-center space-x-2 p-3 rounded-lg border border-gray-200">
+                            <div className="flex items-center gap-2 p-3 rounded-lg border border-gray-200">
                                 <Checkbox
                                     id="is_seat_time_enabled"
                                     checked={formData.is_seat_time_enabled}
@@ -483,7 +483,7 @@ export default function StateFormPage() {
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <div className="flex items-center space-x-2">
+                            <div className="flex items-center gap-2 p-3 rounded-lg border border-gray-200">
                                 <Checkbox
                                     id="is_active"
                                     checked={formData.is_active}

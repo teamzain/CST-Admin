@@ -4,7 +4,7 @@ import { USER_ROUTES, buildUrl } from '@/config/routes';
 import {
     type Instructor,
     type CreateInstructorInput,
-    // type UpdateInstructorInput,
+    type UpdateInstructorInput,
     type InstructorFilters,
     InstructorStatus,
 } from './types';
@@ -239,28 +239,28 @@ export class InstructorsRepository {
     /**
      * Update an existing instructor (partial update)
      */
-    // static async updateInstructor(
-    //     id: number,
-    //     data: UpdateInstructorInput
-    // ): Promise<Instructor> {
-    //     try {
-    //         const url = buildUrl(USER_ROUTES.INSTRUCTOR.UPDATE, { id });
-    //         const response = await userApi.patch(url, data);
+    static async updateInstructor(
+        id: number,
+        data: UpdateInstructorInput
+    ): Promise<Instructor> {
+        try {
+            const url = buildUrl(USER_ROUTES.INSTRUCTOR.UPDATE, { id });
+            const response = await userApi.patch(url, data);
 
-    //         const result = response.data?.data || response.data;
+            const result = response.data?.data || response.data;
 
-    //         toast.success('Instructor updated successfully');
-    //         return transformInstructor(result);
-    //     } catch (error: unknown) {
-    //         console.error('[InstructorsRepository] Error updating instructor:', error);
-    //         const errorMessage = getErrorMessage(
-    //             error,
-    //             'Failed to update instructor'
-    //         );
-    //         toast.error(errorMessage);
-    //         throw error;
-    //     }
-    // }
+            toast.success('Instructor updated successfully');
+            return transformInstructor(result);
+        } catch (error: unknown) {
+            console.error('[InstructorsRepository] Error updating instructor:', error);
+            const errorMessage = getErrorMessage(
+                error,
+                'Failed to update instructor'
+            );
+            toast.error(errorMessage);
+            throw error;
+        }
+    }
 
     /**
      * Delete an instructor

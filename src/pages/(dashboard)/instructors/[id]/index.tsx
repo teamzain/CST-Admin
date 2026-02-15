@@ -15,6 +15,8 @@ import {
     Loader2,
     MoreVertical,
     Trash2,
+    Pencil,
+    Users,
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -30,6 +32,7 @@ import {
 import OverviewTab from '@/components/instructors/detail-tabs/OverviewTab';
 import PersonalTab from '@/components/instructors/detail-tabs/PersonalTab';
 import CoursesTab from '@/components/instructors/detail-tabs/CoursesTab';
+import StudentsTab from '@/components/instructors/detail-tabs/StudentsTab';
 import ReviewsTab from '@/components/instructors/detail-tabs/ReviewsTab';
 
 export default function InstructorDetailPage() {
@@ -40,14 +43,16 @@ export default function InstructorDetailPage() {
     const [isDeleting, setIsDeleting] = useState(false);
 
     // Fetch instructor data from API
+    const instructorId = Number(params.id);
+
     const {
         data: instructor,
         isLoading,
         error,
     } = useQuery({
-        queryKey: ['instructor', params.id],
-        queryFn: () => InstructorsRepository.getInstructorById(Number(params.id)),
-        enabled: !!params.id,
+        queryKey: ['instructor', instructorId],
+        queryFn: () => InstructorsRepository.getInstructorById(instructorId),
+        enabled: !!instructorId,
     });
 
     // Delete mutation
@@ -130,6 +135,12 @@ export default function InstructorDetailPage() {
                             <DropdownMenuContent align="end">
                                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                 <DropdownMenuItem 
+                                    onClick={() => router(`/instructors/${instructor.id}/edit`)}
+                                >
+                                    <Pencil className="mr-2 h-4 w-4" />
+                                    Edit
+                                </DropdownMenuItem>
+                                <DropdownMenuItem 
                                     onClick={handleDelete}
                                     disabled={isDeleting}
                                     className="text-red-600"
@@ -187,6 +198,13 @@ export default function InstructorDetailPage() {
                                 Courses
                             </TabsTrigger>
                             <TabsTrigger
+                                value="students"
+                                className="relative rounded-none border-0 bg-transparent px-4 pb-3 pt-2 font-medium text-gray-600 transition-none data-[state=active]:bg-transparent data-[state=active]:text-gray-900 data-[state=active]:shadow-none hover:text-gray-900 after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-transparent data-[state=active]:after:bg-yellow-400"
+                            >
+                                <Users className="w-4 h-4 mr-2" />
+                                Students
+                            </TabsTrigger>
+                            <TabsTrigger
                                 value="wallet"
                                 className="relative rounded-none border-0 bg-transparent px-4 pb-3 pt-2 font-medium text-gray-600 transition-none data-[state=active]:bg-transparent data-[state=active]:text-gray-900 data-[state=active]:shadow-none hover:text-gray-900 after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-transparent data-[state=active]:after:bg-yellow-400"
                             >
@@ -220,6 +238,10 @@ export default function InstructorDetailPage() {
 
                             <TabsContent value="courses" className="m-0 mt-0">
                                 <CoursesTab instructor={instructor} instructorId={String(instructor.id)} />
+                            </TabsContent>
+
+                            <TabsContent value="students" className="m-0 mt-0">
+                                <StudentsTab instructor={instructor} instructorId={String(instructor.id)} />
                             </TabsContent>
 
                             <TabsContent value="wallet" className="m-0 mt-0">

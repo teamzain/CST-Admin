@@ -105,17 +105,18 @@ export default function CourseDetailsPage() {
     const handleSave = async () => {
         if (!course) return;
         
-        // Build update data with only defined fields to avoid API validation errors
+        // Build update data — only send scalar fields the backend expects.
+        // Never send nested relations (instructor, state object, lessons, etc.)
         const updateData: UpdateCourseInput = {};
         
         if (formData.title !== undefined) updateData.title = formData.title;
         if (formData.description !== undefined) updateData.description = formData.description;
-        if (formData.duration_hours !== undefined) updateData.duration_hours = formData.duration_hours;
-        if (formData.required_hours !== undefined) updateData.required_hours = formData.required_hours;
+        if (formData.duration_hours !== undefined) updateData.duration_hours = Number(formData.duration_hours);
+        if (formData.required_hours !== undefined) updateData.required_hours = Number(formData.required_hours);
         if (formData.training_type !== undefined) updateData.training_type = formData.training_type;
         if (formData.delivery_mode !== undefined) updateData.delivery_mode = formData.delivery_mode;
         if (formData.thumbnail !== undefined) updateData.thumbnail = formData.thumbnail;
-        if (formData.price !== undefined) updateData.price = formData.price;
+        if (formData.price !== undefined) updateData.price = Number(formData.price);
         if (formData.location !== undefined) updateData.location = formData.location;
         if (formData.requires_exam !== undefined) updateData.requires_exam = formData.requires_exam;
         if (formData.requires_range !== undefined) updateData.requires_range = formData.requires_range;
@@ -129,15 +130,16 @@ export default function CourseDetailsPage() {
         if (formData.instructor_id !== undefined) updateData.instructor_id = formData.instructor_id;
         if (formData.is_active !== undefined) updateData.is_active = formData.is_active;
         
-        // Handle state: convert object to string if needed
-        if (formData.state !== undefined) {
-            updateData.state = typeof formData.state === 'object' ? formData.state?.name : formData.state;
+        // Send state_id (integer FK). If the user changed state via the select,
+        // formData.state_id is already set. Convert state object → state_id if needed.
+        if (formData.state_id !== undefined) {
+            updateData.state_id = Number(formData.state_id);
+        } else if (formData.state && typeof formData.state === 'object' && formData.state.id) {
+            updateData.state_id = formData.state.id;
         }
         
-        // Also send state_id if available
-        if (formData.state_id !== undefined) {
-            updateData.state_id = formData.state_id;
-        }
+        // Don't send 'state' as a string — backend uses state_id FK
+        delete (updateData as any).state;
         
         updateMutation.mutate(updateData);
     };

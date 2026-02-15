@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { courseApi } from '@/api';
+import { COURSE_ROUTES, buildUrl } from '@/config/routes';
 import type { Lesson, CreateLessonInput, UpdateLessonInput } from './types';
 
 interface ApiResponse<T> {
@@ -32,7 +33,7 @@ export class LessonsRepository {
      * Get all lessons across all courses
      */
     static async getAll(): Promise<Lesson[]> {
-        const { data } = await courseApi.get('/lessons/all');
+        const { data } = await courseApi.get(COURSE_ROUTES.LESSONS.GET_ALL.url);
         return this.extractData<Lesson[]>(data);
     }
 
@@ -40,7 +41,8 @@ export class LessonsRepository {
      * Get a single lesson by ID
      */
     static async getById(lessonId: number): Promise<Lesson> {
-        const { data } = await courseApi.get(`/lesson/${lessonId}`);
+        const url = buildUrl(COURSE_ROUTES.LESSONS.GET_BY_ID, { lessonId });
+        const { data } = await courseApi.get(url);
         return this.extractData<Lesson>(data);
     }
 
@@ -48,7 +50,8 @@ export class LessonsRepository {
      * Create a new lesson for a course
      */
     static async create(courseId: number, input: CreateLessonInput | FormData): Promise<Lesson> {
-        const { data } = await courseApi.post(`/${courseId}/lessons`, input);
+        const url = buildUrl(COURSE_ROUTES.LESSONS.CREATE, { courseId });
+        const { data } = await courseApi.post(url, input);
         return this.extractData<Lesson>(data);
     }
 
@@ -56,7 +59,8 @@ export class LessonsRepository {
      * Update a lesson
      */
     static async update(lessonId: number, input: UpdateLessonInput): Promise<Lesson> {
-        const { data } = await courseApi.patch(`/lesson/${lessonId}`, input);
+        const url = buildUrl(COURSE_ROUTES.LESSONS.UPDATE, { lessonId });
+        const { data } = await courseApi.patch(url, input);
         return this.extractData<Lesson>(data);
     }
 
@@ -64,7 +68,8 @@ export class LessonsRepository {
      * Delete a lesson
      */
     static async delete(lessonId: number): Promise<void> {
-        await courseApi.delete(`/lesson/${lessonId}`);
+        const url = buildUrl(COURSE_ROUTES.LESSONS.DELETE, { lessonId });
+        await courseApi.delete(url);
     }
 
     /**
@@ -73,7 +78,8 @@ export class LessonsRepository {
     static async replaceVideo(lessonId: number, videoFile: File): Promise<Lesson> {
         const formData = new FormData();
         formData.append('video', videoFile);
-        const { data } = await courseApi.patch(`/lesson/${lessonId}/video`, formData, {
+        const url = buildUrl(COURSE_ROUTES.LESSONS.REPLACE_VIDEO, { lessonId });
+        const { data } = await courseApi.patch(url, formData, {
             headers: {
                 'Content-Type': 'multipart/form-data',
             },

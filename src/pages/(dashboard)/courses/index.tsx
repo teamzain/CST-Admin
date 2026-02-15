@@ -9,7 +9,7 @@ import { CoursesFilters } from '@/components/courses/courses-filters';
 import { getCourseColumns } from '@/components/courses/course-columns';
 import { CoursesRepository, type Course } from '@/repositories/courses';
 import { StatesRepository } from '@/repositories/states';
-import { Plus, Upload } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { DeleteConfirmationDialog } from '@/components/shared/delete-confirmation-dialog';
 
@@ -108,10 +108,6 @@ export default function CoursesPage() {
         }
     };
 
-    const handleImportCSV = () => {
-        toast.info('Import CSV - Not implemented yet');
-    };
-
     const columns = getCourseColumns(handleView, handleDelete);
 
     // Get unique instructors for filter
@@ -164,14 +160,6 @@ export default function CoursesPage() {
                         </p>
                     </div>
                     <div className="flex items-center gap-3 w-full sm:w-auto">
-                        <Button
-                            variant="outline"
-                            className="gap-2 bg-white"
-                            onClick={handleImportCSV}
-                        >
-                            <Upload className="w-4 h-4" />
-                            Import CSV
-                        </Button>
                         <Button
                             className="bg-primary hover:bg-primary/90 text-black font-medium gap-2"
                             onClick={() => navigate('/courses/create')}

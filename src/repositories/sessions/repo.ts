@@ -1,5 +1,7 @@
 import { courseApi } from '@/api';
+import { COURSE_ROUTES, buildUrl } from '@/config/routes';
 import type { Session, CreateSessionInput, UpdateSessionInput } from './types';
+import { CoursesRepository } from '@/repositories/courses/repo';
 
 interface ApiResponse<T> {
     data?: T;
@@ -28,19 +30,37 @@ export class SessionsRepository {
     }
 
     /**
-     * Get all sessions across all courses
+     * Get all sessions across all courses.
+     *
+     * NOTE: The backend's GET /course/live-sessions endpoint has a route
+     * collision with GET /course/:id (ParseIntPipe rejects "live-sessions").
+     * Workaround: fetch all courses, then aggregate per-course sessions.
      */
     static async getAll(): Promise<Session[]> {
-        const { data } = await courseApi.get('/live-sessions');
-        const result = this.extractData<Session[]>(data);
-        return Array.isArray(result) ? result : [];
+        try {
+            // Try the direct endpoint first (in case backend fixes the collision)
+            const { data } = await courseApi.get(COURSE_ROUTES.SESSIONS.GET_ALL.url);
+            const result = this.extractData<Session[]>(data);
+            return Array.isArray(result) ? result : [];
+        } catch (err: any) {
+            // If 400 (route collision), fall back to per-course aggregation
+            if (err?.response?.status === 400) {
+                const courses = await CoursesRepository.getAll();
+                const perCourse = await Promise.all(
+                    courses.map((c) => this.getByCourse(c.id).catch(() => [] as Session[]))
+                );
+                return perCourse.flat();
+            }
+            throw err;
+        }
     }
 
     /**
      * Get all sessions for a specific course
      */
     static async getByCourse(courseId: number): Promise<Session[]> {
-        const { data } = await courseApi.get(`/${courseId}/live-sessions`);
+        const url = buildUrl(COURSE_ROUTES.SESSIONS.GET_BY_COURSE, { courseId });
+        const { data } = await courseApi.get(url);
         const result = this.extractData<Session[]>(data);
         return Array.isArray(result) ? result : [];
     }
@@ -49,7 +69,8 @@ export class SessionsRepository {
      * Get a single session by ID
      */
     static async getById(sessionId: number): Promise<Session> {
-        const { data } = await courseApi.get(`/live-sessions/${sessionId}`);
+        const url = buildUrl(COURSE_ROUTES.SESSIONS.GET_BY_ID, { sessionId });
+        const { data } = await courseApi.get(url);
         return this.extractData<Session>(data);
     }
 
@@ -69,7 +90,8 @@ export class SessionsRepository {
             ...(input.order_index !== undefined && { order_index: input.order_index }),
         };
 
-        const { data } = await courseApi.post(`/${courseId}/live-sessions`, payload);
+        const url = buildUrl(COURSE_ROUTES.SESSIONS.CREATE, { courseId });
+        const { data } = await courseApi.post(url, payload);
         return this.extractData<Session>(data);
     }
 
@@ -77,7 +99,8 @@ export class SessionsRepository {
      * Update a session
      */
     static async update(sessionId: number, input: UpdateSessionInput): Promise<Session> {
-        const { data } = await courseApi.patch(`/live-sessions/${sessionId}`, input);
+        const url = buildUrl(COURSE_ROUTES.SESSIONS.UPDATE, { sessionId });
+        const { data } = await courseApi.patch(url, input);
         return this.extractData<Session>(data);
     }
 
@@ -85,7 +108,8 @@ export class SessionsRepository {
      * Delete a session
      */
     static async delete(sessionId: number): Promise<void> {
-        await courseApi.delete(`/live-sessions/${sessionId}`);
+        const url = buildUrl(COURSE_ROUTES.SESSIONS.DELETE, { sessionId });
+        await courseApi.delete(url);
     }
 }
 

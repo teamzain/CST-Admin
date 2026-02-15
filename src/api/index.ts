@@ -76,7 +76,7 @@ const createApiClient = (appName: APP_NAMES): AxiosInstance => {
                     // No refresh token available, logout and redirect
                     localStorage.removeItem('token');
                     localStorage.removeItem('refresh_token');
-                    localStorage.removeItem('user');
+                    localStorage.removeItem('auth-storage');
                     window.location.href = '/login';
                     return Promise.reject(error);
                 }
@@ -85,7 +85,7 @@ const createApiClient = (appName: APP_NAMES): AxiosInstance => {
                     const authBaseUrl = getBaseApiUrl(APP_NAMES.AUTH);
                     // Call the refresh endpoint directly using a clean axios instance
                     const { data } = await axios.post(
-                        `${authBaseUrl}/refresh`,
+                        `${authBaseUrl}/refresh-token`,
                         {
                             refreshToken: refreshToken,
                         }
@@ -109,7 +109,7 @@ const createApiClient = (appName: APP_NAMES): AxiosInstance => {
                     processQueue(refreshError, null);
                     localStorage.removeItem('token');
                     localStorage.removeItem('refresh_token');
-                    localStorage.removeItem('user');
+                    localStorage.removeItem('auth-storage');
                     window.location.href = '/login';
                     return Promise.reject(refreshError);
                 } finally {

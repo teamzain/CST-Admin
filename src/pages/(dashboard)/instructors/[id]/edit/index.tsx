@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { InstructorsRepository } from '@/repositories/instructors/repo';
 import { StatesRepository } from '@/repositories/states';
@@ -19,18 +19,27 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DatePickerInput } from '@/components/shared/date-picker';
-import { ArrowLeft, Save } from 'lucide-react';
+import { ArrowLeft, Save, Loader2 } from 'lucide-react';
 
-export default function CreateInstructorPage() {
+export default function EditInstructorPage() {
     const router = useNavigate();
+    const params = useParams();
     const queryClient = useQueryClient();
-    
+    const instructorId = Number(params.id);
+
+    // Fetch instructor data
+    const { data: instructor, isLoading: isLoadingInstructor } = useQuery({
+        queryKey: ['instructor', instructorId],
+        queryFn: () => InstructorsRepository.getInstructorById(instructorId),
+        enabled: !!instructorId,
+    });
+
     // Fetch states dynamically
     const { data: allStates = [] } = useQuery({
         queryKey: ['states'],
         queryFn: () => StatesRepository.getAll(),
     });
-    
+
     const [formData, setFormData] = useState({
         firstName: '',
         lastName: '',
@@ -40,32 +49,57 @@ export default function CreateInstructorPage() {
         licenseNo: '',
         licenseExpiry: '',
         signature: null as string | null,
-        userId: '', // Optional: if linking to existing user
+        status: 'ACTIVE',
     });
+
+    // Pre-populate form when instructor data loads
+    useEffect(() => {
+        if (instructor) {
+            const license = instructor.instructorLicenses?.[0] || instructor.licenses?.[0];
+            setFormData({
+                firstName: instructor.first_name || '',
+                lastName: instructor.last_name || '',
+                email: instructor.email || '',
+                phone: instructor.phone || '',
+                stateId: String(instructor.state_id || license?.state_id || ''),
+                licenseNo: instructor.license_no || license?.license_no || '',
+                licenseExpiry: instructor.license_expiry
+                    ? new Date(instructor.license_expiry as string).toISOString().split('T')[0]
+                    : license?.license_expiry
+                    ? new Date(license.license_expiry as string).toISOString().split('T')[0]
+                    : '',
+                signature: instructor.signature || license?.signature || null,
+                status: String(instructor.status || 'ACTIVE').toUpperCase(),
+            });
+        }
+    }, [instructor]);
 
     const mutation = useMutation({
         mutationFn: async (data: typeof formData) => {
-            const payload = {
+            const payload: Record<string, any> = {
                 first_name: data.firstName,
                 last_name: data.lastName,
                 email: data.email,
                 phone: data.phone || undefined,
                 state_id: parseInt(data.stateId),
-                license_no: data.licenseNo,
-                license_expiry: data.licenseExpiry,
-                signature: data.signature || undefined,
-                username: `${data.firstName.toLowerCase()}_${Date.now()}`,
+                license_no: data.licenseNo || undefined,
+                license_expiry: data.licenseExpiry || undefined,
+                signature: data.signature ?? null,
+                status: data.status,
             };
-            return InstructorsRepository.createInstructor(payload);
+            console.log('📤 Sending payload to backend:', JSON.stringify(payload, null, 2));
+            return InstructorsRepository.updateInstructor(instructorId, payload);
         },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['instructors'] });
-            toast.success('Instructor created successfully');
-            router('/instructors');
+        onSuccess: async () => {
+            toast.success('Instructor updated successfully');
+            // Refetch to immediately get updated data from DB
+            await queryClient.refetchQueries({ queryKey: ['instructor', instructorId] });
+            await queryClient.refetchQueries({ queryKey: ['instructors'] });
+            router(`/instructors/${instructorId}`);
         },
         onError: (error: any) => {
-            console.error('Error creating instructor:', error);
-            toast.error(error.message || 'Failed to create instructor');
+            console.error('Error updating instructor:', error);
+            toast.error(error.message || 'Failed to update instructor');
         },
     });
 
@@ -88,24 +122,32 @@ export default function CreateInstructorPage() {
         });
     };
 
+    if (isLoadingInstructor) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+        );
+    }
+
     return (
         <div className="min-h-screen bg-gray-50 p-4 md:p-6">
-            <div className="mx-auto ">
+            <div className="mx-auto">
                 {/* Header */}
                 <div className="mb-6">
                     <Button
                         variant="ghost"
-                        onClick={() => router('/instructors')}
+                        onClick={() => router(`/instructors/${instructorId}`)}
                         className="mb-4 gap-2"
                     >
                         <ArrowLeft className="w-4 h-4" />
-                        Back to Instructors
+                        Back to Instructor
                     </Button>
                     <h1 className="text-2xl md:text-3xl font-semibold text-gray-900">
-                        Add New Instructor
+                        Edit Instructor
                     </h1>
                     <p className="text-sm text-gray-600 mt-1">
-                        Fill in the instructor details below
+                        Update instructor details below
                     </p>
                 </div>
 
@@ -118,9 +160,7 @@ export default function CreateInstructorPage() {
                             {/* Personal Information */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <Label htmlFor="firstName">
-                                        First Name *
-                                    </Label>
+                                    <Label htmlFor="firstName">First Name *</Label>
                                     <Input
                                         id="firstName"
                                         name="firstName"
@@ -130,9 +170,7 @@ export default function CreateInstructorPage() {
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="lastName">
-                                        Last Name *
-                                    </Label>
+                                    <Label htmlFor="lastName">Last Name *</Label>
                                     <Input
                                         id="lastName"
                                         name="lastName"
@@ -167,32 +205,42 @@ export default function CreateInstructorPage() {
                                 </div>
                             </div>
 
+                            {/* Status */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="status">Status</Label>
+                                    <Select
+                                        value={formData.status}
+                                        onValueChange={(value) => handleSelectChange('status', value)}
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select status" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="ACTIVE">Active</SelectItem>
+                                            <SelectItem value="INACTIVE">Inactive</SelectItem>
+                                            <SelectItem value="EXPIRED">Expired</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+
                             {/* License Information */}
                             <div className="pt-4 border-t">
-                                <h3 className="text-lg font-medium mb-4">
-                                    License Information
-                                </h3>
+                                <h3 className="text-lg font-medium mb-4">License Information</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="space-y-2">
                                         <Label htmlFor="stateId">State *</Label>
                                         <Select
                                             value={formData.stateId}
-                                            onValueChange={(value) =>
-                                                handleSelectChange(
-                                                    'stateId',
-                                                    value
-                                                )
-                                            }
+                                            onValueChange={(value) => handleSelectChange('stateId', value)}
                                         >
                                             <SelectTrigger>
                                                 <SelectValue placeholder="Select state" />
                                             </SelectTrigger>
                                             <SelectContent>
                                                 {allStates.map((state: any) => (
-                                                    <SelectItem
-                                                        key={state.id}
-                                                        value={state.id.toString()}
-                                                    >
+                                                    <SelectItem key={state.id} value={state.id.toString()}>
                                                         {state.name}
                                                     </SelectItem>
                                                 ))}
@@ -200,9 +248,7 @@ export default function CreateInstructorPage() {
                                         </Select>
                                     </div>
                                     <div className="space-y-2">
-                                        <Label htmlFor="licenseNo">
-                                            License Number
-                                        </Label>
+                                        <Label htmlFor="licenseNo">License Number</Label>
                                         <Input
                                             id="licenseNo"
                                             name="licenseNo"
@@ -213,12 +259,10 @@ export default function CreateInstructorPage() {
                                 </div>
 
                                 <div className="space-y-2 mt-4">
-                                    <Label htmlFor="licenseExpiry">
-                                        License Expiry Date
-                                    </Label>
+                                    <Label htmlFor="licenseExpiry">License Expiry Date</Label>
                                     <DatePickerInput
                                         value={formData.licenseExpiry}
-                                        onChange={(date) => setFormData((prev: any) => ({ ...prev, licenseExpiry: date }))}
+                                        onChange={(date) => setFormData((prev) => ({ ...prev, licenseExpiry: date }))}
                                         title="License Expiry Date"
                                     />
                                 </div>
@@ -228,17 +272,14 @@ export default function CreateInstructorPage() {
                             <div className="pt-4 border-t">
                                 <SignatureUpload
                                     value={formData.signature || undefined}
-                                    onChange={(url) =>
-                                        setFormData({
-                                            ...formData,
-                                            signature: url,
-                                        })
-                                    }
+                                    onChange={(url) => {
+                                        console.log('🖋️ Signature changed:', url);
+                                        setFormData({ ...formData, signature: url });
+                                    }}
                                     label="Instructor Signature"
                                     disabled={mutation.isPending}
                                 />
                             </div>
-
                         </CardContent>
                     </Card>
 
@@ -247,17 +288,13 @@ export default function CreateInstructorPage() {
                         <Button
                             type="button"
                             variant="outline"
-                            onClick={() => router('/instructors')}
+                            onClick={() => router(`/instructors/${instructorId}`)}
                         >
                             Cancel
                         </Button>
-                        <Button
-                            type="submit"
-                            className="gap-2"
-                            disabled={mutation.isPending}
-                        >
+                        <Button type="submit" className="gap-2" disabled={mutation.isPending}>
                             <Save className="w-4 h-4" />
-                            {mutation.isPending ? 'Creating...' : 'Create Instructor'}
+                            {mutation.isPending ? 'Saving...' : 'Save Changes'}
                         </Button>
                     </div>
                 </form>

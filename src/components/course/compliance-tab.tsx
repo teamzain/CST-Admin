@@ -200,6 +200,32 @@ export function ComplianceTab({ course, formData, isEditing, onInputChange }: Co
                 </div>
 
                 <div className="space-y-4">
+                    <h3 className="text-lg font-semibold">Certificate Template</h3>
+                    <div className="bg-muted/10 p-6 rounded-xl border border-border/50">
+                        {isEditing ? (
+                            <div className="space-y-2">
+                                <Label htmlFor="certificate-template">Template Identifier</Label>
+                                <Input
+                                    id="certificate-template"
+                                    value={formData.certificate_template || ''}
+                                    onChange={(e) => onInputChange('certificate_template', e.target.value || null)}
+                                    placeholder="e.g., template-name or URL"
+                                    className="bg-background border-border"
+                                />
+                                <p className="text-xs text-muted-foreground">
+                                    Certificate template used for course completion certificates
+                                </p>
+                            </div>
+                        ) : (
+                            <div className="text-sm">
+                                <span className="text-muted-foreground">Template: </span>
+                                <span className="font-semibold">{course.certificate_template || 'Not configured'}</span>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                <div className="space-y-4">
                     <h3 className="text-lg font-semibold">System Information</h3>
                     <div className="bg-muted/10 p-6 rounded-xl border border-border/50 space-y-2 text-sm">
                         <div className="flex justify-between">

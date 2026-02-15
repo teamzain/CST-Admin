@@ -1,4 +1,5 @@
 import { courseApi } from '@/api';
+import { COURSE_ROUTES, buildUrl } from '@/config/routes';
 import type { Module, CreateModuleInput, UpdateModuleInput } from './types';
 
 interface ApiResponse<T> {
@@ -44,7 +45,8 @@ export class ModulesRepository {
      * Get all modules for a course
      */
     static async getByCourse(courseId: number): Promise<Module[]> {
-        const { data } = await courseApi.get(`/${courseId}/modules`);
+        const url = buildUrl(COURSE_ROUTES.MODULES.GET_ALL, { courseId });
+        const { data } = await courseApi.get(url);
         const result = this.extractData<Module[]>(data);
         const modulesArray = Array.isArray(result) ? result : [];
         return modulesArray.map(this.normalizeModule);
@@ -54,7 +56,8 @@ export class ModulesRepository {
      * Get a single module by ID
      */
     static async getById(moduleId: number): Promise<Module> {
-        const { data } = await courseApi.get(`/module/${moduleId}`);
+        const url = buildUrl(COURSE_ROUTES.MODULES.GET_BY_ID, { moduleId });
+        const { data } = await courseApi.get(url);
         return this.normalizeModule(this.extractData<Module>(data));
     }
 
@@ -62,7 +65,8 @@ export class ModulesRepository {
      * Create a new module for a course
      */
     static async create(courseId: number, input: CreateModuleInput): Promise<Module> {
-        const { data } = await courseApi.post(`/${courseId}/modules`, input);
+        const url = buildUrl(COURSE_ROUTES.MODULES.CREATE, { courseId });
+        const { data } = await courseApi.post(url, input);
         return this.normalizeModule(this.extractData<Module>(data));
     }
 
@@ -70,7 +74,8 @@ export class ModulesRepository {
      * Update a module
      */
     static async update(moduleId: number, input: UpdateModuleInput): Promise<Module> {
-        const { data } = await courseApi.patch(`/module/${moduleId}`, input);
+        const url = buildUrl(COURSE_ROUTES.MODULES.UPDATE, { moduleId });
+        const { data } = await courseApi.patch(url, input);
         return this.normalizeModule(this.extractData<Module>(data));
     }
 
@@ -85,7 +90,8 @@ export class ModulesRepository {
      * Delete a module
      */
     static async delete(moduleId: number): Promise<void> {
-        await courseApi.delete(`/module/${moduleId}`);
+        const url = buildUrl(COURSE_ROUTES.MODULES.DELETE, { moduleId });
+        await courseApi.delete(url);
     }
 }
 

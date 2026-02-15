@@ -217,37 +217,36 @@ export function CurriculumTab({ courseId }: CurriculumTabProps) {
 
                 setModules(newModules);
 
-                // Persist order changes to backend
+                // Persist order changes to backend using two-step approach
+                // to avoid unique constraint conflicts on order_index.
+                // Step 1: Set all items to temporary high order_index values
+                // Step 2: Set all items to their final order_index values
                 console.log('Items to update:', itemsToUpdate);
-                const updatePromises: Promise<any>[] = [];
 
-                for (const item of itemsToUpdate) {
-                    console.log(`Updating ${item.itemType} id=${item.id} order_index=${item.order_index}`, item.module_id ? `module_id=${item.module_id}` : '');
+                const buildUpdate = (item: typeof itemsToUpdate[0], orderIndex: number) => {
+                    const payload: any = { order_index: orderIndex };
+                    if (item.module_id) payload.module_id = item.module_id;
+                    return payload;
+                };
 
-                    if (item.itemType === 'lesson') {
-                        updatePromises.push(
-                            LessonsRepository.update(item.id, {
-                                order_index: item.order_index,
-                                ...(item.module_id && { module_id: item.module_id }),
-                            })
-                        );
-                    } else if (item.itemType === 'session') {
-                        updatePromises.push(
-                            SessionsRepository.update(item.id, {
-                                order_index: item.order_index,
-                                ...(item.module_id && { module_id: item.module_id }),
-                            })
-                        );
-                    } else if (item.itemType === 'quiz') {
-                        updatePromises.push(
-                            QuizzesRepository.update(item.id, {
-                                order_index: item.order_index,
-                            })
-                        );
-                    }
-                }
+                // Step 1: Temp high values to clear all conflicts
+                const tempPromises: Promise<any>[] = itemsToUpdate.map((item, i) => {
+                    const tempPayload = buildUpdate(item, 10000 + i);
+                    if (item.itemType === 'lesson') return LessonsRepository.update(item.id, tempPayload);
+                    if (item.itemType === 'session') return SessionsRepository.update(item.id, tempPayload);
+                    return QuizzesRepository.update(item.id, tempPayload);
+                });
+                await Promise.all(tempPromises);
 
-                const results = await Promise.all(updatePromises);
+                // Step 2: Final order_index values
+                const finalPromises: Promise<any>[] = itemsToUpdate.map((item) => {
+                    const finalPayload = buildUpdate(item, item.order_index);
+                    if (item.itemType === 'lesson') return LessonsRepository.update(item.id, finalPayload);
+                    if (item.itemType === 'session') return SessionsRepository.update(item.id, finalPayload);
+                    return QuizzesRepository.update(item.id, finalPayload);
+                });
+
+                const results = await Promise.all(finalPromises);
                 console.log('Update results:', results);
                 toast.success('Order updated successfully');
             }
