@@ -77,6 +77,18 @@ export const AUTH_ROUTES = {
         requiresAuth: true,
         description: 'Change user password',
     },
+    RESEND_OTP: {
+        url: '/resend-otp',
+        method: HTTP_METHOD.POST,
+        requiresAuth: false,
+        description: 'Resend OTP to user',
+    },
+    GOOGLE_LOGIN: {
+        url: '/o-auth/google',
+        method: HTTP_METHOD.POST,
+        requiresAuth: false,
+        description: 'Google OAuth login',
+    },
 } as const satisfies ServiceRoutes;
 
 /**
@@ -139,7 +151,7 @@ export const USER_ROUTES = {
             description: 'Get student by ID',
         },
         GET_ENROLLMENTS: {
-            url: '/student/:id/enrollments',
+            url: '/users/:id/enrollments',
             method: HTTP_METHOD.GET,
             requiresAuth: true,
             description: 'Get student enrollments',
@@ -333,13 +345,13 @@ export const COURSE_ROUTES = {
 export const ADMIN_ROUTES = {
     DASHBOARD: {
         STATS: {
-            url: '/admin/dashboard/stats',
+            url: '/statistics',
             method: HTTP_METHOD.GET,
             requiresAuth: true,
             description: 'Get dashboard statistics',
         },
         ANALYTICS: {
-            url: '/admin/dashboard/analytics',
+            url: '/analytics', // Note: Analytics endpoint not found in backend, placeholder kept
             method: HTTP_METHOD.GET,
             requiresAuth: true,
             description: 'Get analytics data',
@@ -347,7 +359,7 @@ export const ADMIN_ROUTES = {
     },
     USERS: {
         GET_ALL: {
-            url: '/admin/users',
+            url: '/',
             method: HTTP_METHOD.GET,
             requiresAuth: true,
             description: 'Get all users (admin)',
@@ -424,37 +436,37 @@ export const ADMIN_ROUTES = {
  */
 export const PAYMENT_ROUTES = {
     CREATE_CHECKOUT: {
-        url: '/payments/checkout',
+        url: '/checkout',
         method: HTTP_METHOD.POST,
         requiresAuth: true,
         description: 'Create checkout session',
     },
     VERIFY_PAYMENT: {
-        url: '/payments/verify',
+        url: '/confirm',
         method: HTTP_METHOD.POST,
         requiresAuth: true,
         description: 'Verify payment',
     },
     GET_TRANSACTIONS: {
-        url: '/payments/transactions',
+        url: '/orders',
         method: HTTP_METHOD.GET,
         requiresAuth: true,
         description: 'Get user transactions',
     },
     GET_TRANSACTION_BY_ID: {
-        url: '/payments/transactions/:id',
+        url: '/orders/:id',
         method: HTTP_METHOD.GET,
         requiresAuth: true,
         description: 'Get transaction by ID',
     },
     REFUND: {
-        url: '/payments/refund',
+        url: '/refund/:orderId',
         method: HTTP_METHOD.POST,
         requiresAuth: true,
         description: 'Process refund',
     },
     WEBHOOK: {
-        url: '/payments/webhook',
+        url: '/webhook',
         method: HTTP_METHOD.POST,
         requiresAuth: false,
         description: 'Payment webhook endpoint',
