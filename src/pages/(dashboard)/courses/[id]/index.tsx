@@ -69,9 +69,12 @@ export default function CourseDetailsPage() {
     useEffect(() => {
         if (course && !isEditing) {
             const courseData = { ...course };
-            // Ensure instructor_id is set correctly from instructor.id if not present
-            if (!courseData.instructor_id && course.instructor?.id) {
-                courseData.instructor_id = course.instructor.id;
+            // Set instructor_id to the User ID (not Instructor table PK)
+            // so it matches dropdown option values from getAllInstructors
+            if (course.instructor?.user_id) {
+                courseData.instructor_id = course.instructor.user_id;
+            } else if (course.instructor?.user?.id) {
+                courseData.instructor_id = course.instructor.user.id;
             }
             setFormData(courseData);
         }
@@ -125,7 +128,7 @@ export default function CourseDetailsPage() {
         if (formData.requires_id_verification !== undefined) updateData.requires_id_verification = formData.requires_id_verification;
         if (formData.is_refresher !== undefined) updateData.is_refresher = formData.is_refresher;
         if (formData.is_price_negotiable !== undefined) updateData.is_price_negotiable = formData.is_price_negotiable;
-        if (formData.pre_requirements !== undefined) updateData.pre_requirements = formData.pre_requirements;
+        if (formData.pre_requirements !== undefined) updateData.pre_requirements = formData.pre_requirements.filter(r => r.trim() !== '');
         if (formData.certificate_template !== undefined) updateData.certificate_template = formData.certificate_template;
         if (formData.instructor_id !== undefined) updateData.instructor_id = formData.instructor_id;
         if (formData.is_active !== undefined) updateData.is_active = formData.is_active;

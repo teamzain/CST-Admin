@@ -29,7 +29,7 @@ export function ComplianceTab({ course, formData, isEditing, onInputChange }: Co
                             <Textarea
                                 id="pre-requirements"
                                 value={formData.pre_requirements?.join('\n') || ''}
-                                onChange={(e) => onInputChange('pre_requirements', e.target.value.split('\n').filter(r => r.trim()))}
+                                onChange={(e) => onInputChange('pre_requirements', e.target.value.split('\n'))}
                                 placeholder="Enter one requirement per line&#10;Example:&#10;Must be 18 years or older&#10;Valid government-issued ID&#10;Background check clearance"
                                 rows={6}
                                 className="bg-background border-border font-mono text-sm"

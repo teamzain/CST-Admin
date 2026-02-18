@@ -9,7 +9,9 @@ export interface UploadResponse {
 }
 
 class BunnyUploadService {
-    private axiosInstance = axios.create();
+    private axiosInstance = axios.create({
+        timeout: 120000, // 2 minute timeout for uploads
+    });
 
     constructor() {
         this.setupInterceptors();
@@ -72,9 +74,7 @@ class BunnyUploadService {
             formData.append('path', path);
 
             const response = await this.axiosInstance.post<UploadResponse>('bunny-upload', formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                },
+                // Let Axios auto-set Content-Type with proper multipart boundary
             });
 
             return response.data;

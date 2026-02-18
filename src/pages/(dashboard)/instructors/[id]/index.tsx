@@ -9,9 +9,8 @@ import {
     Eye,
     User,
     BookOpen,
-    Wallet,
-    Star,
-    Grid3x3,
+    // Star,
+    // Grid3x3,
     Loader2,
     MoreVertical,
     Trash2,
@@ -33,7 +32,7 @@ import OverviewTab from '@/components/instructors/detail-tabs/OverviewTab';
 import PersonalTab from '@/components/instructors/detail-tabs/PersonalTab';
 import CoursesTab from '@/components/instructors/detail-tabs/CoursesTab';
 import StudentsTab from '@/components/instructors/detail-tabs/StudentsTab';
-import ReviewsTab from '@/components/instructors/detail-tabs/ReviewsTab';
+// import ReviewsTab from '@/components/instructors/detail-tabs/ReviewsTab';
 
 export default function InstructorDetailPage() {
     const router = useNavigate();
@@ -204,14 +203,7 @@ export default function InstructorDetailPage() {
                                 <Users className="w-4 h-4 mr-2" />
                                 Students
                             </TabsTrigger>
-                            <TabsTrigger
-                                value="wallet"
-                                className="relative rounded-none border-0 bg-transparent px-4 pb-3 pt-2 font-medium text-gray-600 transition-none data-[state=active]:bg-transparent data-[state=active]:text-gray-900 data-[state=active]:shadow-none hover:text-gray-900 after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-transparent data-[state=active]:after:bg-yellow-400"
-                            >
-                                <Wallet className="w-4 h-4 mr-2" />
-                                Wallet
-                            </TabsTrigger>
-                            <TabsTrigger
+                            {/* <TabsTrigger
                                 value="reviews"
                                 className="relative rounded-none border-0 bg-transparent px-4 pb-3 pt-2 font-medium text-gray-600 transition-none data-[state=active]:bg-transparent data-[state=active]:text-gray-900 data-[state=active]:shadow-none hover:text-gray-900 after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-transparent data-[state=active]:after:bg-yellow-400"
                             >
@@ -223,7 +215,7 @@ export default function InstructorDetailPage() {
                                 className="relative rounded-none border-0 bg-transparent px-4 pb-3 pt-2 font-medium text-gray-600 transition-none data-[state=active]:bg-transparent data-[state=active]:text-gray-900 data-[state=active]:shadow-none hover:text-gray-900 after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-transparent data-[state=active]:after:bg-yellow-400 ml-auto"
                             >
                                 <Grid3x3 className="w-4 h-4" />
-                            </TabsTrigger>
+                            </TabsTrigger> */}
                         </TabsList>
 
                         {/* Tab Content */}
@@ -244,16 +236,7 @@ export default function InstructorDetailPage() {
                                 <StudentsTab instructor={instructor} instructorId={String(instructor.id)} />
                             </TabsContent>
 
-                            <TabsContent value="wallet" className="m-0 mt-0">
-                                <div className="bg-white rounded-lg p-8 text-center">
-                                    <Wallet className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-                                    <p className="text-gray-600">
-                                        Wallet information coming soon
-                                    </p>
-                                </div>
-                            </TabsContent>
-
-                            <TabsContent value="reviews" className="m-0 mt-0">
+                            {/* <TabsContent value="reviews" className="m-0 mt-0">
                                 <ReviewsTab instructor={instructor} instructorId={String(instructor.id)} />
                             </TabsContent>
 
@@ -264,7 +247,7 @@ export default function InstructorDetailPage() {
                                         Additional options coming soon
                                     </p>
                                 </div>
-                            </TabsContent>
+                            </TabsContent> */}
                         </div>
                     </Tabs>
                 </div>

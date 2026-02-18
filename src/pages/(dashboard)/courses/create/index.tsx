@@ -365,14 +365,13 @@ export default function CreateCoursePage() {
                                                 ? String(formData.instructor_id)
                                                 : 'unassigned'
                                         }
-                                        onValueChange={(val) =>
-                                            handleInputChange(
-                                                'instructor_id',
-                                                val === 'unassigned'
-                                                    ? undefined
-                                                    : parseInt(val)
-                                            )
-                                        }
+                                        onValueChange={(val) => {
+                                            if (val === 'unassigned') {
+                                                handleInputChange('instructor_id', undefined);
+                                            } else {
+                                                handleInputChange('instructor_id', parseInt(val));
+                                            }
+                                        }}
                                     >
                                         <SelectTrigger className="bg-input border-border mt-2">
                                             <SelectValue placeholder="Select Instructor" />

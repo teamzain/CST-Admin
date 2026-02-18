@@ -13,6 +13,7 @@ import {
     Trash2,
     Ban,
     CheckCircle,
+    UserMinus,
 } from 'lucide-react';
 import {
     type StudentWithEnrollments,
@@ -166,8 +167,23 @@ export const getStudentColumns = (
                                 <Edit2 className="w-4 h-4" />
                                 Edit Student
                             </DropdownMenuItem>
-                            {row.original.user_auth.status ===
-                            StudentStatus.ACTIVE ? (
+                            {row.original.user_auth.status !==
+                            StudentStatus.ACTIVE && (
+                                <DropdownMenuItem
+                                    className="gap-2 text-green-600"
+                                    onClick={() =>
+                                        onStatusChange(
+                                            row.original.id,
+                                            StudentStatus.ACTIVE
+                                        )
+                                    }
+                                >
+                                    <CheckCircle className="w-4 h-4" />
+                                    Activate Student
+                                </DropdownMenuItem>
+                            )}
+                            {row.original.user_auth.status !==
+                            StudentStatus.SUSPENDED && (
                                 <DropdownMenuItem
                                     className="gap-2 text-yellow-600"
                                     onClick={() =>
@@ -180,18 +196,20 @@ export const getStudentColumns = (
                                     <Ban className="w-4 h-4" />
                                     Suspend Student
                                 </DropdownMenuItem>
-                            ) : (
+                            )}
+                            {row.original.user_auth.status !==
+                            StudentStatus.INACTIVE && (
                                 <DropdownMenuItem
-                                    className="gap-2 text-green-600"
+                                    className="gap-2 text-gray-600"
                                     onClick={() =>
                                         onStatusChange(
                                             row.original.id,
-                                            StudentStatus.ACTIVE
+                                            StudentStatus.INACTIVE
                                         )
                                     }
                                 >
-                                    <CheckCircle className="w-4 h-4" />
-                                    Activate Student
+                                    <UserMinus className="w-4 h-4" />
+                                    Inactivate Student
                                 </DropdownMenuItem>
                             )}
                             <DropdownMenuItem

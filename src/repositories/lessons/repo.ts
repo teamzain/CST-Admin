@@ -51,7 +51,12 @@ export class LessonsRepository {
      */
     static async create(courseId: number, input: CreateLessonInput | FormData): Promise<Lesson> {
         const url = buildUrl(COURSE_ROUTES.LESSONS.CREATE, { courseId });
-        const { data } = await courseApi.post(url, input);
+        // When sending FormData (video upload), remove default JSON Content-Type
+        // so Axios/browser can auto-set multipart/form-data with proper boundary
+        const config = input instanceof FormData
+            ? { headers: { 'Content-Type': 'multipart/form-data' }, timeout: 120000 }
+            : {};
+        const { data } = await courseApi.post(url, input, config);
         return this.extractData<Lesson>(data);
     }
 
@@ -60,7 +65,11 @@ export class LessonsRepository {
      */
     static async update(lessonId: number, input: UpdateLessonInput): Promise<Lesson> {
         const url = buildUrl(COURSE_ROUTES.LESSONS.UPDATE, { lessonId });
-        const { data } = await courseApi.patch(url, input);
+        // When sending FormData (video upload), override Content-Type
+        const config = input instanceof FormData
+            ? { headers: { 'Content-Type': 'multipart/form-data' }, timeout: 120000 }
+            : {};
+        const { data } = await courseApi.patch(url, input, config);
         return this.extractData<Lesson>(data);
     }
 

@@ -134,14 +134,23 @@ export function GeneralInformationTab({
 
     const displayCourse = { ...course, ...formData };
 
-    // Get instructor display name - handle both course.instructor and formData.instructor_id
+    // Get the current instructor_id for the dropdown (User ID)
+    const getInstructorDropdownValue = (): string => {
+        // formData.instructor_id should already be a User ID (set in course edit page useEffect)
+        if (formData.instructor_id) return String(formData.instructor_id);
+        // Fallback: resolve from nested instructor object
+        if (course.instructor?.user_id) return String(course.instructor.user_id);
+        if (course.instructor?.user?.id) return String(course.instructor.user.id);
+        return 'unassigned';
+    };
+
+    // Get instructor display name
     const getInstructorName = () => {
         // If instructor_id was changed in formData, find it from instructors list
         if (formData.instructor_id) {
-            const instructor = instructors.find((i: any) => i.id === formData.instructor_id);
-            // InstructorsRepository returns flattened structure with first_name/last_name directly
-            if (instructor) {
-                return `${instructor.first_name || ''} ${instructor.last_name || ''}`.trim();
+            const inst = instructors.find((i: any) => i.id === formData.instructor_id);
+            if (inst) {
+                return `${(inst as any).first_name || ''} ${(inst as any).last_name || ''}`.trim();
             }
         }
 
@@ -322,22 +331,13 @@ export function GeneralInformationTab({
                                     <div>
                                         <Label>Instructor</Label>
                                         <Select
-                                            value={
-                                                formData.instructor_id
-                                                    ? String(formData.instructor_id)
-                                                    : course.instructor?.id
-                                                    ? String(course.instructor.id)
-                                                    : 'unassigned'
-                                            }
+                                            value={getInstructorDropdownValue()}
                                             onValueChange={(val) => {
-                                                const id =
-                                                    val === 'unassigned'
-                                                        ? undefined
-                                                        : parseInt(val);
-                                                onInputChange(
-                                                    'instructor_id',
-                                                    id
-                                                );
+                                                if (val === 'unassigned') {
+                                                    onInputChange('instructor_id', undefined);
+                                                } else {
+                                                    onInputChange('instructor_id', parseInt(val));
+                                                }
                                             }}
                                         >
                                             <SelectTrigger className="bg-background border-border">

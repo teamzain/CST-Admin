@@ -186,6 +186,12 @@ export const USER_ROUTES = {
             requiresAuth: true,
             description: 'Activate student',
         },
+        INACTIVATE: {
+            url: '/student/:id/inactivate',
+            method: HTTP_METHOD.PATCH,
+            requiresAuth: true,
+            description: 'Inactivate student',
+        },
     },
     INSTRUCTOR: {
         GET_BY_ID: {

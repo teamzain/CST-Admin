@@ -64,6 +64,8 @@ export default function StudentsPage() {
         mutationFn: ({ id, status }: { id: number; status: StudentStatus }) => {
             if (status === StudentStatus.SUSPENDED) {
                 return StudentsRepository.suspendStudent(id);
+            } else if (status === StudentStatus.INACTIVE) {
+                return StudentsRepository.inactivateStudent(id);
             } else {
                 return StudentsRepository.activateStudent(id);
             }

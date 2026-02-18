@@ -234,6 +234,26 @@ export class StudentsRepository {
     }
 
     /**
+     * Inactivate a student
+     */
+    static async inactivateStudent(id: number): Promise<Student> {
+        try {
+            const url = buildUrl(USER_ROUTES.STUDENTS.INACTIVATE, { id });
+            const response = await userApi.patch(url);
+            toast.success('Student inactivated successfully');
+            return response.data.data || response.data;
+        } catch (error: unknown) {
+            console.error('Error inactivating student:', error);
+            const errorMessage = getErrorMessage(
+                error,
+                'Failed to inactivate student'
+            );
+            toast.error(errorMessage);
+            throw error;
+        }
+    }
+
+    /**
      * Get all active students
      */
     static async getActiveStudents(): Promise<Student[]> {

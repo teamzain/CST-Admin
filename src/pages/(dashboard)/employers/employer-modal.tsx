@@ -357,7 +357,7 @@ export function EmployerModal({
                         <div>
                             <Label htmlFor="industry">Industry</Label>
                             <Select
-                                value={formData.industry}
+                                value={formData.industry || undefined}
                                 onValueChange={(value) =>
                                     setFormData({ ...formData, industry: value })
                                 }
@@ -366,6 +366,12 @@ export function EmployerModal({
                                     <SelectValue placeholder="Select industry" />
                                 </SelectTrigger>
                                 <SelectContent>
+                                    {/* Include stored industry if not in static list */}
+                                    {formData.industry && !industries.includes(formData.industry) && (
+                                        <SelectItem key={formData.industry} value={formData.industry}>
+                                            {formData.industry}
+                                        </SelectItem>
+                                    )}
                                     {industries.map((ind) => (
                                         <SelectItem key={ind} value={ind}>
                                             {ind}
