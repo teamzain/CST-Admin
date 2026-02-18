@@ -144,6 +144,8 @@ export class PlatformSettingsRepository {
             let settings: PlatformSettings[] = [];
             const payload = response.data;
             
+            console.log('[PlatformSettings] raw response.data:', JSON.stringify(payload));
+            
             if (Array.isArray(payload)) {
                 // Direct array: [{ id, company_name, ... }]
                 settings = payload;
@@ -157,6 +159,8 @@ export class PlatformSettingsRepository {
                 // Direct single object: { id, company_name, ... }
                 settings = [payload];
             }
+            
+            console.log('[PlatformSettings] parsed settings:', JSON.stringify(settings));
             
             return settings;
         } catch (error: unknown) {
@@ -174,8 +178,12 @@ export class PlatformSettingsRepository {
             const response = await adminApi.get(
                 ADMIN_ROUTES.PLATFORM_SETTINGS.GET_CURRENT.url
             );
-            const data = response.data?.data || response.data;
-            return data;
+            const payload = response.data?.data || response.data;
+            // Handle array response — API may return [{...}] instead of {...}
+            if (Array.isArray(payload)) {
+                return payload[0];
+            }
+            return payload;
         } catch (error: unknown) {
             console.error('Error fetching current platform settings:', error);
             throw error;

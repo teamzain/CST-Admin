@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
     LogOut,
-    User,
+    // User,
     Settings as SettingsIcon,
     CreditCard,
 } from 'lucide-react';
@@ -10,6 +11,8 @@ import { useLogout } from '@/hooks/use-auth';
 export const ProfileDropdown = () => {
     const [profileOpen, setProfileOpen] = useState(false);
     const { mutate: logout } = useLogout();
+    const navigate = useNavigate();
+
     const dropdownRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -47,17 +50,16 @@ export const ProfileDropdown = () => {
             {profileOpen && (
                 <div className="absolute right-0 mt-2 w-56 bg-card border rounded-lg shadow-lg py-1 z-50 text-card-foreground animate-in fade-in zoom-in-95 duration-200">
                     <div className="px-4 py-3 border-b border-border">
-                        <p className="text-sm font-medium">John Doe</p>
+                        <p className="text-sm font-medium">Admin</p>
                         <p className="text-xs text-muted-foreground truncate">
-                            john@example.com
+                            Administration
                         </p>
                     </div>
                     <div className="py-1">
-                        <button className="w-full px-4 py-2 text-sm text-left hover:bg-accent hover:text-accent-foreground flex items-center gap-2">
-                            <User className="w-4 h-4" />
-                            Profile
-                        </button>
-                        <button className="w-full px-4 py-2 text-sm text-left hover:bg-accent hover:text-accent-foreground flex items-center gap-2">
+                        <button
+                            onClick={() => { setProfileOpen(false); navigate('/settings'); }}
+                            className="w-full px-4 py-2 text-sm text-left hover:bg-accent hover:text-accent-foreground flex items-center gap-2"
+                        >
                             <SettingsIcon className="w-4 h-4" />
                             Settings
                         </button>
